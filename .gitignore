@@ -57,3 +57,5 @@ ui/
 *Makefile*
 objects/*
 objects/
+*.stash*
+
