@@ -67,10 +67,11 @@ void RunDAQ::ReadRFile(QString &file)
     }
 
     // attach the sockets to the ports grabbed by Configuration
-    if(m_dbg) qDebug() << "[RunDAQ::ReadRFile]    Attaching socket to VMMAPPPort: " << m_config->getVMMAPPPort();
+    if(m_dbg) qDebug() << "[RunDAQ::ReadRFile]    Attaching socket to FECPort: " << m_config->getFECPort();
     bool bind = m_socket->bind(m_config->getFECPort(), QUdpSocket::ShareAddress);
     if(!bind) {
-        qDebug() << "Socket not bound";
+        qDebug() << "[RunDAQ::ReadRFile]    Socket unable to be bound!";
+        abort();
     }
 
     // grab the DAQ configuration items parsed and filled in ReadCFile
@@ -559,8 +560,8 @@ void RunDAQ::SendPulse()
         m_config->Sender(datagram, ip, m_config->getVMMAPPPort(), *m_socket);
         read = m_socket->waitForReadyRead(1000);
         if(read) {
-            // did not increment command counter on falling edge sender
-            processReply(ip, 1);
+            //command counter is the same as in previous processReply (we did not UpdateCounter in between)
+            processReply(ip);
         }
         else {
             qDebug() << "[RunDAQ::SendPulse]    Timeout (2) while waitinf for replies from VMM inpulser. Pulse lost.";
