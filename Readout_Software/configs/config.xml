@@ -70,7 +70,7 @@
 		<ch.polarity>wires</ch.polarity>
 		<ch.leakage.current>enabled</ch.leakage.current>
 		<analog.tristates>off</analog.tristates>
-		<double.leakage>off</double.leakage>
+		<double.leakage>on</double.leakage>
 		<gain>3.0</gain>
 		<peak.time>200</peak.time>
 		<neighbor.trigger>off</neighbor.trigger>
@@ -82,30 +82,30 @@
 		<out.buffer.mo>off</out.buffer.mo>
 		<out.buffer.pdo>off</out.buffer.pdo>
 		<out.buffer.tdo>off</out.buffer.tdo>
-		<channel.monitoring>2</channel.monitoring>
-		<monitoring.control>off</monitoring.control>
+		<channel.monitoring>0</channel.monitoring>
+		<monitoring.control>on</monitoring.control>
 		<monitor.pdo.out>off</monitor.pdo.out>
 		<ADCs>on</ADCs>
 		<sub.hyst.discr>off</sub.hyst.discr>
 		<direct.time>off</direct.time>
 		<direct.time.mode>TtP</direct.time.mode>
-		<conv.mode.8bit>off</conv.mode.8bit>
+		<conv.mode.8bit>on</conv.mode.8bit>
 		<enable.6bit>off</enable.6bit>
 		<ADC.10bit>200ns</ADC.10bit>
 		<ADC.8bit>100ns</ADC.8bit>
 		<ADC.6bit>low</ADC.6bit>
 		<dual.clock.data>off</dual.clock.data>
 		<dual.clock.6bit>off</dual.clock.6bit>
-		<threshold.DAC>300</threshold.DAC>
-		<test.pulse.DAC>400</test.pulse.DAC>
+		<threshold.DAC>100</threshold.DAC>
+		<test.pulse.DAC>600</test.pulse.DAC>
 	</global.settings>
 	<channel.00>
 		<polarity>wires</polarity>
 		<capacitance>off</capacitance>
 		<leakage.current>enabled</leakage.current>
-		<test.pulse>off</test.pulse>
+		<test.pulse>on</test.pulse>
 		<hidden.mode>off</hidden.mode>
-		<trim>10</trim>
+		<trim>0</trim>
 		<monitor.mode>off</monitor.mode>
 		<s10bADC.time.set>0</s10bADC.time.set>
 		<s08bADC.time.set>0</s08bADC.time.set>
@@ -211,7 +211,7 @@
 		<polarity>wires</polarity>
 		<capacitance>off</capacitance>
 		<leakage.current>enabled</leakage.current>
-		<test.pulse>on</test.pulse>
+		<test.pulse>off</test.pulse>
 		<hidden.mode>off</hidden.mode>
 		<trim>0</trim>
 		<monitor.mode>off</monitor.mode>
