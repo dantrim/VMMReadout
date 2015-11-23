@@ -50,12 +50,15 @@ class Configuration : public QObject
 	    	ilist.push_back(ACQ_Window);
 	    	ilist.push_back(Run_count);
         }
-
         quint16 getFECPort()      { return FECPort; }
         quint16 getDAQPort()      { return DAQPort; }
         quint16 getVMMASICPort()  { return VMMASICPort; }
         quint16 getVMMAPPPort()   { return VMMAPPPort; }
         quint16 getS6Port()       { return S6Port; }
+        QString getGainString()   { return _gainstring; }
+        int getTACSlope()         { return _TACslop; }
+        int getPeakInt()          { return _peakint; }
+        
 
     private:
 
