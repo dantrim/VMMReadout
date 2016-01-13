@@ -6,8 +6,10 @@ RunDAQ::RunDAQ(QObject *parent)
     : QObject(parent)
 {
     m_config = new Configuration();
+    m_builder = NULL;
     m_has_config  = false;
     m_is_testmode = false;
+    m_writeEvent = false;
     m_dbg = false;
     n_command_counter = 0;
 
@@ -357,8 +359,13 @@ void RunDAQ::Run()
         qDebug() << "[RunDAQ::Run]    DAQ socket not able to be bound.";
         abort();
     }
-    connect(m_socketDAQ, SIGNAL(readyRead()), this, SLOT(ReadEvent())); // call ReadEvent on any incoming data
+    #warning BINARY DUMP IS COMMENTED OUT!!!
+    //connect(m_socketDAQ, SIGNAL(readyRead()), this, SLOT(ReadEvent())); // call ReadEvent on any incoming data
 
+    if(m_writeEvent) {
+        InitializeEventBuilder();
+        connect(m_socketDAQ, SIGNAL(readyRead()), m_builder, SLOT(dataPending()));
+    }
     DataHeader();
     qDebug() << "[RunDAQ::Run]    Starting run...";
     if(m_timedrun) {
@@ -367,6 +374,16 @@ void RunDAQ::Run()
     else {
         PulserRun();
     }
+}
+
+void RunDAQ::InitializeEventBuilder()
+{
+    if(m_dbg) qDebug() << "[InitializeEventBuilder]";
+    m_builder = new EventBuilder();
+    m_builder->setDebug(m_dbg);
+    m_builder->setWriteData(m_writeEvent);
+    m_builder->initialize(m_socketDAQ, m_config);
+     
 }
 
 void RunDAQ::DataHeader()

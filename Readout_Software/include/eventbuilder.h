@@ -30,15 +30,23 @@ class EventBuilder : public QObject
         void setUseChanMap(bool useMap) { m_useChanMap = useMap; }
         void setIgnore16(bool ignore) { m_ignore16 = ignore; }
         void setWriteData(bool doWrite) { m_writeData = doWrite; }
+        void initialize(QUdpSocket *socket, Configuration* config);
 
-        void setupOutputTree();
+        void setupOutputTrees();
+
+        // get the strip # from th corresponding vmm (chip#, channel#)
+        int MappingMini2(int vmmchannel, int chipnumber);
+
+        unsigned int grayToBinary(unsigned int bcid_in);
+
+        
 
         // output file for ROOT trees
         TFile *m_fileDAQRoot;
 
         // output trees
         // vmm2 outputs
-        TTree *m_vmm2;
+        TTree *vmm2;
         TBranch *br_eventNumberFAFA;
         TBranch *br_triggerTimeStamp;
         TBranch *br_triggerCounter;
@@ -53,7 +61,7 @@ class EventBuilder : public QObject
         TBranch *br_chanId;
 
         // run configuration
-        TTree *m_run_properties;
+        TTree *run_properties;
         TBranch *br_runNumber;
         TBranch *br_gain;
         TBranch *br_tacSlope;
@@ -66,7 +74,6 @@ class EventBuilder : public QObject
         // methods
         QUdpSocket *m_socketDAQ;
         Configuration* m_config;
-        void initialize(const QUdpSocket *socket, const Configuration* config);
         // convert the input array of bits to a QByteArray object
         QByteArray bitsToBytes(QBitArray bits);
         // reverse the order of the input hex datagram and return as an int
@@ -80,18 +87,19 @@ class EventBuilder : public QObject
         QByteArray m_bufferEVT;
 
         // event data from vmm
-        int m_eventNumberFAFAVariable;
-        std::vector<int> m_triggerTimeStampVariable;
-        std::vector<int> m_triggerCounterVariable;
-        std::vector<int> m_chipIdVariable;
-        std::vector<int> m_evSizeVariable;
-        std::vector< std::vector<int> > m_tdoVariable;
-        std::vector< std::vector<int> > m_pdoVariable;
-        std::vector< std::vector<int> > m_flagVariable;
-        std::vector< std::vector<int> > m_threshVariable;
-        std::vector< std::vector<int> > m_bcidVariable;
-        std::vector< std::vector<int> > m_chanIdVariable;
-        std::vector< std::vector<int> > m_grayDecodedVariable;
+        int m_eventNumberFAFA;
+        int n_daqCnt;
+        std::vector<int> m_triggerTimeStamp;
+        std::vector<int> m_triggerCounter;
+        std::vector<int> m_chipId;
+        std::vector<int> m_evSize;
+        std::vector< std::vector<int> > m_tdo;
+        std::vector< std::vector<int> > m_pdo;
+        std::vector< std::vector<int> > m_flag;
+        std::vector< std::vector<int> > m_thresh;
+        std::vector< std::vector<int> > m_bcid;
+        std::vector< std::vector<int> > m_chanId;
+        std::vector< std::vector<int> > m_grayDecoded;
 
 
     signals :

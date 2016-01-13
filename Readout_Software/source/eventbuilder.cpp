@@ -20,7 +20,7 @@ EventBuilder::EventBuilder(QObject *parent)
     m_socketDAQ = NULL;
 
 }
-void EventBuilder::initialize(const QUdpSocket *socket, const Configuration *config)
+void EventBuilder::initialize(QUdpSocket *socket, Configuration *config)
 {
     if(socket->state() == QAbstractSocket::BoundState) {
         m_socketDAQ = socket;
@@ -31,7 +31,7 @@ void EventBuilder::initialize(const QUdpSocket *socket, const Configuration *con
     }
     m_config = config;
 
-    EventBuilder::setupOutputTree();
+    EventBuilder::setupOutputTrees();
 }
 void EventBuilder::setupOutputTrees()
 {
@@ -40,53 +40,54 @@ void EventBuilder::setupOutputTrees()
 
     vmm2 = new TTree("vmm2", "vmm2");
     // clear the branch variables
-    m_tdoVariable.clear();
-    m_pdoVariable.clear();
-    m_chIdVariable.clear();
-    m_bcidVariable.clear();
-    m_flagVariable.clear();
-    m_threshVariable.clear();
-    m_grayDecodedVariable.clear();
-    m_neighborVariableForCalibration.clear();
-    m_chipIdVariable.clear();
-    m_evSizeVariable.clear();
-    m_triggerTimeStampVariable.clear();
-    m_triggerCounterVariable.clear();
+    m_tdo.clear();
+    m_pdo.clear();
+    m_chanId.clear();
+    m_bcid.clear();
+    m_flag.clear();
+    m_thresh.clear();
+    m_grayDecoded.clear();
+    //m_neighborForCalibration.clear();
+    m_chipId.clear();
+    m_evSize.clear();
+    m_triggerTimeStamp.clear();
+    m_triggerCounter.clear();
 
-    br_eventNumberFAFA  = vmm2->Branch("eventFAFA", &m_eventNumberFAFAVariable);
-    br_triggerTimeStamp = vmm2->Branch("triggerTimeStamp", "std::vector<int>", &m_triggerTimeStampVariable);
-    br_triggerCounter   = vmm2->Branch("triggerCounter", "std::vector<int>", &m_triggerCounterVariable);
-    br_chipId           = vmm2->Branch("chip", "std::vector<int>", &m_chipIdVariable);
-    br_evSize           = vmm2->Branch("eventSize", "std::vector<int>", &m_evSizeVariable);
-    br_tdo              = vmm2->Branch("tdo", "std::vector<vector<int> >", &m_tdoVariable);
-    br_pdo              = vmm2->Branch("pdo", "std::vector<vector<int> >", &m_pdoVariable);
-    br_flag             = vmm2->Branch("flag", "std::vector<vector<int> >", &m_flagVariable);
-    br_thresh           = vmm2->Branch("threshold", "std::vector<vector<int> >", &m_threshVariable);
-    br_bcid             = vmm2->Branch("bcid", "std::vector<vector<int> >", &m_bcidVariable);
-    br_grayDecoded      = vmm2->Branch("grayDecoded", "std::vector<vector<int> >", &m_grayDecodedVariable);
+    br_eventNumberFAFA  = vmm2->Branch("eventFAFA", &m_eventNumberFAFA);
+    n_daqCnt = 0;
+    br_triggerTimeStamp = vmm2->Branch("triggerTimeStamp", "std::vector<int>", &m_triggerTimeStamp);
+    br_triggerCounter   = vmm2->Branch("triggerCounter", "std::vector<int>", &m_triggerCounter);
+    br_chipId           = vmm2->Branch("chip", "std::vector<int>", &m_chipId);
+    br_evSize           = vmm2->Branch("eventSize", "std::vector<int>", &m_evSize);
+    br_tdo              = vmm2->Branch("tdo", "std::vector<vector<int> >", &m_tdo);
+    br_pdo              = vmm2->Branch("pdo", "std::vector<vector<int> >", &m_pdo);
+    br_flag             = vmm2->Branch("flag", "std::vector<vector<int> >", &m_flag);
+    br_thresh           = vmm2->Branch("threshold", "std::vector<vector<int> >", &m_thresh);
+    br_bcid             = vmm2->Branch("bcid", "std::vector<vector<int> >", &m_bcid);
+    br_grayDecoded      = vmm2->Branch("grayDecoded", "std::vector<vector<int> >", &m_grayDecoded);
 
     run_properties = new TTree("run_properties", "run_properties");
-    double gainVariable;
-    int runNumberVariable;
-    int tacSlopeVariable;
-    int peakTimeVariable;
-    int dacCountsVariable;
-    int pulserCountsVariable;
-    int angleVariable;
+    double gain;
+    int runNumber;
+    int tacSlope;
+    int peakTime;
+    int dacCounts;
+    int pulserCounts;
+    int angle;
 
-    br_runNumber    = run_properties->Branch("runNumber", &runNumberVariable);
-    br_gain         = run_properties->Branch("gain", &gainVariable);
-    br_tacSlope     = run_properties->Branch("tacSlope", &tacSlopeVariable);
-    br_peakTime     = run_properties->Branch("peakTime", &peakTimeVariable);
-    br_dacCounts    = run_properties->Branch("dacCounts", &dacCountsVariable);
-    br_pulserCounts = run_properties->Branch("pulserCounts", &pulserCountsVariable);
-    br_angle        = run_properties->Branch("angle", &angleVariable);
+    br_runNumber    = run_properties->Branch("runNumber", &runNumber);
+    br_gain         = run_properties->Branch("gain", &gain);
+    br_tacSlope     = run_properties->Branch("tacSlope", &tacSlope);
+    br_peakTime     = run_properties->Branch("peakTime", &peakTime);
+    br_dacCounts    = run_properties->Branch("dacCounts", &dacCounts);
+    br_pulserCounts = run_properties->Branch("pulserCounts", &pulserCounts);
+    br_angle        = run_properties->Branch("angle", &angle);
 
-    gainVariable         = m_config->getGainString().toDouble();
-    tacSlopeVariable     = m_config->getTACSlope();
-    peakTimeVariable     = m_config->getPeakInt();
-    dacCountsVariable    = m_config->getThresholdDAC();
-    pulserCountsVariable = m_config->getTestPulseDAC();
+    gain         = m_config->getGainString().toDouble();
+    tacSlope     = m_config->getTACSlope();
+    peakTime     = m_config->getPeakInt();
+    dacCounts    = m_config->getThresholdDAC();
+    pulserCounts = m_config->getTestPulseDAC();
 
     // fill dac conf
     br_gain->Fill();
@@ -119,7 +120,7 @@ void EventBuilder::dataPending()
             qDebug() << "[EventBuilder::dataPending]    Empty event";
         }
 
-        dataFrameString = m_bufferEVT.mid(0,4).toHex();
+        QString dataFrameString = m_bufferEVT.mid(0,4).toHex();
         if(dataFrameString != "fafafafa") {
             // full incoming data buffer
             QString incomingData = m_bufferEVT.mid(12,m_bufferEVT.size()).toHex();
@@ -138,15 +139,15 @@ void EventBuilder::dataPending()
                 qDebug() << "[EventBuilder::dataPending]    Data   : " << incomingData;
             }
 
-            // event vars
-            vector<int> pdo; pdo.clear();
-            vector<int> tdo; tdo.clear();
-            vector<int> bcid; bcid.clear();
-            vector<int> grayDecoded; grayDecoded.clear();
-            vector<int> channel; channel.clear();
-            vector<int> flag; flag.clear();
-            vector<int> thresh; thresh.clear();
-            vector<int> neighbor; neighbor.clear();
+            // event vars (temp containers for this event to attach to the output tree)
+            vector<int> pdo;            pdo.clear();
+            vector<int> tdo;            tdo.clear();
+            vector<int> bcid;           bcid.clear();
+            vector<int> grayDecoded;    grayDecoded.clear();
+            vector<int> channel;        channel.clear();
+            vector<int> flag;           flag.clear();
+            vector<int> thresh;         thresh.clear();
+            vector<int> neighbor;       neighbor.clear();
 
             // now loop over the event data (incoming bytes >12) each packet is 8 bytes long
             for(int i = 12; i < m_bufferEVT.size(); ) {
@@ -157,7 +158,7 @@ void EventBuilder::dataPending()
 
                 if(m_dbg) {
                     QString b1_BeforeRev, b1_AftRev;
-                    qDebug() << "[EventBuilder::dataPending]    bytes 1 before rev : " << b1_BeforeRef.number(bytesInt1);
+                    qDebug() << "[EventBuilder::dataPending]    bytes 1 before rev : " << b1_BeforeRev.number(bytesInt1);
                     qDebug() << "[EventBuilder::dataPending]    bytes 1 after rev  : " << b1_AftRev.number(bytesInt1tmp);
                 } // dbg
 
@@ -168,7 +169,7 @@ void EventBuilder::dataPending()
                 flag.push_back(flag_);
 
                 // threshold
-                uint treshold_ = (bytesInt2 & 0x2) >> 1;
+                uint threshold_ = (bytesInt2 & 0x2) >> 1;
                 thresh.push_back(threshold_);
 
                 // channel input
@@ -220,7 +221,7 @@ void EventBuilder::dataPending()
                 // bcid info
                 QString bcid_s1 = datastring.mid(16,6);
                 QString bcid_s2 = datastring.mid(26,6);
-                QStrinb bcid_final;
+                QString bcid_final;
                 bcid_final.append(bcid_s2);
                 bcid_final.append(bcid_s1);
                 uint bcid_ = bcid_final.toUInt(&ok,2);
@@ -252,39 +253,53 @@ void EventBuilder::dataPending()
 
             // now fill the branches with the event data
             if(m_writeData) {
-             //   m_eventNumbefFAFAVariable = // TODO : implement this var
-                m_triggerTimeStampVariable.push_back(trigTimeStampString.toInt(&ok,16));
-                m_triggerCounterVariable.push_back(trigCntString.toInt(&ok,16));
-                m_chipIdVariable.push_back(chip.toInt(&ok,16));
-                m_evSizeVariable.push_back(m_bufferEVT.size()-12);
+             //   m_eventNumbefFAFA = // TODO : implement this var
+                m_triggerTimeStamp.push_back(trigTimeStampString.toInt(&ok,16));
+                m_triggerCounter.push_back(trigCntString.toInt(&ok,16));
+                m_chipId.push_back(chip.toInt(&ok,16));
+                m_evSize.push_back(m_bufferEVT.size()-12);
                 
-                m_tdoVariable.push_back(tdo);
-                m_pdoVariable.push_back(pdo);
-                m_flagVariable.push_back(flag);
-                m_threshVariable.push_back(thresh);
-                m_bcidVariable.push_back(bcid);
-                m_chanIdVariable.push_back(bcid);
-                m_grayDecodedVariable.push_back(grayDecoded);
+                m_tdo.push_back(tdo);
+                m_pdo.push_back(pdo);
+                m_flag.push_back(flag);
+                m_thresh.push_back(thresh);
+                m_bcid.push_back(bcid);
+                m_chanId.push_back(channel);
+                m_grayDecoded.push_back(grayDecoded);
             }
                 
 
         } // !=fafafafa
         else if(dataFrameString == "fafafafa") {
-
+            n_daqCnt++;
+            m_eventNumberFAFA = n_daqCnt - 1;
 
             if(m_writeData) {
+                if(m_dbg) {
+                    qDebug() << "[EventBuilder::dataPending]    Writing event with size: " << m_chanId.size();
+                    for(int i = 0; i < (int)m_chanId.size(); i++) {
+                        for(int j = 0; j < (int)m_chanId[i].size(); j++) {
+                            qDebug() << "              >> i: " << i << ",  j: " << j << ",  channel: " << m_chanId[i][j];
+                        } // j
+                    } // i
+                } // dbg
+
+                // fill the output tree
                 vmm2->Fill();
-                m_triggerTimeStampVariable.clear();
-                m_triggerCounterVariable.clear();
-                m_chipIdVariable.clear();
-                m_evSizeVariable.clear();
-                m_tdoVariable.clear();
-                m_pdoVariable.clear();
-                m_flagVariable.clear();
-                m_threshVariable.clear();
-                m_bcidVariable.clear();
-                m_chanIdVariable.clear();
-                m_grayDecodedVariable.clear();
+                vmm2->Write("",TObject::kOverwrite); 
+
+                // clear the data now that we have read in the full event
+                m_triggerTimeStamp.clear();
+                m_triggerCounter.clear();
+                m_chipId.clear();
+                m_evSize.clear();
+                m_tdo.clear();
+                m_pdo.clear();
+                m_flag.clear();
+                m_thresh.clear();
+                m_bcid.clear();
+                m_chanId.clear();
+                m_grayDecoded.clear();
             }
 
         } // == fafafafa
@@ -313,10 +328,10 @@ quint32 EventBuilder::reverse32(QString datagram_hex)
 QByteArray EventBuilder::bitsToBytes(QBitArray inbits)
 {
     QByteArray bytes;
-    bytes.resize(bits.count() / 8); // integer division
+    bytes.resize(inbits.count() / 8); // integer division
     bytes.fill(0);
-    for(int b = 0; b < bits.count(); ++b) {
-        bytes[b/8] = ( bytes.at(b/8) | ((bits[b]?1:0)<<(7-(b%8))));
+    for(int b = 0; b < inbits.count(); ++b) {
+        bytes[b/8] = ( bytes.at(b/8) | ((inbits[b]?1:0)<<(7-(b%8))));
     }
     return bytes;
 }

@@ -14,6 +14,7 @@ configpath_="../include"
 
 QT += core
 QT += network
+QT += xmlpatterns
 QT += xml
 CONFIG += console
 CONFIG += declarative_debug
@@ -26,6 +27,7 @@ LIBS += -L$(ROOTSYS)/lib -lCore -lCint -lRIO -lNet \
             -lHist -lGraf -lGraf3d -lGpad -lTree \
             -lRint -lPostscript -lMatrix -lPhysics \
             -lGui -lRGL -lMathCore
+LIBS += -L./objects -lMylib
 
 
 INCLUDEPATH += $$headerpath_/

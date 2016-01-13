@@ -20,7 +20,7 @@
 		<acq.sync>100</acq.sync>
 		<acq.window>4096</acq.window>
 		<run.mode>pulser</run.mode>
-		<run.count>50</run.count>
+		<run.count>20</run.count>
 		<output.path>/Users/dantrim/Desktop/</output.path>
 		<output.filename>tmp.txt</output.filename>
 	</trigger.daq>
