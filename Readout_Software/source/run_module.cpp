@@ -478,10 +478,10 @@ void RunDAQ::processReply(const QString &sentip, int command_delay)
             qDebug() << "[RunDAQ::processReply]    VMM with IP: " << ip << " sent a reply to command: " << command_count_to_check;
         } // ip
     } // dbg
-    if(m_replies.size()>1) {
+    if(m_replies.size()>0) {
         foreach(const QString &ip, m_replies) {
             if(ip != sentip) {
-                qDebug() << "[RunDAQ::processReply]    VMM with IP: " << ip << " sent a packet at command number: " << command_count_to_check << " which was not actually to it. Out fo sync.";
+                qDebug() << "[RunDAQ::processReply]    VMM with IP: " << ip << " sent a packet at command number: " << command_count_to_check << " which was not actually to it. Out of sync.";
                 abort();
             }
         } // ip loop
