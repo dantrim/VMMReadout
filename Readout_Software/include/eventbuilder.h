@@ -21,10 +21,8 @@
 
 class EventBuilder : public QObject
 {
-    Q_OBJECT
-
     public :
-        explicit EventBuilder(QObject *parent = 0);
+        EventBuilder();
         virtual ~EventBuilder(){};
         void setDebug(bool dbg) { m_dbg = dbg; }
         void setUseChanMap(bool useMap) { m_useChanMap = useMap; }
@@ -39,7 +37,7 @@ class EventBuilder : public QObject
 
         unsigned int grayToBinary(unsigned int bcid_in);
 
-        
+        void writeData(QByteArray& array);
 
         // output file for ROOT trees
         TFile *m_fileDAQRoot;
@@ -101,13 +99,6 @@ class EventBuilder : public QObject
         std::vector< std::vector<int> > m_chanId;
         std::vector< std::vector<int> > m_grayDecoded;
 
-
-    signals :
-
-    public slots :
-        void dataPending(); 
-
-    private slots :
 
 }; // class EventBuilder
 

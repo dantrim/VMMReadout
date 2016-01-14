@@ -802,29 +802,16 @@ int Configuration::SendConfig(){
 void Configuration::Sender(QByteArray blockOfData, const QString &ip, quint16 destPort)
 {
 	if(pinged==true && bnd==true){
-			
-				
-	socket->writeDatagram(blockOfData,QHostAddress(ip), destPort);
-	if(debug)	qDebug()<<"IP:"<<ip<<", data:"<<blockOfData.toHex()<<", size:"<<blockOfData.size();
-
-	}else{
-			
-		qDebug() <<"Error from socket: "<< socket->errorString()<<", Local Port = "<<socket->localPort()<< ", Bind Reply: "<<bnd<<" Ping status: "<<pinged;
+	    socket->writeDatagram(blockOfData,QHostAddress(ip), destPort);
+	    if(debug)	qDebug()<<"IP:"<<ip<<", data:"<<blockOfData.toHex()<<", size:"<<blockOfData.size();
+	} else {
+		qDebug() <<"[Configuration::Sender]    Error from socket: "<< socket->errorString()<<", Local Port = "<<socket->localPort()<< ", Bind Reply: "<<bnd<<" Ping status: "<<pinged;
 		socket->close();
 		socket->disconnectFromHost();
 		abort();
 	}
 }
 
-QByteArray Configuration::bitsToBytes(QBitArray bits) {
-	QByteArray bytes;
-	bytes.resize(bits.count()/8);//add more §for a header of 8 bits????
-	bytes.fill(0);
-	// Convert from QBitArray to QByteArray
-	for(int b=0; b<bits.count(); ++b)
-		bytes[b/8] = ( bytes.at(b/8) | ((bits[b]?1:0)<<(7-(b%8))));
-	return bytes;
-}
 
 void Configuration::Sender(QByteArray blockOfData, const QString &ip, quint16 destPort, QUdpSocket& socket)
 {
@@ -834,10 +821,10 @@ void Configuration::Sender(QByteArray blockOfData, const QString &ip, quint16 de
     bool send_ok = (boards_pinged && socket_bound);
     if(!send_ok) {
         if(!boards_pinged) {
-            qDebug() << "[Configuration::Sender]    Ping status: " << boards_pinged;
+            qDebug() << "[Configuration::Sender]    Unable to send datagram. Ping status: " << boards_pinged;
         }
         if(!socket_bound) {
-            qDebug() << "[Configuration::Sender]    Socket is not in bound state. Error from socket: " << socket.errorString() << ", Local Port: " << socket.localPort();
+            qDebug() << "[Configuration::Sender]    Unable to send datagram. Socket is not in bound state. Error from socket: " << socket.errorString() << ", Local Port: " << socket.localPort();
         }
         socket.close();
         socket.disconnectFromHost();
@@ -848,6 +835,16 @@ void Configuration::Sender(QByteArray blockOfData, const QString &ip, quint16 de
         socket.writeDatagram(blockOfData, QHostAddress(ip), destPort);
         if(debug) qDebug() << "IP: " << ip << ", data sent: " << blockOfData.toHex() << ", size: " << blockOfData.size();
     }
+}
+
+QByteArray Configuration::bitsToBytes(QBitArray bits) {
+	QByteArray bytes;
+	bytes.resize(bits.count()/8);//add more §for a header of 8 bits????
+	bytes.fill(0);
+	// Convert from QBitArray to QByteArray
+	for(int b=0; b<bits.count(); ++b)
+		bytes[b/8] = ( bytes.at(b/8) | ((bits[b]?1:0)<<(7-(b%8))));
+	return bytes;
 }
 
 void Configuration::UpdateCounter(){

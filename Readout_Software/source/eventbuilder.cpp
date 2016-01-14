@@ -9,9 +9,7 @@
 #include <vector>
 using namespace std;
 
-EventBuilder::EventBuilder(QObject *parent)
-    : QObject(parent)
-
+EventBuilder::EventBuilder()
 {
     m_dbg = false;
     m_useChanMap = false;
@@ -102,208 +100,203 @@ void EventBuilder::setupOutputTrees()
 
 }
 
-void EventBuilder::dataPending()
+void EventBuilder::writeData(QByteArray& array)
 {
-    qDebug() << "[EventBuilder::dataPending]    dataPending()";
-    if( !(m_socketDAQ->state() == QAbstractSocket::BoundState) ){
-        qDebug() << "[EventBuilder::dataPending]    DAQ socket is not bound!";
-        abort();
-    }
 
     bool ok;
-    while(m_socketDAQ->hasPendingDatagrams()) {
-        m_bufferEVT.resize(m_socketDAQ->pendingDatagramSize());
-        m_socketDAQ->readDatagram(m_bufferEVT.data(), m_bufferEVT.size());
+    m_bufferEVT.clear();
+    m_bufferEVT.resize(array.size());
+    m_bufferEVT.append(array);
+    //m_socketDAQ->readDatagram(m_bufferEVT.data(), m_bufferEVT.size());
 
-        if(m_bufferEVT.size() == 12) {
-            // bytes >12 are the event variables
-            qDebug() << "[EventBuilder::dataPending]    Empty event";
+    if(m_bufferEVT.size() == 12) {
+        // bytes >12 are the event variables
+        qDebug() << "[EventBuilder::writeData]    Empty event";
+    }
+
+    QString dataFrameString = m_bufferEVT.mid(0,4).toHex();
+    if(dataFrameString != "fafafafa") {
+        // full incoming data buffer
+        QString incomingData = m_bufferEVT.mid(12,m_bufferEVT.size()).toHex();
+        // data header
+        QString dataHeader = m_bufferEVT.mid(4,4).toHex();
+        // chip #
+        QString chip = m_bufferEVT.mid(7,1).toHex();
+        // trigger counter
+        QString trigCntString = m_bufferEVT.mid(8,2).toHex();
+        // trigger time stamp
+        QString trigTimeStampString = m_bufferEVT.mid(10,2).toHex();
+
+        if(m_dbg) {
+            qDebug() << "[EventBuilder::writeData]    Header : " << dataHeader;
+            qDebug() << "[EventBuilder::writeData]    Chip   : " << chip;
+            qDebug() << "[EventBuilder::writeData]    Data   : " << incomingData;
         }
 
-        QString dataFrameString = m_bufferEVT.mid(0,4).toHex();
-        if(dataFrameString != "fafafafa") {
-            // full incoming data buffer
-            QString incomingData = m_bufferEVT.mid(12,m_bufferEVT.size()).toHex();
-            // data header
-            QString dataHeader = m_bufferEVT.mid(4,4).toHex();
-            // chip #
-            QString chip = m_bufferEVT.mid(7,1).toHex();
-            // trigger counter
-            QString trigCntString = m_bufferEVT.mid(8,2).toHex();
-            // trigger time stamp
-            QString trigTimeStampString = m_bufferEVT.mid(10,2).toHex();
+        // event vars (temp containers for this event to attach to the output tree)
+        vector<int> pdo;            pdo.clear();
+        vector<int> tdo;            tdo.clear();
+        vector<int> bcid;           bcid.clear();
+        vector<int> grayDecoded;    grayDecoded.clear();
+        vector<int> channel;        channel.clear();
+        vector<int> flag;           flag.clear();
+        vector<int> thresh;         thresh.clear();
+        vector<int> neighbor;       neighbor.clear();
+
+        // now loop over the event data (incoming bytes >12) each packet is 8 bytes long
+        for(int i = 12; i < m_bufferEVT.size(); ) {
+            quint32 bytesInt1tmp = reverse32(m_bufferEVT.mid(i,4).toHex());
+            QString bytesInt1String = m_bufferEVT.mid(i,4).toHex();
+            quint32 bytesInt1 = bytesInt1String.toUInt(&ok,16);
+            quint32 bytesInt2 = reverse32(m_bufferEVT.mid(i+4,4).toHex());
 
             if(m_dbg) {
-                qDebug() << "[EventBuilder::dataPending]    Header : " << dataHeader;
-                qDebug() << "[EventBuilder::dataPending]    Chip   : " << chip;
-                qDebug() << "[EventBuilder::dataPending]    Data   : " << incomingData;
+                QString b1_BeforeRev, b1_AftRev;
+                qDebug() << "[EventBuilder::writeData]    bytes 1 before rev : " << b1_BeforeRev.number(bytesInt1);
+                qDebug() << "[EventBuilder::writeData]    bytes 1 after rev  : " << b1_AftRev.number(bytesInt1tmp);
+            } // dbg
+
+            // dantrim -- do we even use the reversed ?
+
+            // flag
+            uint flag_ = (bytesInt2 & 0x1);
+            flag.push_back(flag_);
+
+            // threshold
+            uint threshold_ = (bytesInt2 & 0x2) >> 1;
+            thresh.push_back(threshold_);
+
+            // channel input
+            uint channelin_ = (bytesInt2 & 0xfc) >> 2; // 0xfc = 0000 0000 1111 1100
+            uint channel_remapped = 0;
+            // > use the vmmchannel # or the strip number (the pin numbers do not equal strip numbers)
+            if(m_useChanMap) {
+                channel_remapped = EventBuilder::MappingMini2(channelin_, chip.toInt(&ok,16));
+            } else {
+                channel_remapped = channelin_;
+            }
+            channel.push_back(channel_remapped);
+
+            QString datastring    = "00000000000000000000000000000000";
+            QString datastringtmp = "00000000000000000000000000000000";
+            datastringtmp = datastringtmp.number(bytesInt1,2);
+            for(int j = 0; j < datastringtmp.size(); j++) {
+                QString tmp = datastringtmp.at(datastringtmp.size()-1-j);
+                datastring.replace(j,1,tmp);
+            }
+            // i.e. datastring0 is reversed bytesInt1 (in string and binary)
+            if(m_dbg) {
+                qDebug() << "[EventBuilder::writeData]    bytes int 1 string       : " << datastringtmp;
+                qDebug() << "[EventBuilder::writeData]    bytes int 1 string (rev) : " << datastring;
             }
 
-            // event vars (temp containers for this event to attach to the output tree)
-            vector<int> pdo;            pdo.clear();
-            vector<int> tdo;            tdo.clear();
-            vector<int> bcid;           bcid.clear();
-            vector<int> grayDecoded;    grayDecoded.clear();
-            vector<int> channel;        channel.clear();
-            vector<int> flag;           flag.clear();
-            vector<int> thresh;         thresh.clear();
-            vector<int> neighbor;       neighbor.clear();
-
-            // now loop over the event data (incoming bytes >12) each packet is 8 bytes long
-            for(int i = 12; i < m_bufferEVT.size(); ) {
-                quint32 bytesInt1tmp = reverse32(m_bufferEVT.mid(i,4).toHex());
-                QString bytesInt1String = m_bufferEVT.mid(i,4).toHex();
-                quint32 bytesInt1 = bytesInt1String.toUInt(&ok,16);
-                quint32 bytesInt2 = reverse32(m_bufferEVT.mid(i+4,4).toHex());
-
-                if(m_dbg) {
-                    QString b1_BeforeRev, b1_AftRev;
-                    qDebug() << "[EventBuilder::dataPending]    bytes 1 before rev : " << b1_BeforeRev.number(bytesInt1);
-                    qDebug() << "[EventBuilder::dataPending]    bytes 1 after rev  : " << b1_AftRev.number(bytesInt1tmp);
-                } // dbg
-
-                // dantrim -- do we even use the reversed ?
-
-                // flag
-                uint flag_ = (bytesInt2 & 0x1);
-                flag.push_back(flag_);
-
-                // threshold
-                uint threshold_ = (bytesInt2 & 0x2) >> 1;
-                thresh.push_back(threshold_);
-
-                // channel input
-                uint channelin_ = (bytesInt2 & 0xfc) >> 2; // 0xfc = 0000 0000 1111 1100
-                uint channel_remapped = 0;
-                // > use the vmmchannel # or the strip number (the pin numbers do not equal strip numbers)
-                if(m_useChanMap) {
-                    channel_remapped = EventBuilder::MappingMini2(channelin_, chip.toInt(&ok,16));
-                } else {
-                    channel_remapped = channelin_;
-                }
-                channel.push_back(channel_remapped);
-
-                QString datastring    = "00000000000000000000000000000000";
-                QString datastringtmp = "00000000000000000000000000000000";
-                datastringtmp = datastringtmp.number(bytesInt1,2);
-                for(int j = 0; j < datastringtmp.size(); j++) {
-                    QString tmp = datastringtmp.at(datastringtmp.size()-1-j);
-                    datastring.replace(j,1,tmp);
-                }
-                // i.e. datastring0 is reversed bytesInt1 (in string and binary)
-                if(m_dbg) {
-                    qDebug() << "[EventBuilder::dataPending]    bytes int 1 string       : " << datastringtmp;
-                    qDebug() << "[EventBuilder::DataPending]    bytes int 1 string (rev) : " << datastring;
-                }
-
-                // grab the PDO
-                QString q_s1 = datastring.left(8);
-                QString q_s2 = datastring.mid(14,2); 
-                QString charge_final;
-                charge_final.append(q_s2);
-                charge_final.append(q_s1);
-                uint charge_ = 0;
-                if(charge_final.right(4)=="0000" && m_ignore16) charge_ = 1025;
-                else {
-                    charge_ = charge_final.toUInt(&ok,2);
-                }
-                pdo.push_back(charge_);
-
-                // grab the TAC info
-                QString TAC_s1 = datastring.mid(8,6);
-                QString TAC_s2 = datastring.mid(22,2);
-                QString TAC_final;
-                TAC_final.append(TAC_s2);
-                TAC_final.append(TAC_s1);
-                uint tac_ = TAC_final.toUInt(&ok,2);
-                tdo.push_back(tac_);
-
-                // bcid info
-                QString bcid_s1 = datastring.mid(16,6);
-                QString bcid_s2 = datastring.mid(26,6);
-                QString bcid_final;
-                bcid_final.append(bcid_s2);
-                bcid_final.append(bcid_s1);
-                uint bcid_ = bcid_final.toUInt(&ok,2);
-                bcid.push_back(bcid_);
-
-                // gray decoded
-                uint gray_bin = EventBuilder::grayToBinary(bcid_);
-                grayDecoded.push_back(gray_bin);
-
-                if(m_dbg) {
-                    QString yep = "[EventBuilder::dataPending]    ";
-                    qDebug() << yep << "Before reverse, 1: " << m_bufferEVT.mid(i,4).toHex()<<",  2: " << m_bufferEVT.mid(i+4,4).toHex();
-                    qDebug() << yep << "After, bytesInt 1: " << bytesInt1 << ",  2: " << bytesInt2;
-                    qDebug() << yep << "Flag             : " << flag_;
-                    qDebug() << yep << "Threshold        : " << threshold_;
-                    qDebug() << yep << "Channel          : " << channel_remapped;
-                    qDebug() << yep << "Charge           : " << charge_;
-                    qDebug() << yep << "Bits             : " << datastring;
-                    qDebug() << yep << "CH1              : " << q_s1;
-                    qDebug() << yep << "CH2              : " << q_s2;
-                    qDebug() << yep << "CH final         : " << charge_final;
-                    qDebug() << yep << "TAC              : " << tac_;
-                    qDebug() << yep << "BCID             : " << bcid_;
-                }
-
-                // move to next set of 8 bytes
-                i = i + 8;
-            } // i
-
-            // now fill the branches with the event data
-            if(m_writeData) {
-             //   m_eventNumbefFAFA = // TODO : implement this var
-                m_triggerTimeStamp.push_back(trigTimeStampString.toInt(&ok,16));
-                m_triggerCounter.push_back(trigCntString.toInt(&ok,16));
-                m_chipId.push_back(chip.toInt(&ok,16));
-                m_evSize.push_back(m_bufferEVT.size()-12);
-                
-                m_tdo.push_back(tdo);
-                m_pdo.push_back(pdo);
-                m_flag.push_back(flag);
-                m_thresh.push_back(thresh);
-                m_bcid.push_back(bcid);
-                m_chanId.push_back(channel);
-                m_grayDecoded.push_back(grayDecoded);
+            // grab the PDO
+            QString q_s1 = datastring.left(8);
+            QString q_s2 = datastring.mid(14,2); 
+            QString charge_final;
+            charge_final.append(q_s2);
+            charge_final.append(q_s1);
+            uint charge_ = 0;
+            if(charge_final.right(4)=="0000" && m_ignore16) charge_ = 1025;
+            else {
+                charge_ = charge_final.toUInt(&ok,2);
             }
-                
+            pdo.push_back(charge_);
 
-        } // !=fafafafa
-        else if(dataFrameString == "fafafafa") {
-            n_daqCnt++;
-            m_eventNumberFAFA = n_daqCnt - 1;
+            // grab the TAC info
+            QString TAC_s1 = datastring.mid(8,6);
+            QString TAC_s2 = datastring.mid(22,2);
+            QString TAC_final;
+            TAC_final.append(TAC_s2);
+            TAC_final.append(TAC_s1);
+            uint tac_ = TAC_final.toUInt(&ok,2);
+            tdo.push_back(tac_);
 
-            if(m_writeData) {
-                if(m_dbg) {
-                    qDebug() << "[EventBuilder::dataPending]    Writing event with size: " << m_chanId.size();
-                    for(int i = 0; i < (int)m_chanId.size(); i++) {
-                        for(int j = 0; j < (int)m_chanId[i].size(); j++) {
-                            qDebug() << "              >> i: " << i << ",  j: " << j << ",  channel: " << m_chanId[i][j];
-                        } // j
-                    } // i
-                } // dbg
+            // bcid info
+            QString bcid_s1 = datastring.mid(16,6);
+            QString bcid_s2 = datastring.mid(26,6);
+            QString bcid_final;
+            bcid_final.append(bcid_s2);
+            bcid_final.append(bcid_s1);
+            uint bcid_ = bcid_final.toUInt(&ok,2);
+            bcid.push_back(bcid_);
 
-                // fill the output tree
-                vmm2->Fill();
-                vmm2->Write("",TObject::kOverwrite); 
+            // gray decoded
+            uint gray_bin = EventBuilder::grayToBinary(bcid_);
+            grayDecoded.push_back(gray_bin);
 
-                // clear the data now that we have read in the full event
-                m_triggerTimeStamp.clear();
-                m_triggerCounter.clear();
-                m_chipId.clear();
-                m_evSize.clear();
-                m_tdo.clear();
-                m_pdo.clear();
-                m_flag.clear();
-                m_thresh.clear();
-                m_bcid.clear();
-                m_chanId.clear();
-                m_grayDecoded.clear();
+            if(m_dbg) {
+                QString yep = "[EventBuilder::writeData]    ";
+                qDebug() << yep << "Before reverse, 1: " << m_bufferEVT.mid(i,4).toHex()<<",  2: " << m_bufferEVT.mid(i+4,4).toHex();
+                qDebug() << yep << "After, bytesInt 1: " << bytesInt1 << ",  2: " << bytesInt2;
+                qDebug() << yep << "Flag             : " << flag_;
+                qDebug() << yep << "Threshold        : " << threshold_;
+                qDebug() << yep << "Channel          : " << channel_remapped;
+                qDebug() << yep << "Charge           : " << charge_;
+                qDebug() << yep << "Bits             : " << datastring;
+                qDebug() << yep << "CH1              : " << q_s1;
+                qDebug() << yep << "CH2              : " << q_s2;
+                qDebug() << yep << "CH final         : " << charge_final;
+                qDebug() << yep << "TAC              : " << tac_;
+                qDebug() << yep << "BCID             : " << bcid_;
             }
 
-        } // == fafafafa
-    } // while datagrams
+            // move to next set of 8 bytes
+            i = i + 8;
+        } // i
+
+        // now fill the branches with the event data
+        if(m_writeData) {
+         //   m_eventNumbefFAFA = // TODO : implement this var
+            m_triggerTimeStamp.push_back(trigTimeStampString.toInt(&ok,16));
+            m_triggerCounter.push_back(trigCntString.toInt(&ok,16));
+            m_chipId.push_back(chip.toInt(&ok,16));
+            m_evSize.push_back(m_bufferEVT.size()-12);
+            
+            m_tdo.push_back(tdo);
+            m_pdo.push_back(pdo);
+            m_flag.push_back(flag);
+            m_thresh.push_back(thresh);
+            m_bcid.push_back(bcid);
+            m_chanId.push_back(channel);
+            m_grayDecoded.push_back(grayDecoded);
+        }
+            
+
+    } // !=fafafafa
+    else if(dataFrameString == "fafafafa") {
+        n_daqCnt++;
+        m_eventNumberFAFA = n_daqCnt - 1;
+
+        if(m_writeData) {
+            if(m_dbg) {
+                qDebug() << "[EventBuilder::writeData]    Writing event with size: " << m_chanId.size();
+                for(int i = 0; i < (int)m_chanId.size(); i++) {
+                    for(int j = 0; j < (int)m_chanId[i].size(); j++) {
+                        qDebug() << "              >> i: " << i << ",  j: " << j << ",  channel: " << m_chanId[i][j];
+                    } // j
+                } // i
+            } // dbg
+
+            // fill the output tree
+            vmm2->Fill();
+            vmm2->Write("",TObject::kOverwrite); 
+
+            // clear the data now that we have read in the full event
+            m_triggerTimeStamp.clear();
+            m_triggerCounter.clear();
+            m_chipId.clear();
+            m_evSize.clear();
+            m_tdo.clear();
+            m_pdo.clear();
+            m_flag.clear();
+            m_thresh.clear();
+            m_bcid.clear();
+            m_chanId.clear();
+            m_grayDecoded.clear();
+        }
+
+    } // == fafafafa
 }
 
 quint32 EventBuilder::reverse32(QString datagram_hex)
