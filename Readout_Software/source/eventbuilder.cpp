@@ -11,6 +11,7 @@ using namespace std;
 
 EventBuilder::EventBuilder()
 {
+    m_parser = NULL;
     m_dbg = false;
     m_useChanMap = false;
     m_ignore16 = false;
@@ -28,6 +29,14 @@ void EventBuilder::initialize(QUdpSocket *socket, Configuration *config)
         abort();
     }
     m_config = config;
+
+    // get the xml parser -- for now hardcode location of file
+    m_parser = new XMLParser();
+    m_parser->loadXml("/Users/dantrim/workarea/NSW/VMMReadout/Readout_Software/configs/DAQ_config.xml");
+    qDebug() << "[EventBuilder::initialize]    XML loaded for chip type : " << m_parser->getChipType();
+    
+    
+       
 
     EventBuilder::setupOutputTrees();
 }
@@ -171,7 +180,9 @@ void EventBuilder::writeData(QByteArray& array)
             uint channel_remapped = 0;
             // > use the vmmchannel # or the strip number (the pin numbers do not equal strip numbers)
             if(m_useChanMap) {
-                channel_remapped = EventBuilder::MappingMini2(channelin_, chip.toInt(&ok,16));
+                // use parser to remap channel to associated strip #
+                channel_remapped = m_parser->getStripNumber(chip.toInt(&ok,16), channelin_);
+                //channel_remapped = EventBuilder::MappingMini2(channelin_, chip.toInt(&ok,16));
             } else {
                 channel_remapped = channelin_;
             }

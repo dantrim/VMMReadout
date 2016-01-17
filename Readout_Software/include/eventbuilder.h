@@ -18,6 +18,7 @@
 
 //vmm
 #include "configuration_module.h"
+#include "xmlparser.h"
 
 class EventBuilder : public QObject
 {
@@ -69,6 +70,7 @@ class EventBuilder : public QObject
         TBranch *br_angle;
 
     private :
+        XMLParser *m_parser;
         // methods
         QUdpSocket *m_socketDAQ;
         Configuration* m_config;
