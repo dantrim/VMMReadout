@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    configuration of the DAQ elx and data parsing
+-->
+
+<daq_config>
+
+    <!-- electronics file -->
+    <elx_file>mini2_map.txt</elx_file>
+
+    <!-- path to save data files -->
+    <data_directory>/Users/dantrim/workarea/NSW/VMMReadout/Readout_Software/output</data_directory>
+
+<daq_config>
