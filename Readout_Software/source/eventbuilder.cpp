@@ -152,7 +152,7 @@ void EventBuilder::writeData(QByteArray& array)
         vector<int> thresh;         thresh.clear();
         vector<int> neighbor;       neighbor.clear();
 
-        // now loop over the event data (incoming bytes >12) each packet is 8 bytes long
+        // now loop over the event data for this chip (incoming bytes >12) each packet is 8 bytes long
         for(int i = 12; i < m_bufferEVT.size(); ) {
             quint32 bytesInt1tmp = reverse32(m_bufferEVT.mid(i,4).toHex());
             QString bytesInt1String = m_bufferEVT.mid(i,4).toHex();
