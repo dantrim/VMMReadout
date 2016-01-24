@@ -42,8 +42,10 @@ LIBS += ./objects/configuration_module.o
 
 SOURCES +=  $$sourcepath_/vmmrun.cpp\
             $$sourcepath_/run_module.cpp\
-            $$sourcepath_/eventbuilder.cpp
+            $$sourcepath_/eventbuilder.cpp\
+            $$sourcepath_/xmlparser.cpp
 
 HEADERS += $$headerpath_/run_module.h\
            $$headerpath_/configuration_module.h\
-           $$headerpath_/eventbuilder.h
+           $$headerpath_/eventbuilder.h\
+           $$headerpath_/xmlparser.h
