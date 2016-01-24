@@ -7,6 +7,7 @@
 #include "tcphandler.h"
 #include <vector>
 #include "configuration_module.h"
+#include "run_module.h"
 //using std::vector;
 using namespace std;
 
@@ -252,6 +253,8 @@ private:
     Ui::MainWindow *ui;
     tcpHandler triggerTCP;
     Configuration* _config;
+    RunDAQ* _runDAQ;
+    bool m_daqConstantsLoaded;
 
 public slots:
     uint grayToBinary(uint num);
@@ -302,7 +305,12 @@ public slots:
     void startCalibration();
     void loadCalibrationConstants(int);
     void HandleRecipe();
+    void LoadConfigurationFromFile();
+    void WriteConfigurationFromFile();
+	void SendParamsToConfigModule();
+    void SendRunParamsToDAQModule();
     void CreateChannelMap(int state);
+    void DecodeChannelMap(int chanmap);
     void LoadThresholds(int state);
     int TMapping(int PanasonicPin, int ChipNumber);
     int TMappingMini2(int VMMChannel, int ChipNumber);

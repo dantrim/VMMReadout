@@ -26,11 +26,12 @@ class RunDAQ : public QObject
         void SetTestMode(bool doTest) { m_is_testmode = doTest; }
         void SetOutputFileName(QString name) { m_useCustomName = true; m_userGivenName = name; }
         void ReadRFile(QString &file);
+        void LoadDAQConstantsFromGUI(int pulserDelay, QString trigPeriod, int acqSync, int acqWindow);
 
         // methods to set up the DAQ from the information read in ReadRFile
         void PrepareRun();
         void SetTrigAcqConstants();
-        void SetTriggerMode();
+        void SetTriggerMode(bool doExternalRunMode);
         void ACQOn();
         void ACQOff();
 

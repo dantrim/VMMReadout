@@ -144,14 +144,39 @@ void RunDAQ::PrepareRun()
 {
     qDebug() << "[RunDAQ::PrepareRun]    Preparing to run.";
     SetTrigAcqConstants();
-    SetTriggerMode(); //pulser or external
+    SetTriggerMode(m_timedrun); //pulser or external
     ACQOn();
 }
+void RunDAQ::LoadDAQConstantsFromGUI(int pulserDelay, QString trigPeriod, int acqSync, int acqWindow)
+{
+    m_tpdelay = pulserDelay;
+    m_trigperiod = trigPeriod;
+    m_acqsync = acqSync;
+    m_acqwindow = acqWindow;
+}
+
 void RunDAQ::SetTrigAcqConstants()
 {
     qDebug() << "[RunDAQ::SetTrigAcqConstants]    Setting the trigger/acq. constants";
     bool ok;
     QByteArray datagram;
+
+    // connect the socket for this word
+    if(m_socket->state()==QAbstractSocket::UnconnectedState) {
+        if(m_dbg) qDebug() << "[RunDAQ::SetTrigAcqConstants]    About to rebind the socket";
+        bool bnd = m_socket->bind(6007, QUdpSocket::ShareAddress); // connect to FECPort
+        if(!bnd) {
+            qDebug() << "[RunDAQ::SetTrigAcqConstants]    WARNING Unable to bind socket to FECPort (6007). Exitting.";
+            abort();
+        } else {
+            if(m_dbg) qDebug() << "[RunDAQ::SetTrigAcqConstants]    Socket binding to FECPort (6007) successful";
+        }
+    }
+        
+
+    // temporarily add the IP here --> will need to grab them from the configuration object if using the GUI
+    m_ips.clear();
+    m_ips << "10.0.0.2";
 
     foreach(const QString &ip, m_ips) {
         UpdateCounter();
@@ -165,6 +190,7 @@ void RunDAQ::SetTrigAcqConstants()
         cmdType     = "AA";
         cmdLength   = "FFFF";
         msbCounter = "0x80000000";
+        m_channelmap = 3;
         out<<(quint32)(n_command_counter + msbCounter.toUInt(&ok,16))<<(quint16)0<<(quint16)m_channelmap;
         //out<<(quint32)(n_command_counter + msbCounter.toUInt(&ok,16))<<(quint16)9<<(quint16)m_channelmap;
         out<<(quint8)cmd.toUInt(&ok,16)<<(quint8)cmdType.toUInt(&ok,16)<<(quint16)cmdLength.toUInt(&ok,16);
@@ -175,7 +201,9 @@ void RunDAQ::SetTrigAcqConstants()
         out<<(quint32)5<<(quint32) m_acqsync; // acq. sync
         out<<(quint32)6<<(quint32) m_acqwindow; // acq. window
 
-        m_config->Sender(datagram, ip, m_config->getVMMAPPPort(), *m_socket);
+        //m_config->Sender(datagram, ip, m_config->getVMMAPPPort(), *m_socket);
+        m_config->Sender(datagram, ip, 6600, *m_socket); // send to VMMAPPPort (6600)
+        //m_socket->writeDatagram(datagram, QHostAddress(ip), 6600);
 
         bool read = false;
         read = m_socket->waitForReadyRead(1000);
@@ -184,16 +212,39 @@ void RunDAQ::SetTrigAcqConstants()
         }
         else {
             qDebug() << "[RunDAQ::SetTrigAcqConstants]    Timeout while waiting for replies from VMM while setting trigger constants.";
+            if(m_dbg) qDebug() << "[RunDAQ::SetTrigAcqConstants]    Call socket close() and disconnectFromHost()";
+            m_socket->close();
+            m_socket->disconnectFromHost();
             abort();
         }
     } // loop over ips
+
+    if(m_dbg) qDebug() << "[RunDAQ::SetTrigAcqConstants]    Call socket close() and disconnectFromHost()";
+    m_socket->close();
+    m_socket->disconnectFromHost();
+
 }
 
-void RunDAQ::SetTriggerMode()
+void RunDAQ::SetTriggerMode(bool externalRunMode)
 {
     qDebug() << "[RunDAQ::SetTriggerMode]    Setting trigger mode";
     bool ok;
     QByteArray datagram;
+
+    if(m_socket->state()==QAbstractSocket::UnconnectedState) {
+        if(m_dbg) qDebug() << "[RunDAQ::SetTriggerMode]    About to rebind the socket";
+        bool bnd = m_socket->bind(6007, QUdpSocket::ShareAddress);
+        if(!bnd) {
+            qDebug() << "[RunDAQ::SetTriggerMode]    WARNING Unable to bind socket to FECPort (6007). Exitting.";
+            abort();
+        } else {
+            if(m_dbg) qDebug() << "[RunDAQ::SetTriggerMode]    Socket binding to FECPort (6007) successful";
+        }
+    }
+
+    // temporarily add the IP here --> will need to grab them from the configuration object if using the GUI!
+    m_ips.clear();
+    m_ips << "10.0.0.2";
 
     foreach(const QString &ip, m_ips) {
         UpdateCounter();
@@ -206,21 +257,24 @@ void RunDAQ::SetTriggerMode()
         QString cmdType     = "AA";
         QString cmdLength   = "FFFF";
         QString msbCounter  = "0x80000000";
+        // temporarily add the channel map here --> will need to grab them from the configuration object if using the GUI!
+        m_channelmap=3;
         out<<(quint32)(n_command_counter + msbCounter.toUInt(&ok,16))<<(quint16)0<<(quint16)m_channelmap;
         out<<(quint8)cmd.toUInt(&ok,16)<<(quint8)cmdType.toUInt(&ok,16)<<(quint16)cmdLength.toUInt(&ok,16);
         out<<(quint32)0;
         out<<(quint32)0;
-        if(m_timedrun) { //external trigger
+        if(externalRunMode) { //external trigger
             out << (quint32)4;
             qDebug() << "[RunDAQ::SetTriggerMode]    External trigger enabled";
         }
-        else if(!m_timedrun) { //interal (pulser)
+        else if(!externalRunMode) { //interal (pulser)
             out << (quint32)7;
             qDebug() << "[RunDAQ::SetTriggerMode]    Pulser enabled";
         }
-        qDebug() << "[RunDAQ::SetTriggerMode]    Send: " << datagram.toHex();
+        if(m_dbg) qDebug() << "[RunDAQ::SetTriggerMode]    Send: " << datagram.toHex();
 
-        m_config->Sender(datagram, ip, m_config->getVMMAPPPort(), *m_socket);
+        //m_config->Sender(datagram, ip, m_config->getVMMAPPPort(), *m_socket);
+        m_config->Sender(datagram, ip, 6600, *m_socket);
 
         bool read = false;
         read = m_socket->waitForReadyRead(1000);
@@ -229,9 +283,16 @@ void RunDAQ::SetTriggerMode()
         }
         else {
             qDebug() << "[RunDAQ::SetTriggerMode]    Timeout while waiting for replies from VMM while setting trigger mode.";
+            if(m_dbg) qDebug() << "[RunDAQ::SetTriggerMode]    Call socket close() and disconnectFromHost()";
+            m_socket->close();
+            m_socket->disconnectFromHost();
             abort();
         }
     } // loop over ips
+
+    if(m_dbg) qDebug() << "[RunDAQ::SetTriggerMode]    Call socket close() and disconnectFromHost()";
+    m_socket->close();
+    m_socket->disconnectFromHost();
 }
 
 void RunDAQ::ACQOn()
@@ -240,6 +301,21 @@ void RunDAQ::ACQOn()
     bool ok;
     UpdateCounter();
     QByteArray datagram;
+
+    if(m_socket->state()==QAbstractSocket::UnconnectedState) {
+        if(m_dbg) qDebug() << "[RunDAQ::ACQOn]    About to rebind the socket";
+        bool bnd = m_socket->bind(6007, QUdpSocket::ShareAddress);
+        if(!bnd) {
+            qDebug() << "[RunDAQ::ACQOn]    WARNING Unable to bind the socket to FECPort (6007). Exitting.";
+            abort();
+        } else {
+            if(m_dbg) qDebug() << "[RunDAQ::ACQOn]    Socket binding to FECPort (6007) successful";
+        }
+    }
+
+    // temporarily add the IP here
+    m_ips.clear();
+    m_ips << "10.0.0.2";
 
     foreach(const QString &ip, m_ips) {
         UpdateCounter();
@@ -253,13 +329,16 @@ void RunDAQ::ACQOn()
         cmdType     = "AA";
         cmdLength   = "FFFF";
         msbCounter  = "0x80000000";
+        // temporarily fix the channel map until grabbing it from GUI
+        m_channelmap = 3;
         out << (quint32)(n_command_counter+msbCounter.toUInt(&ok,16)) << (quint16)0 << (quint16)m_channelmap;
         out << (quint8)cmd.toUInt(&ok,16) << (quint8)cmdType.toUInt(&ok,16) << (quint16)cmdLength.toUInt(&ok,16);
         out << (quint32)0;
         out << (quint32)15;
         out << (quint32)1;
 
-        m_config->Sender(datagram, ip, m_config->getVMMAPPPort(), *m_socket);
+        //m_config->Sender(datagram, ip, m_config->getVMMAPPPort(), *m_socket);
+        m_config->Sender(datagram, ip, 6600, *m_socket);
 
         bool read = false;
         read = m_socket->waitForReadyRead(1000);
@@ -273,10 +352,15 @@ void RunDAQ::ACQOn()
             out << tmp32;
             out.device()->seek(6);
             out << (quint16)2;
-            m_config->Sender(datagram, ip, m_config->getVMMAPPPort(), *m_socket);
+
+            m_config->Sender(datagram, ip, 6600, *m_socket);
+            //m_config->Sender(datagram, ip, m_config->getVMMAPPPort(), *m_socket);
         }
         else {
-            qDebug() << "[RunDAQ::ACQOn]    Timeout (1) while waiting for replies from VMM while setting ACQ on.";
+            qDebug() << "[RunDAQ::ACQOn]    WARNING Timeout (1) while waiting for replies from VMM while setting ACQ on. Exitting.";
+            if(m_dbg) qDebug() << "[RunDAQ::ACQOn]    Call socket close() and disconnectFromHost()";
+            m_socket->close();
+            m_socket->disconnectFromHost();
             abort();
         }
         read = m_socket->waitForReadyRead(1000);
@@ -284,10 +368,17 @@ void RunDAQ::ACQOn()
             processReply(ip);
         }
         else {
-            qDebug() << "[RunDAQ::ACQOn]    Timeout (2) while waiting for replies from VMM while setting ACQ on.";
+            qDebug() << "[RunDAQ::ACQOn]    WARNING Timeout (2) while waiting for replies from VMM while setting ACQ on. Exitting.";
+            if(m_dbg) qDebug() << "[RunDAQ::ACQOn]    Call socket close() and disconnectFromHost()";
+            m_socket->close();
+            m_socket->disconnectFromHost();
             abort();
         }
     } // loop over ips
+
+    if(m_dbg) qDebug() << "[RunDAQ::ACQOn]    Call socket close() and disconnectFromHost()";
+    m_socket->close();
+    m_socket->disconnectFromHost();
 }
 
 void RunDAQ::ACQOff()
@@ -295,6 +386,23 @@ void RunDAQ::ACQOff()
     if(m_dbg) qDebug() << "[RunDAQ::ACQOff]    Call to ACQ off";
     bool ok;
     QByteArray datagram;
+
+    // connect the socket for this word
+    if(m_socket->state()==QAbstractSocket::UnconnectedState) {
+        if(m_dbg) qDebug() << "[RunDAQ::ACQOff]    About to rebind the socket";
+        bool bnd = m_socket->bind(6007, QUdpSocket::ShareAddress);
+        if(!bnd) {
+            qDebug() << "[RunDAQ::ACQOff]    WARNING Unable to bind socket to FECPort (6007). Exitting.";
+            abort();
+        } else {
+            if(m_dbg) qDebug() << "[RunDAQ::ACQOff]    Socket binding to FECPort (6007) successful";
+        }
+    }
+
+    // temporarily add the ips here
+    m_ips.clear();
+    m_ips << "10.0.0.2";
+
     foreach(const QString &ip, m_ips) {
         UpdateCounter();
         datagram.clear();
@@ -307,13 +415,16 @@ void RunDAQ::ACQOff()
         cmdType     = "AA";
         cmdLength   = "FFFF";
         msbCounter  = "0x80000000";
+        //temporarily add the channel map
+        m_channelmap = 3;
         out << (quint32)(n_command_counter+msbCounter.toUInt(&ok,16)) << (quint16)0 << (quint16)m_channelmap;
         out << (quint8)cmd.toUInt(&ok,16) << (quint8)cmdType.toUInt(&ok,16) << (quint16)cmdLength.toUInt(&ok,16);
         out << (quint32)0;
         out << (quint32)15;
         out << (quint32)0;
 
-        m_config->Sender(datagram, ip, m_config->getVMMAPPPort(), *m_socket);
+        m_config->Sender(datagram, ip, 6600, *m_socket);
+        //m_config->Sender(datagram, ip, m_config->getVMMAPPPort(), *m_socket);
 
         bool read = false;
         read = m_socket->waitForReadyRead(1000);
@@ -328,10 +439,14 @@ void RunDAQ::ACQOff()
             out << tmp32;
             out.device()->seek(6);
             out << (quint16) 2; // change to write mode
-            m_config->Sender(m_buffer, ip, m_config->getVMMAPPPort(), *m_socket);
+            m_config->Sender(m_buffer, ip, 6600, *m_socket);
+            //m_config->Sender(m_buffer, ip, m_config->getVMMAPPPort(), *m_socket);
         }
         else {
-            qDebug() << "[RunDAQ::ACQOff]    Timeout (1) while waiting for replies from VMM setting ACQ off";
+            qDebug() << "[RunDAQ::ACQOff]    WARNING Timeout (1) while waiting for replies from VMM setting ACQ off. Exitting.";
+            if(m_dbg) qDebug() << "[RunDAQ::ACQOff]    Call socket close() and disconnectFromHost()";
+            m_socket->close();
+            m_socket->disconnectFromHost();
             abort();
         }
         read = m_socket->waitForReadyRead(1000);
@@ -342,10 +457,17 @@ void RunDAQ::ACQOff()
             processReply(ip);
         }
         else {
-            qDebug() << "[RunDAQ::ACQOff]    Timeout (2) while waiting for replies from VMM setting ACQ off";
+            qDebug() << "[RunDAQ::ACQOff]    WARNING Timeout (2) while waiting for replies from VMM setting ACQ off. Exitting.";
+            if(m_dbg) qDebug() << "[RunDAQ::ACQOff]    Call socket close() and disconnectFromHost()";
+            m_socket->close();
+            m_socket->disconnectFromHost();
             abort();
         }
     } // loop over ips
+
+    if(m_dbg) qDebug() << "[RunDAQ::ACQOff]    Call socket close() and disconnectFromHost()";
+    m_socket->close();
+    m_socket->disconnectFromHost();
 }
 
 void RunDAQ::Run()

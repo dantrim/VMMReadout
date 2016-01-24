@@ -5,6 +5,7 @@
 #include "tcphandler.h"
 #include "tcphandlerthread.h"
 #include <QDir>
+#include <QFileDialog>
 
 //_________________________________________________________________________________________
 MainWindow::MainWindow(QWidget *parent) :
@@ -14,7 +15,10 @@ MainWindow::MainWindow(QWidget *parent) :
 		//Commented out as it is not needed (already loaded) - ARV 30/06/15
     //gSystem->Load("libMylib.so");
 
-  	_config= new Configuration();
+  	_config = new Configuration();
+    _runDAQ = new RunDAQ(); 
+    m_daqConstantsLoaded = false;
+
     idForCustomCommands=0;
     multicastingFlag=0;
     FECPort=6007;
@@ -53,6 +57,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->closeConnection_tr, SIGNAL(pressed()), this , SLOT(ConnectTCP()));
 
     connect(ui->SendConfiguration, SIGNAL(clicked()), this , SLOT(HandleRecipe()));
+    connect(ui->loadConfigXMLFile, SIGNAL(clicked()), this , SLOT(LoadConfigurationFromFile()));
+    connect(ui->writeConfigXMLFile, SIGNAL(clicked()), this , SLOT(WriteConfigurationFromFile()));
     //    connect(ui->SendConfiguration_tr, SIGNAL(clicked()), this , SLOT(MergerFPGA()));
     connect(ui->onAcq_fpga, SIGNAL(clicked()), this , SLOT(MergerFPGA()));
     connect(ui->offAcq_fpga, SIGNAL(clicked()), this , SLOT(MergerFPGA()));
@@ -288,8 +294,53 @@ void MainWindow::CreateChannelMap(int state){
     //qDebug()<<channelMap<<endl;
 }
 
+void MainWindow::DecodeChannelMap(int chanmap){
+
+	int index=0;
+	bool atleastone=false;
+	pair <int,int> doublet;
+
+	QList<QCheckBox*> hdmis = QList<QCheckBox*>() << ui->hdmi1 << ui->hdmi2 << ui->hdmi3 << ui->hdmi4 << ui->hdmi5 << ui->hdmi6 << ui->hdmi7 << ui->hdmi8; 
+	QList<QCheckBox*> hdmiVMMs = QList<QCheckBox*>() << ui->hdmi1_1 << ui->hdmi1_2 << ui->hdmi2_1 << ui->hdmi2_2 << ui->hdmi3_1 << ui->hdmi3_2 << ui->hdmi4_1 << ui->hdmi4_2 << ui->hdmi5_1 << ui->hdmi5_2 << ui->hdmi6_1 << ui->hdmi6_2 << ui->hdmi7_1 << ui->hdmi7_2 << ui->hdmi8_1 << ui->hdmi8_2; 
+
+	//Create 16-bit QString from int channelmap
+	QString stest = QString("%1").arg(chanmap, 16, 2, QChar('0'));
+
+	//Iterate over characters in string to set channel Map check marks in GUI
+	for(QString::const_iterator itr(stest.end()-1); itr != stest.begin()-1; --itr) {
+
+		//First set values in pair
+		if (*itr == '1') {
+			if (index%2==0) doublet.first = 1;
+			else doublet.second = 1;
+			atleastone=true; //Set true if at least one of the two VMMs is set at 1
+		} else {
+			if (index%2==0) doublet.first = 0;
+			else doublet.second = 0;
+		}
+
+		//Now click
+		if (index%2!=0) {
+			if (atleastone) {
+				if (!hdmis.at(index/2)->isChecked()) hdmis.at(index/2)->animateClick();
+				if (doublet.first && !hdmiVMMs.at(index-1)->isChecked()) hdmiVMMs.at(index-1)->animateClick();
+				if (doublet.second && !hdmiVMMs.at(index)->isChecked()) hdmiVMMs.at(index)->animateClick();
+				if (!doublet.first && hdmiVMMs.at(index-1)->isChecked()) hdmiVMMs.at(index-1)->animateClick();
+				if (!doublet.second && hdmiVMMs.at(index)->isChecked()) hdmiVMMs.at(index)->animateClick();
+			}
+			else { //Clicking on main hdmi button will uncheck the two associated VMMs
+				if (hdmis.at(index/2)->isChecked()) hdmis.at(index/2)->animateClick();
+			}
+			atleastone=false;
+		}
+		++index;
+	}
+
+}
+
 //_________________________________________________________________________________________________
 void MainWindow::PingFec(){
+/*
     for(int i=0;i<ui->numbersOfFecs->value();i++){
         //int exitCode = QProcess::execute("ping", QStringList() << "-t2" << ips[i]); //Works for MACs
         int exitCode = QProcess::execute("ping", QStringList() << "-c1" << ips[i]); //Works for linux
@@ -301,6 +352,7 @@ void MainWindow::PingFec(){
         }
         Sleeper::msleep(100);
     }
+*/
 }
 //_________________________________________________________________________________________________
 void MainWindow::PingFPGA(){
@@ -323,7 +375,8 @@ void MainWindow::SetNumberOfFecs(int){
     }
     ui->setVMMs->addItem("All");
     ui->setVMMs->setCurrentIndex(ui->setVMMs->currentIndex()+1);
-    if(ui->setVMMs->currentText()=="All") ui->header4LE->setText(ui->ip4->text());
+    if(ui->setVMMs->currentText()=="All") ui->header4LE->setText(ui->ip4->text()); //What is that for? - ARV
+		/* Remove all notions of socket from the GUI
     if(ui->connectionLabel->text()==" All Alive"){
         bnd=false;
         ui->connectionLabel->setText("Re-Establish Connection");
@@ -331,6 +384,7 @@ void MainWindow::SetNumberOfFecs(int){
         socket->disconnectFromHost();
         ui->connectionLabel->setStyleSheet("background-color: light");
     }
+		*/
 }
 //_________________________________________________________________________________________________
 void MainWindow::SetFPGAIP(){
@@ -338,10 +392,28 @@ void MainWindow::SetFPGAIP(){
 }
 //_________________________________________________________________________________________________
 void MainWindow::Connect(){
-    PingFec();
+    //PingFec();
+	SendParamsToConfigModule();//Only needed for IPs
+    SendRunParamsToDAQModule();
+
+	if (ui->numbersOfFecs->value() == 0){
+		ui->connectionLabel->setText("Select number of FECs");
+		ui->connectionLabel->setStyleSheet("background-color: light");
+		return;
+	}
+	int pinged = _config->Ping();
+	if (pinged == 0) {
+		ui->connectionLabel->setText(" All Alive");
+		ui->connectionLabel->setStyleSheet("background-color: green");
+	} else {
+		ui->connectionLabel->setText(" Ping failed");
+		ui->connectionLabel->setStyleSheet("background-color: lightGray");
+	}
+
+    socket = new QUdpSocket(this);
+		/*
     QString deads="";
     int numFECS=0;
-    socket = new QUdpSocket(this);
     bnd = socket->bind(FECPort);//, QUdpSocket::ShareAddress);
     if(bnd){
         connect( socket, SIGNAL(readyRead()), this, SLOT(dataPending()) );
@@ -374,11 +446,12 @@ void MainWindow::Connect(){
         socket->close();
         socket->disconnectFromHost();
     }
+		*/
 }
 //_________________________________________________________________________________________________
 void MainWindow::dataPending()
 {
-    while(socket->hasPendingDatagrams())
+    while(bnd && socket->hasPendingDatagrams())
     {
         buffer.resize(socket->pendingDatagramSize());
         socket->readDatagram( buffer.data(), buffer.size() );
@@ -484,7 +557,7 @@ void MainWindow::ConnectFPGA(){
     socketFPGA = new QUdpSocket(this);
     bndFPGA = socketFPGA->bind(FPGAPort, QUdpSocket::ShareAddress);
     if(bndFPGA && communicationAliveFPGA){
-        connect( socketFPGA, SIGNAL(readyRead()), this, SLOT(dataPending()) );
+        //connect( socketFPGA, SIGNAL(readyRead()), this, SLOT(dataPending()) );
         ui->connectionLabel_tr->setText("      Alive");
         ui->connectionLabel_tr->setStyleSheet("background-color: green");
     }else{
@@ -519,10 +592,12 @@ void MainWindow::displayError(QAbstractSocket::SocketError socketError)
 }
 //_________________________________________________________________________________________________
 void MainWindow::Disconnect(){
+		/*
     ui->connectionLabel->setText("Disconnected");
     ui->connectionLabel->setStyleSheet("background-color: red");
     socket->disconnectFromHost();
     bnd = false;
+		*/
 }
 //_________________________________________________________________________________________________
 void MainWindow::CreateChannelsField(){
@@ -1115,7 +1190,6 @@ void MainWindow::HandleRecipe(){
             }
             ui->sdt->setValue(boardThreshold[boardToSendData-15]);
             Merger();
-						//_config->SendConfig();
             Sleeper::msleep(5);
         }
     }else if(ui->loadCalibDataCB->isChecked()){
@@ -1137,9 +1211,59 @@ void MainWindow::HandleRecipe(){
 }
 
 //_________________________________________________________________________________________
-void MainWindow::Merger(){
-    bool ok;
+void MainWindow::SendParamsToConfigModule() {
 
+		//cout << ui->ip1->text().toStdString() << "." << ui->ip2->text().toStdString()  << "." << ui->ip3->text().toStdString()  << "." << ui->ip4->text().toStdString()  << endl;
+
+		int nVMMs = -1;
+		int ipVMM = -1;
+		ipVMM = ui->ip4->text().toInt();
+
+		if (ui->setVMMs->currentText()=="All") {
+			nVMMs = ui->numbersOfFecs->value();
+		} else if (ui->setVMMs->currentText()!="") {
+			nVMMs = 1;
+			ipVMM += ui->setVMMs->currentIndex(); 
+		} else {
+			cout << "Need to set VMM number value first using drop-down list" << endl;
+			return;
+		}
+		//cout << nVMMs << " " << ipVMM << endl;
+
+
+		int result = _config->LoadConfigFromGUI(ipVMM, nVMMs, channelMap, ui->spg->currentIndex(), ui->slg->currentIndex(), 
+																ui->sdrv->currentIndex(), ui->sfm->currentIndex(), ui->sg->currentIndex(), ui->st->currentIndex(),
+																ui->stc->currentIndex(), ui->sng->currentIndex(), ui->sdp->currentIndex(), ui->sfa->currentIndex(), ui->sfam->currentIndex(), ui->sdcka->currentIndex(), ui->sbfm->currentIndex(), 
+																ui->sbfp->currentIndex(), ui->sbft->currentIndex(), ui->sm5_sm0->currentIndex(), ui->scmx->currentIndex(), ui->sbmx->currentIndex(), ui->spdc->currentIndex(), 
+																ui->ssh->currentIndex(), ui->sttt->currentIndex(), ui->stpp->currentIndex(), ui->stot->currentIndex(), ui->s8b->currentIndex(), ui->s6b->currentIndex(), 
+																ui->sc010b->currentIndex(), ui->sc08b->currentIndex(), ui->sc06b->currentIndex(), ui->sdcks->currentIndex(), ui->sdck6b->currentIndex(), ui->sdt->value(), ui->sdp_2->value(),
+                                VMM1SPBool, VMM1SCBool, VMM1SLBool, VMM1STBool, VMM1SMBool, VMM1SDValue, VMM1SMXBool, VMM1SZ010bValue, VMM1SZ08bValue, VMM1SZ06bValue);
+                                //VMM1SPBool, VMM1SCBool, VMM1SLBool, VMM1STBool, VMM1SMBool, VMM1SDValue, VMM1SMXBool, VMM1SZ010bValue, VMM1SZ08bValue, VMM1SZ06bValue, true); //for debug purposes (OFF by default)
+		cout << "Result from LoadConfigFromGUI: " << result << endl;
+
+	return;
+
+}
+//_________________________________________________________________________________________
+void MainWindow::SendRunParamsToDAQModule()
+{
+    qDebug() << "[MainWindow::SendRunParamsToDAQModule]    Sending trigger acquisition constants to DAQ module.";
+    // --- send the DAQ constants --- //
+    _runDAQ->LoadDAQConstantsFromGUI(ui->pulserDelay->value(),
+                                  ui->trgPeriod->text(),
+                                  ui->acqSync->value(),
+                                  ui->acqWindow->value());
+    m_daqConstantsLoaded = true;
+}
+
+//_________________________________________________________________________________________
+void MainWindow::Merger(){
+
+		SendParamsToConfigModule();
+		_config->DumpConfigParams();
+		int result = _config->SendConfig();
+		cout << "Result from SendConfig: " << result << endl;
+/*
     //qDebug()<<"##################################### GLOBAL BITS <<",  ##################################";
 
     //QDataStream::BigEndian	QSysInfo::BigEndian
@@ -1195,7 +1319,7 @@ void MainWindow::Merger(){
     GlobalRegistersStringsSequence[0]++;
     GlobalRegistersStrings[0].replace(GlobalRegistersStringsSequence[0],1, QString::number(ui->stpp->currentIndex()));//timing out 2
 
-    //    qDebug()<<GlobalRegistersStrings[0];
+       qDebug()<<"GL0: " << GlobalRegistersStrings[0];
     //#######################################################################";
 
     //####################### Global SPI 1 ###############################################
@@ -1255,7 +1379,7 @@ void MainWindow::Merger(){
         GlobalRegistersStrings[1].replace(GlobalRegistersStringsSequence[1]-j-1,1, bitTmp);
     }
 
-    //qDebug()<<"GL1: "<<GlobalRegistersStrings[1];
+    qDebug()<<"GL1: "<<GlobalRegistersStrings[1];
 
     //#######################################################################";
     //####################### Global SPI 2 ###############################################
@@ -1289,6 +1413,8 @@ void MainWindow::Merger(){
     GlobalRegistersStrings[2].replace(GlobalRegistersStringsSequence[2],1, QString::number(ui->sfa->currentIndex()));//ART enable
     GlobalRegistersStringsSequence[2]++;
     GlobalRegistersStrings[2].replace(GlobalRegistersStringsSequence[2],1, QString::number(ui->sfam->currentIndex()));//ART mode
+
+    qDebug() << "GL2: " << GlobalRegistersStrings[2];
 
     //#######################################################################";
     QString channelRegistersStrings[64];
@@ -1446,9 +1572,11 @@ void MainWindow::Merger(){
 
         }
     }
+*/
 }
 //_________________________________________________________________________________________
 void MainWindow::downloadSPI(){//if to be called from datapending - responce = 1
+/*
     bool ok;
     UpdateCounter();
     QByteArray datagramAll;
@@ -1487,6 +1615,103 @@ void MainWindow::downloadSPI(){//if to be called from datapending - responce = 1
     //    Sleeper::msleep(10);
     //    if(ui->loadCalibDataCB->isChecked())spiSent=1;
     //    Sender(datagramAll);
+*/
+}
+//_________________________________________________________________________________________
+void MainWindow::LoadConfigurationFromFile(){
+
+	int result;
+	bool SPBool[64], SCBool[64], SLBool[64], STBool[64], SMBool[64], SMXBool[64];
+	quint8 SDVoltage[64], SZ010bCBox[64], SZ08bCBox[64], SZ06bCBox[64];
+	QStringList ips_list;
+
+	//Opens a file dialog to choose XML config file to use
+	QString filename = QFileDialog::getOpenFileName(this,
+    tr("Open Configuration XML File"), "../configs/", tr("XML Files (*.xml)"));
+	
+	if (filename.isNull()) return;
+
+	cout << filename.toStdString() << endl;
+
+	result = _config->ReadCFile(filename);
+	cout << "ReadCFile return code: " << result << endl;
+
+	_config->getIPs(ips_list);
+	ui->numbersOfFecs->setValue(ips_list.size());
+	ui->ip4->setText(ips_list.at(0).split(".").last());
+	DecodeChannelMap(_config->getChannelMap());
+	//Get config values from configuration module object
+	ui->spg->setCurrentIndex(_config->getChPolarity());
+	ui->slg->setCurrentIndex(_config->getLeakCurrent());
+	ui->sdrv->setCurrentIndex(_config->getAnalogTristates());
+	ui->sfm->setCurrentIndex(_config->getDoubleLeak());
+	ui->sg->setCurrentIndex(_config->getGainVal());
+	ui->st->setCurrentIndex(_config->getPeakt());
+	ui->stc->setCurrentIndex(_config->getTACslope());
+	ui->sdp->setCurrentIndex(_config->getDisAtPeak());
+	ui->sfa->setCurrentIndex(_config->getART());
+	ui->sfam->setCurrentIndex(_config->getARTmode());
+	ui->sdcka->setCurrentIndex(_config->getDualClock());
+	ui->sbfm->setCurrentIndex(_config->getSBFM());
+	ui->sbfp->setCurrentIndex(_config->getSBFP());
+	ui->sbft->setCurrentIndex(_config->getSBFT());
+	ui->sm5_sm0->setCurrentIndex(_config->getChanMon());
+	ui->scmx->setCurrentIndex(_config->getSCMX());
+	ui->sbmx->setCurrentIndex(_config->getSBMX());
+	ui->spdc->setCurrentIndex(_config->getADCs());
+	ui->ssh->setCurrentIndex(_config->getHyst());
+	ui->sttt->setCurrentIndex(_config->getDirectTime());
+	ui->stpp->setCurrentIndex(_config->getDirectTimeModeOne());
+	ui->stot->setCurrentIndex(_config->getDirectTimeModeTwo());
+	ui->s8b->setCurrentIndex(_config->getEbitConvMode());
+	ui->s6b->setCurrentIndex(_config->getSbitEnable());
+	ui->sc010b->setCurrentIndex(_config->getADC10b());
+	ui->sc08b->setCurrentIndex(_config->getADC8b());
+	ui->sc06b->setCurrentIndex(_config->getADC6b());
+	ui->sdcks->setCurrentIndex(_config->getDualClockData());
+	ui->sdck6b->setCurrentIndex(_config->getDualClocksbit());
+	ui->sdt->setValue(_config->getThresholdDAC());
+	ui->sdp_2->setValue(_config->getTestPulseDAC());
+
+	_config->getChannelArrays(SPBool, SCBool, SLBool, STBool, SMBool, SDVoltage, SMXBool, SZ010bCBox, SZ08bCBox, SZ06bCBox);
+	//Click on QPushButton to trigger the slot response
+	//setCurrentIndex on QComboBox will trigger the currentindexchanged signal
+	for(int i=0;i<64;i++){
+		if (SPBool[i]) VMM1NegativeButton[i]->click(); //false = negative polarity; true = positive polarity (green)
+		if (SCBool[i]) VMM1SC[i]->click();
+		if (!SLBool[i]) VMM1SL[i]->click(); //enabled = false; disabled = true;
+		if (STBool[i]) VMM1ST[i]->click();
+		if (SMBool[i]) VMM1SM[i]->click();
+		if (SMXBool[i]) VMM1SMX[i]->click();
+		VMM1SDVoltage[i]->setCurrentIndex(SDVoltage[i]);
+		VMM1SZ010bCBox[i]->setCurrentIndex(SZ010bCBox[i]);
+		VMM1SZ08bCBox[i]->setCurrentIndex(SZ08bCBox[i]);
+		VMM1SZ06bCBox[i]->setCurrentIndex(SZ06bCBox[i]);
+	}
+
+}
+//_________________________________________________________________________________________
+void MainWindow::WriteConfigurationFromFile(){
+	//bool ok;
+
+	QString runmode;
+
+	//Opens a file dialog to select or create XML config file to save
+	QString filename = QFileDialog::getSaveFileName(this, 
+		tr("Save XML Configuration File"), "../configs", tr("XML Files (*.xml)"));
+
+	if (filename.isNull()) return;
+
+	//cout << filename.toStdString() << endl;
+
+	if (ui->trgPulser->isChecked()) runmode="pulser";
+	else if (ui->trgExternal->isChecked()) runmode="external";
+
+	SendParamsToConfigModule();
+	//qDebug() << channelMap;
+	_config->LoadRunParamsFromGUI(ui->pulserDelay->value(), ui->trgPeriod->text(), ui->acqSync->value(), ui->acqWindow->value(), runmode);
+	_config->WriteCFile(filename);
+
 }
 //_________________________________________________________________________________________
 void MainWindow::customCommandHandler(){//if to be called from datapending - responce = 1
@@ -1716,6 +1941,23 @@ void MainWindow::customCommandWithoutResponse(){
         out<<(quint32)128<<(quint32)2;
         Sender(datagramAll);
     }else if(ui->onACQ==QObject::sender()||ui->offACQ==QObject::sender()){
+
+        ///////////////////////////////// use run_module [begin] dantrim
+        if(ui->onACQ==QObject::sender()) {
+            // UpdateCounter ?
+            _runDAQ->ACQOn();
+            ui->onACQ->setStyleSheet("background-color: green");
+            ui->offACQ->setStyleSheet("background-color: lightGray");
+        }
+        else if(ui->offACQ==QObject::sender()) {
+            _runDAQ->ACQOff();
+            ui->onACQ->setStyleSheet("background-color: lightGray");
+            ui->offACQ->setStyleSheet("background-color: green");
+        }
+        ui->appRB->setChecked(1);
+        ///////////////////////////////// use run_module [end] dantrim
+
+/*
         qDebug()<<"Controling the ACQ";
         bool ok;
         UpdateCounter();
@@ -1743,6 +1985,7 @@ void MainWindow::customCommandWithoutResponse(){
         }
         ui->appRB->setChecked(1);
         Sender(datagramAll);
+*/
     }else if(ui->fec_reset==QObject::sender()||ui->fec_WarmInit==QObject::sender()){
         QString from;
         if(ui->fec_reset==QObject::sender())
@@ -1781,6 +2024,16 @@ void MainWindow::customCommandWithoutResponse(){
         ui->setTrgAcqConst->setStyleSheet("background-color: lightGray");
         Sender(datagramAll);
     }else if(ui->setTrgAcqConst==QObject::sender()){
+
+        ///////////////////////////////// use run_module [begin] dantrim
+        if(!m_daqConstantsLoaded)
+            SendRunParamsToDAQModule();
+        _runDAQ->SetTrigAcqConstants();
+        ui->setTrgAcqConst->setStyleSheet("background-color: green");
+        ui->appRB->setChecked(1);
+        ///////////////////////////////// use run_module [end] dantrim
+
+/*
         qDebug()<<"Setting the trigger/acq constants";
         bool ok;
         UpdateCounter();
@@ -1802,7 +2055,24 @@ void MainWindow::customCommandWithoutResponse(){
         ui->setTrgAcqConst->setStyleSheet("background-color: green");
         ui->appRB->setChecked(1);
         Sender(datagramAll);
+*/
     }else if(ui->trgExternal==QObject::sender()||ui->trgPulser==QObject::sender()){
+
+        ///////////////////////////////// use run_module [begin] dantrim
+        if(ui->trgExternal==QObject::sender()) {
+            _runDAQ->SetTriggerMode(true);
+            ui->trgExternal->setStyleSheet("background-color: green");
+            ui->trgPulser->setStyleSheet("background-color: lightGray");
+        }
+        else if(ui->trgPulser==QObject::sender()) {
+            _runDAQ->SetTriggerMode(false);
+            ui->trgExternal->setStyleSheet("background-color: lightGray");
+            ui->trgPulser->setStyleSheet("background-color: green");
+        }
+        ui->appRB->setChecked(1);
+        ///////////////////////////////// use run_module [end] dantrim
+
+/*
         qDebug()<<"Controling the trigger";
         bool ok;
         UpdateCounter();
@@ -1840,6 +2110,7 @@ void MainWindow::customCommandWithoutResponse(){
         }
         ui->appRB->setChecked(1);
         Sender(datagramAll);
+*/
     }else if(ui->setMask==QObject::sender()){
         qDebug()<<"Setting HDMI Mask";
         bool ok;
@@ -2130,6 +2401,8 @@ void MainWindow::Sender(QByteArray blockOfData)
     if(ui->s6RB->isChecked())
         destPort=S6Port;
 
+    bnd = socket->bind(FECPort);//, QUdpSocket::ShareAddress);
+
     if(bnd && ui->connectionLabel->text()==" All Alive"){
         if(ui->setVMMs->currentText()!=""){
             if(ui->setVMMs->currentText()=="All" && headerSet == 0 && multicastingFlag == 0){
@@ -2165,6 +2438,12 @@ void MainWindow::Sender(QByteArray blockOfData)
         socket->close();
         socket->disconnectFromHost();
     }
+
+		//Disconnect socket after writing datagrams
+		bnd=false;
+    socket->close();
+    socket->disconnectFromHost();
+		delete(socket);
 
 }
 //_________________________________________________________________________________________
@@ -2236,6 +2515,7 @@ void MainWindow::threadHandler(){
 }
 //_________________________________________________________________________________________
 void MainWindow::sendDis(int){
+/*
     bool ok;
     UpdateCounter();
     QByteArray datagramAll;
@@ -2256,6 +2536,7 @@ void MainWindow::sendDis(int){
     Sleeper::msleep(10);
     //    delayMs();
     Sender(datagramAll);
+*/
 }
 
 //_________________________________________________________________________________________________

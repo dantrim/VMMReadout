@@ -2,6 +2,7 @@
 #include "configuration_module.h"
 #include <QProcess>
 #include <QFile>
+#include <QFileInfo>
 #include <QSettings>
 #include <QtCore>
 #include <iostream>
@@ -10,6 +11,7 @@
 #include <QByteArray>
 #include <QThread>
 #include <ctime>
+#include <algorithm>
 
 Configuration::Configuration(){
 
@@ -20,7 +22,16 @@ Configuration::Configuration(){
 	debug=false;
 	boardip=new QHostAddress();
 	socket = new QUdpSocket(this);
-	
+	_gains << "0.5" << "1.0" << "3.0" << "4.5" << "6.0" << "9.0" << "12.0" << "16.0";
+	_peakts << 200 << 100 << 50 << 25;
+	_TACslops << 125 << 250 << 500 << 1000;
+	_polarities << "wires" << "strips";
+	_ARTmodes << "threshold" << "peak";
+	_dTimeModes << "TtP" << "ToT" << "PtP" << "PtT";
+	_adc10bs << "200ns" << "+60ns";
+	_adc8bs << "100ns" << "+60ns";
+	_adc6bs << "low" << "middle" << "up";
+
 }
 
 Configuration::~Configuration(){
@@ -45,6 +56,431 @@ int Configuration::Ping(){
 			return 1;
 		}
 	}
+	return 0;
+}
+
+int Configuration::WriteCFile(QString &filename){
+
+	//Read info from base XML file
+	QFile inFile("../configs/config.xml");
+  if( !inFile.open( QIODevice::ReadOnly | QIODevice::Text ) )
+  {
+    qDebug( "[Configuration::WriteCFile] Failed to open file for reading." );
+    return 0;
+  }
+
+	//Create DOM object with base XML file info
+  QDomDocument doc;
+  if( !doc.setContent( &inFile ) )
+  {
+    qDebug( "[Configuration::WriteCFile] Failed to parse the file into a DOM tree." );
+    inFile.close();
+    return 0;
+  }
+  
+  inFile.close();
+
+	QString XMLdebug = ValToOnOffXML(debug, "on", "off"); //Debug
+	QString XMLchSP = _polarities.at(_chSP); //Polarity
+	QString XMLleak = ValToOnOffXML(_leak, "disabled", "enabled"); //Leakage current
+	QString XMLnanaltri = ValToOnOffXML(_nanaltri, "on", "off"); //Analog Tristates
+	QString XMLdoubleleak = ValToOnOffXML(_doubleleak, "on", "off"); //Double Leakage
+	QString XMLgain = _gains.at(_gain);
+	QString XMLpeakt = QString::number(_peakts.at(_peakt));
+	QString XMLntrig = ValToOnOffXML(_ntrig, "on", "off"); //neighbour trigger
+	QString XMLTACslop = QString::number(_TACslops.at(_TACslop));
+	QString XMLdpeak = ValToOnOffXML(_dpeak, "on", "off"); //Disable at Peak
+	QString XMLart = ValToOnOffXML(_art, "on", "off"); //ART
+	QString XMLartm = _ARTmodes.at(_artm); //ART Mode
+	QString XMLdualclock = ValToOnOffXML(_dualclock, "on", "off"); //Dual clock
+	QString XMLsbfm = ValToOnOffXML(_sbfm, "on", "off"); //sbfm
+	QString XMLsbfp = ValToOnOffXML(_sbfp, "on", "off"); //sbfp
+	QString XMLsbft = ValToOnOffXML(_sbft, "on", "off"); //sbft
+	QString XMLscmx = ValToOnOffXML(_scmx, "on", "off"); //scmx
+	QString XMLsbmx = ValToOnOffXML(_sbmx, "on", "off"); //sbmx
+	QString XMLadcs = ValToOnOffXML(_adcs, "on", "off"); //ADCs 
+	QString XMLhyst = ValToOnOffXML(_hyst, "on", "off"); //sub.hyst.discr
+	QString XMLdtime = ValToOnOffXML(_dtime, "on", "off"); //direct.time
+	QString stest = "00"; //direct.time.mode
+	stest.replace(0,1,QString(_dtimeMode[0]));
+	stest.replace(1,1,QString(_dtimeMode[1]));
+	QString XMLdtimemode = _dTimeModes.at(stest.toInt());
+	QString XML8bconvmode = ValToOnOffXML(_ebitconvmode, "on", "off"); //conv.mode.8bit
+	QString XML6benable = ValToOnOffXML(_sbitenable, "on", "off"); //enable.6bit
+	QString XMLadc10b = _adc10bs.at(_adc10b); //ADC.10bit
+	QString XMLadc8b = _adc8bs.at(_adc8b); //ADC.8bit
+	QString XMLadc6b = _adc6bs.at(_adc6b); //ADC.6bit
+	QString XMLdclockdata = ValToOnOffXML(_dualclockdata, "on", "off"); //dual.clock.data
+	QString XMLdclock6bit = ValToOnOffXML(_dualclock6bit, "on", "off"); //dual.clock.6bit
+
+	QString XMLSMX[64];
+	QString XMLSM[64];
+	QString XMLSP[64];
+	QString XMLSC[64];
+	QString XMLSL[64];
+	QString XMLST[64];
+	for (int ichan=0; ichan<64; ++ichan) {
+		XMLSP[ichan] = _polarities.at(SP[ichan]);
+		XMLSC[ichan] = ValToOnOffXML(SC[ichan], "on", "off"); 
+		XMLSL[ichan] = ValToOnOffXML(SL[ichan], "disabled", "enabled"); 
+		XMLST[ichan] = ValToOnOffXML(ST[ichan], "on", "off"); 
+		XMLSM[ichan] = ValToOnOffXML(SM[ichan], "on", "off"); 
+		XMLSMX[ichan] = ValToOnOffXML(SMX[ichan], "on", "off"); 
+	}
+
+	bool different;
+	QString tagname, svalue;
+
+	//Modify DOM object content
+
+	// Get DOM element from config.xml 
+	QDomElement root = doc.documentElement(); //<configuration>
+
+	QDomElement nodeTag, subnodeTag, newNodeTag;
+	QDomText newNodeText;
+
+/*
+	nodeTag = root.firstChildElement("udp.setup");
+	subnodeTag = nodeTag.firstChildElement("fec.port");
+
+	// create a new node with a QDomText child
+	newNodeTag = doc.createElement(QString("fec.port")); 
+	newNodeText = doc.createTextNode(QString("New Text"));
+	newNodeTag.appendChild(newNodeText);
+
+	// replace existing node with new node
+	nodeTag.replaceChild(newNodeTag, subnodeTag);
+*/
+
+	//****General.info****//
+	nodeTag = root.firstChildElement("general.info");
+	//ips
+	subnodeTag = nodeTag.firstChildElement("ip");
+	QStringList oldips = subnodeTag.text().split(",");
+	std::sort(oldips.begin(),oldips.end());
+	std::sort(_ips.begin(),_ips.end());
+	if (oldips != _ips) {
+		newNodeTag = doc.createElement(QString("ip"));
+		newNodeText = doc.createTextNode(_ips.join(","));
+		newNodeTag.appendChild(newNodeText);
+		nodeTag.replaceChild(newNodeTag, subnodeTag);
+	}
+	//debug
+	subnodeTag = nodeTag.firstChildElement("debug");
+	if (QString::compare(subnodeTag.text(), XMLdebug, Qt::CaseInsensitive) != 0) {
+		newNodeTag = doc.createElement(QString("debug"));
+		newNodeText = doc.createTextNode(XMLdebug);
+		newNodeTag.appendChild(newNodeText);
+		nodeTag.replaceChild(newNodeTag, subnodeTag);
+	}
+
+	//****Trigger.daq****//
+	nodeTag = root.firstChildElement("trigger.daq");
+	for (int iparam=0;iparam<5; ++iparam) {
+		different=false;
+		if (iparam == 0) {
+			if (nodeTag.firstChildElement("tp.delay").text().toInt() != TP_Delay) different=true;
+			tagname = QString("tp.delay");
+			svalue = QString::number(TP_Delay);
+		} else if (iparam == 1) {
+			if (QString::compare(nodeTag.firstChildElement("trigger.period").text(), Trig_Period, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("trigger.period");
+			svalue = Trig_Period;
+		} else if (iparam == 2) {
+			if (nodeTag.firstChildElement("acq.sync").text().toInt() != ACQ_Sync) different=true;
+			tagname = QString("acq.sync");
+			svalue = QString::number(ACQ_Sync);
+		} else if (iparam == 3) {
+			if (nodeTag.firstChildElement("acq.window").text().toInt() != ACQ_Window) different=true;
+			tagname = QString("acq.window");
+			svalue = QString::number(ACQ_Window);
+		} else if (iparam == 4) {
+			if (QString::compare(nodeTag.firstChildElement("run.mode").text(), Run_mode, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("run.mode");
+			svalue = Run_mode;
+		}
+
+		if (different) {
+			subnodeTag = nodeTag.firstChildElement(tagname);
+			newNodeTag = doc.createElement(tagname);
+			newNodeText = doc.createTextNode(svalue);
+			newNodeTag.appendChild(newNodeText);
+			nodeTag.replaceChild(newNodeTag, subnodeTag);
+		}
+	}
+
+	//TODO: ChannelMap
+	//****channel.map****//
+	QDomElement subsubnodeTag;
+	nodeTag = root.firstChildElement("channel.map");
+	stest = QString("%1").arg(channelMap, 16, 2, QChar('0'));
+	int index=0;
+  bool atleastone=false;
+  pair <int,int> doublet;
+	for(QString::const_iterator itr(stest.end()-1); itr != stest.begin()-1; --itr) {
+
+		//First set values in pair
+    if (*itr == '1') {
+      if (index%2==0) doublet.first = 1;
+      else doublet.second = 1;
+      atleastone=true; //Set true if at least one of the two VMMs is set at 1
+    } else {
+      if (index%2==0) doublet.first = 0;
+      else doublet.second = 0;
+    }
+
+		if (index%2!=0) {
+			subnodeTag = nodeTag.firstChildElement("hdmi."+QString::number(index/2+1));
+			for (int iparam=0;iparam<3; ++iparam) {
+				different=false;
+				if (iparam == 0) {
+					if (QString::compare(subnodeTag.firstChildElement("first").text(), QString::number(doublet.first), Qt::CaseInsensitive) != 0) different=true;
+					tagname = QString("first");
+					svalue = QString::number(doublet.first);
+				} else if (iparam == 1) {
+					if (QString::compare(subnodeTag.firstChildElement("second").text(), QString::number(doublet.second), Qt::CaseInsensitive) != 0) different=true;
+					tagname = QString("second");
+					svalue = QString::number(doublet.second);
+				} else if (iparam == 2) {
+					different=true;
+					tagname = QString("switch");
+					if (atleastone) svalue = "on";
+					else svalue = "off";
+				}
+
+				if (different) {
+					subsubnodeTag = subnodeTag.firstChildElement(tagname);
+					newNodeTag = doc.createElement(tagname);
+					newNodeText = doc.createTextNode(svalue);
+					newNodeTag.appendChild(newNodeText);
+					subnodeTag.replaceChild(newNodeTag, subsubnodeTag);
+				}
+			}
+			atleastone=false;
+		}
+
+		++index;
+	}
+
+	//****global.settings****//
+	nodeTag = root.firstChildElement("global.settings");
+	for (int iparam=0;iparam<31; ++iparam) {
+		different=false;
+		if (iparam == 0) {
+			if (QString::compare(nodeTag.firstChildElement("ch.polarity").text(), XMLchSP, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("ch.polarity");
+			svalue = XMLchSP;
+		} else if (iparam == 1) {
+			if (QString::compare(nodeTag.firstChildElement("ch.leakage.current").text(), XMLleak, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("ch.leakage.current");
+			svalue = XMLleak;
+		} else if (iparam == 2) {
+			if (QString::compare(nodeTag.firstChildElement("double.leakage").text(), XMLdoubleleak, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("double.leakage");
+			svalue = XMLdoubleleak;
+		} else if (iparam == 3) {
+			if (QString::compare(nodeTag.firstChildElement("analog.tristates").text(), XMLnanaltri, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("analog.tristates");
+			svalue = XMLnanaltri;
+		} else if (iparam == 4) {
+			if (QString::compare(nodeTag.firstChildElement("gain").text(), XMLgain, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("gain");
+			svalue = XMLgain;
+		} else if (iparam == 5) {
+			if (QString::compare(nodeTag.firstChildElement("peak.time").text(), XMLpeakt, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("peak.time");
+			svalue = XMLpeakt;
+		} else if (iparam == 6) {
+			if (QString::compare(nodeTag.firstChildElement("neighbor.trigger").text(), XMLntrig, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("neighbor.trigger");
+			svalue = XMLntrig;
+		} else if (iparam == 7) {
+			if (QString::compare(nodeTag.firstChildElement("TAC.slop.adj").text(), XMLTACslop, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("TAC.slop.adj");
+			svalue = XMLTACslop;
+		} else if (iparam == 8) {
+			if (QString::compare(nodeTag.firstChildElement("disable.at.peak").text(), XMLdpeak, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("disable.at.peak");
+			svalue = XMLdpeak;
+		} else if (iparam == 9) {
+			if (QString::compare(nodeTag.firstChildElement("ART").text(), XMLart, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("ART");
+			svalue = XMLart;
+		} else if (iparam == 10) {
+			if (QString::compare(nodeTag.firstChildElement("ART.mode").text(), XMLartm, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("ART.mode");
+			svalue = XMLartm;
+		} else if (iparam == 11) {
+			if (QString::compare(nodeTag.firstChildElement("dual.clock.ART").text(), XMLdualclock, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("dual.clock.ART");
+			svalue = XMLdualclock;
+		} else if (iparam == 12) {
+			if (QString::compare(nodeTag.firstChildElement("out.buffer.mo").text(), XMLsbfm, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("out.buffer.mo");
+			svalue = XMLsbfm;
+		} else if (iparam == 13) {
+			if (QString::compare(nodeTag.firstChildElement("out.buffer.pdo").text(), XMLsbfp, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("out.buffer.pdo");
+			svalue = XMLsbfp;
+		} else if (iparam == 14) {
+			if (QString::compare(nodeTag.firstChildElement("out.buffer.tdo").text(), XMLsbft, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("out.buffer.tdo");
+			svalue = XMLsbft;
+		} else if (iparam == 15) {
+			if (nodeTag.firstChildElement("channel.monitoring").text().toInt() != _cmon) different=true;
+			tagname = QString("channel.monitoring");
+			svalue = QString::number(_cmon);
+		} else if (iparam == 16) {
+			if (QString::compare(nodeTag.firstChildElement("monitoring.control").text(), XMLscmx, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("monitoring.control");
+			svalue = XMLscmx;
+		} else if (iparam == 17) {
+			if (QString::compare(nodeTag.firstChildElement("monitor.pdo.out").text(), XMLsbmx, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("monitor.pdo.out");
+			svalue = XMLsbmx;
+		} else if (iparam == 18) {
+			if (QString::compare(nodeTag.firstChildElement("ADCs").text(), XMLadcs, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("ADCs");
+			svalue = XMLadcs;
+		} else if (iparam == 19) {
+			if (QString::compare(nodeTag.firstChildElement("sub.hyst.discr").text(), XMLhyst, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("sub.hyst.discr");
+			svalue = XMLhyst;
+		} else if (iparam == 20) {
+			if (QString::compare(nodeTag.firstChildElement("direct.time").text(), XMLdtime, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("direct.time");
+			svalue = XMLdtime;
+		} else if (iparam == 21) {
+			if (QString::compare(nodeTag.firstChildElement("direct.time.mode").text(), XMLdtimemode, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("direct.time.mode");
+			svalue = XMLdtimemode;
+		} else if (iparam == 22) {
+			if (QString::compare(nodeTag.firstChildElement("conv.mode.8bit").text(), XML8bconvmode, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("conv.mode.8bit");
+			svalue = XML8bconvmode;
+		} else if (iparam == 23) {
+			if (QString::compare(nodeTag.firstChildElement("enable.6bit").text(), XML6benable, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("enable.6bit");
+			svalue = XML6benable;
+		} else if (iparam == 24) {
+			if (QString::compare(nodeTag.firstChildElement("ADC.10bit").text(), XMLadc10b, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("ADC.10bit");
+			svalue = XMLadc10b;
+		} else if (iparam == 25) {
+			if (QString::compare(nodeTag.firstChildElement("ADC.8bit").text(), XMLadc8b, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("ADC.8bit");
+			svalue = XMLadc8b;
+		} else if (iparam == 26) {
+			if (QString::compare(nodeTag.firstChildElement("ADC.6bit").text(), XMLadc6b, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("ADC.6bit");
+			svalue = XMLadc6b;
+		} else if (iparam == 27) {
+			if (QString::compare(nodeTag.firstChildElement("dual.clock.data").text(), XMLdclockdata, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("dual.clock.data");
+			svalue = XMLdclockdata;
+		} else if (iparam == 28) {
+			if (QString::compare(nodeTag.firstChildElement("dual.clock.6bit").text(), XMLdclock6bit, Qt::CaseInsensitive) != 0) different=true;
+			tagname = QString("dual.clock.6bit");
+			svalue = XMLdclock6bit;
+		} else if (iparam == 29) {
+			if (nodeTag.firstChildElement("threshold.DAC").text().toInt() != _thresDAC) different=true;
+			tagname = QString("threshold.DAC");
+			svalue = QString::number(_thresDAC);
+		} else if (iparam == 30) {
+			if (nodeTag.firstChildElement("test.pulse.DAC").text().toInt() != _tpDAC) different=true;
+			tagname = QString("test.pulse.DAC");
+			svalue = QString::number(_tpDAC);
+		}
+
+		if (different) {
+			subnodeTag = nodeTag.firstChildElement(tagname);
+			newNodeTag = doc.createElement(tagname);
+			newNodeText = doc.createTextNode(svalue);
+			newNodeTag.appendChild(newNodeText);
+			nodeTag.replaceChild(newNodeTag, subnodeTag);
+		}
+	}
+
+	//****channel.XX****//
+	QString chan("channel."), schannum; 
+	for (int ichan=0; ichan<64; ++ichan) {
+		schannum = QString("%1").arg(ichan, 2, 10, QChar('0'));
+		nodeTag = root.firstChildElement(chan+schannum);
+		for (int iparam=0;iparam<10; ++iparam) {
+			different=false;
+			if (iparam == 0) {
+				if (QString::compare(nodeTag.firstChildElement("polarity").text(), XMLSP[ichan], Qt::CaseInsensitive) != 0) different=true;
+				tagname = QString("polarity");
+				svalue = XMLSP[ichan];
+			} else if (iparam == 1) {
+				if (QString::compare(nodeTag.firstChildElement("leakage.current").text(), XMLSL[ichan], Qt::CaseInsensitive) != 0) different=true;
+				tagname = QString("leakage.current");
+				svalue = XMLSL[ichan];
+			} else if (iparam == 2) {
+				if (QString::compare(nodeTag.firstChildElement("capacitance").text(), XMLSC[ichan], Qt::CaseInsensitive) != 0) different=true;
+				tagname = QString("capacitance");
+				svalue = XMLSC[ichan];
+			} else if (iparam == 3) {
+				if (QString::compare(nodeTag.firstChildElement("test.pulse").text(), XMLST[ichan], Qt::CaseInsensitive) != 0) different=true;
+				tagname = QString("test.pulse");
+				svalue = XMLST[ichan];
+			} else if (iparam == 4) {
+				if (QString::compare(nodeTag.firstChildElement("hidden.mode").text(), XMLSM[ichan], Qt::CaseInsensitive) != 0) different=true;
+				tagname = QString("hidden.mode");
+				svalue = XMLSM[ichan];
+			} else if (iparam == 5) {
+				if (QString::compare(nodeTag.firstChildElement("monitor.mode").text(), XMLSMX[ichan], Qt::CaseInsensitive) != 0) different=true;
+				tagname = QString("monitor.mode");
+				svalue = XMLSMX[ichan];
+			} else if (iparam == 6) {
+				if (nodeTag.firstChildElement("trim").text().toInt() != trim[ichan]) different=true;
+				tagname = QString("trim");
+				svalue = QString::number(trim[ichan]);
+			} else if (iparam == 7) {
+				if (nodeTag.firstChildElement("s10bADC.time.set").text().toInt() != tenbADC[ichan]) different=true;
+				tagname = QString("s10bADC.time.set");
+				svalue = QString::number(tenbADC[ichan]);
+			} else if (iparam == 8) {
+				if (nodeTag.firstChildElement("s08bADC.time.set").text().toInt() != eightbADC[ichan]) different=true;
+				tagname = QString("s08bADC.time.set");
+				svalue = QString::number(eightbADC[ichan]);
+			} else if (iparam == 9) {
+				if (nodeTag.firstChildElement("s06bADC.time.set").text().toInt() != sixbADC[ichan]) different=true;
+				tagname = QString("s06bADC.time.set");
+				svalue = QString::number(sixbADC[ichan]);
+			}
+	
+			if (different) {
+				subnodeTag = nodeTag.firstChildElement(tagname);
+				newNodeTag = doc.createElement(tagname);
+				newNodeText = doc.createTextNode(svalue);
+				newNodeTag.appendChild(newNodeText);
+				nodeTag.replaceChild(newNodeTag, subnodeTag);
+			}
+		}
+	}
+
+	//Check if file exist, and confirm overwriting it
+	QFileInfo checkFile(filename);
+	//qDebug() << checkFile.absoluteFilePath();
+	if (checkFile.exists() || (checkFile.exists() && !checkFile.isFile()) ) {
+		cout << "Configuration not written" << endl;
+		cout << "File already exists or is not a file, try again" << endl;
+		return -2;
+	}
+
+	// Write changes to new XML file
+  QFile file(filename);
+	
+  if( !file.open( QIODevice::WriteOnly ) )
+  return -1;
+
+	//Dump content of modified QDomDocument object in new file
+  QTextStream ts( &file );
+  ts << doc.toString();
+
+  file.close();
+
 	return 0;
 }
 
@@ -204,11 +640,8 @@ int Configuration::ReadCFile(QString &filename){
 		}
 		//ch.polarity
  		QString stmp = n->firstChildElement("ch.polarity").text();
-		if(stmp=="wires" || stmp=="Wires"){
-			_chSP=0;
-		}else if(stmp=="strips" || stmp=="Strips"){
-			_chSP=1; 
-		}else{
+		_chSP = _polarities.indexOf(stmp.toLower());
+		if (_chSP == -1) {
 			qDebug()<<"Ch. polarity value must be one of: strips or wires , you have: "<<stmp;
 			abort();
 		}
@@ -220,37 +653,15 @@ int Configuration::ReadCFile(QString &filename){
 	 	_doubleleak = OnOffKey("double.leakage",(n->firstChildElement("double.leakage")).text());
 		//gain
 		_gainstring = (n->firstChildElement("gain")).text();
-		if(_gainstring=="0.5"){
-			_gain=0;
-		}else if(_gainstring=="1.0"){
-			_gain=1; 
-		}else if(_gainstring=="3.0"){
-			_gain=2;
-		}else if(_gainstring=="4.5"){
-			_gain=3;
-		}else if(_gainstring=="6.0"){
-			_gain=4;
-		}else if(_gainstring=="9.0"){
-			_gain=5;
-		}else if(_gainstring=="12.0"){
-			_gain=6;
-		}else if(_gainstring=="16.0"){
-			_gain=7;
-		}else{
+		_gain = _gains.indexOf(_gainstring);
+		if (_gain == -1) {
 			qDebug()<<"gain value must be one of: 0.5, 1.0, 3.0, 4.5, 6.0, 9.0, 12.0 or 16.0 mV/fC , you have: "<<_gainstring;
 			abort();
 		}
 		//peak.time
 		_peakint = (n->firstChildElement("peak.time")).text().toInt();
-		if(_peakint==200){
-			_peakt=0;
-		}else if(_peakint==100){
-			_peakt=1; 
-		}else if(_peakint==50){
-			_peakt=2;
-		}else if(_peakint==25){
-			_peakt=3;
-		}else{
+		_peakt = _peakts.indexOf(_peakint);
+		if (_peakt == -1) {
 			qDebug()<<"peak.time value must be one of: 25, 50, 100 or 200 ns , you have: "<<_peakint;
 			abort();
 		}
@@ -259,15 +670,8 @@ int Configuration::ReadCFile(QString &filename){
 	 	_ntrig = OnOffKey("neighbor.trigger",_ntrigstring);
 		//TAC.slop.adj
 		int tmp = (n->firstChildElement("TAC.slop.adj")).text().toInt();
-		if(tmp==125){
-			_TACslop=0;
-		}else if(tmp==250){
-			_TACslop=1; 
-		}else if(tmp==500){
-			_TACslop=2;
-		}else if(tmp==1000){
-			_TACslop=3;
-		}else{
+		_TACslop = _TACslops.indexOf(tmp);
+		if (_TACslop == -1) {
 			qDebug()<<"TAC.slop.adj value must be one of: 125, 250, 500 or 1000 ns , you have: "<<tmp;
 			abort();
 		}
@@ -277,11 +681,8 @@ int Configuration::ReadCFile(QString &filename){
 	 	_art = OnOffKey("ART",(n->firstChildElement("ART")).text());
 		//ART.mode
 		stmp = (n->firstChildElement("ART.mode")).text();
-		if(stmp=="threshold"){
-			_artm=0;
-		}else if(stmp=="peak"){
-			_artm=1; 
-		}else{
+		_artm = _ARTmodes.indexOf(stmp);
+		if (_artm == -1) {
 			qDebug()<<"ART.mode value must be one of: threshold or peak , you have: "<<stmp;
 			abort();
 		}
@@ -311,51 +712,36 @@ int Configuration::ReadCFile(QString &filename){
 	 	_dtime = OnOffKey("direct.time",(n->firstChildElement("direct.time")).text());
 		//direct.time.mode
 		stmp = (n->firstChildElement("direct.time.mode")).text();
-		if (stmp=="TtP") { //threshold-to-peak
-			_dtimeMode[0]=0;_dtimeMode[1]=0;//0
-		} else if (stmp=="ToT") { //time-over-threshold
-			_dtimeMode[0]=0;_dtimeMode[1]=1;//1
-		} else if (stmp=="PtP") {//pulse-at-peak
-			_dtimeMode[0]=1;_dtimeMode[1]=0;//2
-		} else if (stmp=="PtT") {//peak-to-threshold
-			_dtimeMode[0]=1;_dtimeMode[1]=1;//3
-		} else {
+		tmp = _dTimeModes.indexOf(stmp);
+		if (tmp == -1) {
 			qDebug()<<"direct.time.mode value must be one of: TtP, ToT, PtP or PtT, you have: "<<stmp;
 			abort();
 		}
+		_sdtm = QString("%1").arg(tmp, 2, 2, QChar('0'));
+		_dtimeMode[0] = _sdtm.at(0).digitValue();
+		_dtimeMode[1] = _sdtm.at(1).digitValue();
 		//conv.mode.8bit
 	 	_ebitconvmode = OnOffKey("conv.mode.8bit",(n->firstChildElement("conv.mode.8bit")).text());
 		//enable.6bit
 	 	_sbitenable = OnOffKey("enable.6bit",(n->firstChildElement("enable.6bit")).text());
 		//ADC.10bit
 		stmp = (n->firstChildElement("ADC.10bit")).text();
-		if(stmp=="200ns"){
-			_adc10b=0;
-		}else if(stmp=="+60ns"){
-			_adc10b=1; 
-		}else{
+		_adc10b = _adc10bs.indexOf(stmp);
+		if (_adc10b == -1) {
 			qDebug()<<"ADC.10bit value must be one of: 200ns or +60ns, you have: "<<stmp;
 			abort();
 		}
 		//ADC.8bit
 		stmp = (n->firstChildElement("ADC.8bit")).text();
-		if(stmp=="100ns"){
-			_adc8b=0;
-		}else if(stmp=="+60ns"){
-			_adc8b=1; 
-		}else{
+		_adc8b = _adc8bs.indexOf(stmp);
+		if (_adc8b == -1) {
 			qDebug()<<"ADC.8bit value must be one of: 100ns or +60ns, you have: "<<stmp;
 			abort();
 		}
 		//ADC.6bit
 		stmp = (n->firstChildElement("ADC.6bit")).text();
-		if(stmp=="low" || stmp=="Low"){
-			_adc6b=0;
-		}else if(stmp=="middle" || stmp=="Middle"){
-			_adc6b=1; 
-		}else if(stmp=="up" || stmp=="Up"){
-			_adc6b=2; 
-		}else{
+		_adc6b = _adc6bs.indexOf(stmp.toLower());
+		if (_adc6b == -1) {
 			qDebug()<<"ADC.6bit value must be one of: low, middle or up, you have: "<<stmp;
 			abort();
 		}
@@ -375,22 +761,6 @@ int Configuration::ReadCFile(QString &filename){
 			qDebug()<<"test.pulse.DAC value must be between 0 and 1023, you have: "<<_tpDAC;
 			abort();
 		}
-		/* Old VMM1 registers
-		//make.channel.7.neighbor.56
-	 	//_n756 = OnOffKey("make.channel.7.neighbor.56",(n->firstChildElement("make.channel.7.neighbor.56")).text());
-		//TAC.stop.setting
-		//stmp = (n->firstChildElement("TAC.stop.setting")).text();
-		//if(stmp=="ena-low"){
-		//	_TACstop=0;
-		//}else if(stmp=="stp-low"){
-		//	_TACstop=1; 
-		//}else{
-		//	qDebug()<<"TAC.stop.setting value must be one of: ena-low or stp-low, you have: "<<stmp;
-		//	abort();
-		//}
-		//ACQ.self.reset
-	 	//_ACQreset = OnOffKey("ACQ.self.reset",(n->firstChildElement("ACQ.self.reset")).text());*/
-		//cleanup
 		delete n;
 		n=0;
 	}
@@ -415,11 +785,8 @@ int Configuration::ReadCFile(QString &filename){
 			}
 			//polarity
 	 		QString stmp = n->firstChildElement("polarity").text();
-			if(stmp=="wires" || stmp=="Wires"){
-				SP[l]=0;
-			}else if(stmp=="strips" || stmp=="Strips"){
-				SP[l]=1; 
-			}else{
+			SP[l] = _polarities.indexOf(stmp.toLower());
+			if (SP[l] == -1) {
 				qDebug()<<"polarity value in channel "<<l<<"	must be one of: strips or wires , you have: "<<stmp;
 				abort();
 			}
@@ -552,16 +919,177 @@ int Configuration::ResetTriggerCounter() {
 	return 0;
 }
 
+int Configuration::LoadRunParamsFromGUI(int tpd, QString tp, int as, int aw, QString rm){
+
+	//Trigger DAQ
+	TP_Delay = tpd;
+	Trig_Period = tp;
+	ACQ_Sync = as;
+	ACQ_Window = aw;
+	Run_mode = rm;
+
+	return 0;
+}
+
+//Only called to send config from GUI, some parameters can be hard coded
+int Configuration::LoadConfigFromGUI(int iBaseIP, int nIPs, quint16 chanMap, int spg, int slg, int sdrv, int sfm, int sg, int st, 
+																			int stc, int sng, int sdp, int sfa, int sfam, int sdcka, int sbfm, int sbfp, int sbft, 
+																			int sm5_sm0, int scmx, int sbmx, int adcs, int hyst, int dtime, int dtimeMode1,
+																			int dtimeMode2, int ebitconvmode, int sbitenable, int adc10b, int adc8b, int adc6b,
+																			int duaclockdata, int dualclock6bit, int thresDAC, int tpDAC,
+																			bool VMM1SPBool[64], bool VMM1SCBool[64], bool VMM1SLBool[64], bool VMM1STBool[64],
+																			bool VMM1SMBool[64], quint8 VMM1SDVoltage[64], bool VMM1SMXBool[64], quint8 VMM1SZ010bCBox[64],
+																			quint8 VMM1SZ08bCBox[64], quint8 VMM1SZ06bCBox[64], bool debug_flag){
+
+	if (debug_flag) cout<<"[Configuration::LoadConfigFromGUI] Setting config parameters from GUI"<<endl;
+
+	int iip=-1;
+
+	//Set parameter values
+
+	// Ports
+	FECPort = 6007;
+	DAQPort = 6006;
+	VMMASICPort = 6603;
+	VMMAPPPort = 6600;
+	S6Port = 6602;
+
+	//General info
+	_ips.clear();
+	for (int i=0; i< nIPs; ++i) {
+		iip = iBaseIP;
+		iip+=i;
+		_ips<<"10.0.0."+QString::number(iip);
+	}
+	//Debug OFF by default
+	debug = debug_flag;
+
+	//Channel Map (hdmi)
+	channelMap = chanMap;
+
+	//Global settings
+	_chSP = spg;
+	_leak = slg;
+	_nanaltri = sdrv;
+	_doubleleak = sfm;
+	_gain = sg;
+	_peakt = st;
+	_ntrig = sng;
+	_TACslop = stc;
+	_dpeak = sdp;
+	_art = sfa;
+	_artm = sfam;
+	_dualclock = sdcka;
+	_sbfm = sbfm;
+	_sbfp = sbfp;
+	_sbft = sbft;
+	_cmon = sm5_sm0;
+	_scmx = scmx;
+	_sbmx = sbmx;
+	_adcs = adcs;
+	_hyst = hyst;
+	_dtime = dtime;
+	_dtimeMode[0] = dtimeMode1;
+	_dtimeMode[1] = dtimeMode2;
+	_ebitconvmode = ebitconvmode;
+	_sbitenable = sbitenable;
+	_adc10b = adc10b;
+	_adc8b = adc8b;
+	_adc6b = adc6b;
+	_dualclockdata = duaclockdata;
+	_dualclock6bit = dualclock6bit;
+	_thresDAC = thresDAC;
+	_tpDAC = tpDAC;
+
+	for (int ichan=0; ichan<64; ++ichan) {
+		SP[ichan] = VMM1SPBool[ichan];
+		SC[ichan] = VMM1SCBool[ichan];
+		SL[ichan] = VMM1SLBool[ichan];
+		ST[ichan] = VMM1STBool[ichan];
+		SM[ichan] = VMM1SMBool[ichan];
+		trim[ichan] = VMM1SDVoltage[ichan];
+		SMX[ichan] = VMM1SMXBool[ichan];
+		tenbADC[ichan] = VMM1SZ010bCBox[ichan];
+		eightbADC[ichan] = VMM1SZ08bCBox[ichan];
+		sixbADC[ichan] = VMM1SZ06bCBox[ichan];
+	}
+
+	if (debug) cout<<"[Configuration::LoadConfigFromGUI] Done"<<endl;
+
+	return 0;
+}
+
+int Configuration::DumpConfigParams(){
+
+	if (debug) cout<<"[Configuration::DumpConfigParams] Begin"<<endl;
+
+	foreach (const QString &ip, _ips){
+		qDebug() << "IPs= "  << ip;
+	}
+	
+	if (debug) cout << "debug is ON" << endl;	
+	cout << "channelMap= " << channelMap << endl;
+	cout << "polarity= " << _chSP << endl;
+	cout << "leakage= " << _leak << endl;
+	cout << "analog tristates= " << _nanaltri << endl;
+	cout << "double leakage= " << _doubleleak << endl;
+	cout << "gain= " << _gain << endl;
+	cout << "peak time= " << _peakt << endl;
+	cout << "TAC slope= " << _TACslop << endl;
+	cout << "disable at peak= " << _dpeak << endl;
+	cout << "ART= " << _art << endl;
+	cout << "ART mode= " << _artm << endl;
+	cout << "dual clock= " << _dualclock << endl;
+	cout << "sbfm= " << _sbfm << endl;
+	cout << "sbfp= " << _sbfp << endl;
+	cout << "sbft= " << _sbft << endl;
+	cout << "channel monitoring= " << _cmon << endl;
+	cout << "scmx= " << _scmx << endl;
+	cout << "sbmx= " << _sbmx << endl;
+	cout << "ADCs= " << _adcs << endl;
+	cout << "hysterisis= " << _hyst << endl;
+	cout << "direct time= " << _dtime << endl;
+	cout << "direct time mode 0= " << _dtimeMode[0] << endl;
+	cout << "direct time mode 1=" << _dtimeMode[1] << endl;
+	cout << "8bit conv mode= " << _ebitconvmode << endl;
+	cout << "6bit enable= " << _sbitenable << endl;
+	cout << "10bit ADC= " << _adc10b << endl;
+	cout << "8bit ADC= " << _adc8b << endl;
+	cout << "6bit ADC= " << _adc6b << endl;
+	cout << "dual clock data= " << _dualclockdata << endl;
+	cout << "dual clock 6bit= " << _dualclock6bit << endl;
+	cout << "threshold DAC= " << _thresDAC << endl;
+	cout << "pulser DAC= " << _tpDAC << endl;
+/*
+	for (int ichan=0; ichan<64; ++ichan) {
+		SP[ichan] = VMM1SPBool[ichan];
+		SC[ichan] = VMM1SCBool[ichan];
+		SL[ichan] = VMM1SLBool[ichan];
+		ST[ichan] = VMM1STBool[ichan];
+		SM[ichan] = VMM1SMBool[ichan];
+		trim[ichan] = VMM1SDVoltage[ichan];
+		SMX[ichan] = VMM1SMXBool[ichan];
+		tenbADC[ichan] = VMM1SZ010bCBox[ichan];
+		eightbADC[ichan] = VMM1SZ08bCBox[ichan];
+		sixbADC[ichan] = VMM1SZ06bCBox[ichan];
+	}
+*/
+	if (debug) cout<<"[Configuration::DumpConfigParams] End"<<endl;
+
+	return 0;
+}
+
 int Configuration::SendConfig(){
+
 
   //Checking if UDP Socket is still connected by checking for readyRead() signal
   if (socket->state()==QAbstractSocket::UnconnectedState) {
-		if (debug) qDebug()<<"WARNING: About to rebind the socket";
+		if (debug) qDebug()<<"INFO: About to rebind the socket";
 		bnd = socket->bind(FECPort, QUdpSocket::ShareAddress);
 		if(bnd==false){
-			qDebug()<<"Binding socket failed";
+			qDebug()<<"[Configuration::SendConfig]    WARNING Binding socket failed. Exitting.";
 		}else{
-			qDebug()<<"Binding socket successful";
+			if(debug) qDebug()<<"Binding socket successful";
 		}
 	}
 	
@@ -592,32 +1120,43 @@ int Configuration::SendConfig(){
 	strTmp = QString("%1").arg(_adc10b, 2, 2, QChar('0')); //arg(int to convert, number of figures, base, leading character to use)
 	GlobalRegistersStrings[0].replace(GlobalRegistersStringsSequence,strTmp.size(), strTmp);
 	GlobalRegistersStringsSequence+=strTmp.size();
+    //qDebug() << "10bit : " << GlobalRegistersStrings[0];
 
 	//8bit
 	strTmp = QString("%1").arg(_adc8b, 2, 2, QChar('0'));
 	GlobalRegistersStrings[0].replace(GlobalRegistersStringsSequence,strTmp.size(), strTmp);
 	GlobalRegistersStringsSequence+=strTmp.size();
+    //qDebug() << "8bit : " << GlobalRegistersStrings[0];
 
 	//6bit
 	strTmp = QString("%1").arg(_adc6b, 3, 2, QChar('0'));
 	GlobalRegistersStrings[0].replace(GlobalRegistersStringsSequence,strTmp.size(), strTmp);
 	GlobalRegistersStringsSequence+=strTmp.size();
+    //qDebug() << "6bit : " << GlobalRegistersStrings[0];
 
 	GlobalRegistersStrings[0].replace(GlobalRegistersStringsSequence,1, QString::number(_ebitconvmode));//8-bit enable
+    //qDebug() << "8-bit enable : " << GlobalRegistersStrings[0];
 	GlobalRegistersStringsSequence++;
 	GlobalRegistersStrings[0].replace(GlobalRegistersStringsSequence,1, QString::number(_sbitenable));//6-bit enable
+    //qDebug() << "6-bit enable : " << GlobalRegistersStrings[0];
 	GlobalRegistersStringsSequence++;
 	GlobalRegistersStrings[0].replace(GlobalRegistersStringsSequence,1, QString::number(_adcs));//ADC enable
+    //qDebug() << "ADC enable   : " << GlobalRegistersStrings[0];
 	GlobalRegistersStringsSequence++;
 	GlobalRegistersStrings[0].replace(GlobalRegistersStringsSequence,1, QString::number(_dualclockdata));//dual clock serialized
+    //qDebug() << "dual clock serialized : " << GlobalRegistersStrings[0];
 	GlobalRegistersStringsSequence++;
 	GlobalRegistersStrings[0].replace(GlobalRegistersStringsSequence,1, QString::number(_dualclock));//dual clock ART
+    //qDebug() << "dual clock ART        : " << GlobalRegistersStrings[0];
 	GlobalRegistersStringsSequence++;
 	GlobalRegistersStrings[0].replace(GlobalRegistersStringsSequence,1, QString::number(_dualclock6bit));//dual clk 6-bit
+    //qDebug() << "dual clock 6-bit      : " << GlobalRegistersStrings[0];
 	GlobalRegistersStringsSequence++;
 	GlobalRegistersStrings[0].replace(GlobalRegistersStringsSequence,1, QString::number(_nanaltri));//tristates analog
+    //qDebug() << "tristates analog      : " << GlobalRegistersStrings[0];
 	GlobalRegistersStringsSequence++;
 	GlobalRegistersStrings[0].replace(GlobalRegistersStringsSequence,1, QString::number(_dtimeMode[0]));//timing out 2
+    //qDebug() << "timing out 2          : " << GlobalRegistersStrings[0];
 
 	if (debug) qDebug()<<"GL0: "<<GlobalRegistersStrings[0];
 	//#######################################################################";
@@ -631,38 +1170,48 @@ int Configuration::SendConfig(){
 	strTmp = QString("%1").arg(_peakt, 2, 2, QChar('0'));
 	GlobalRegistersStrings[1].replace(GlobalRegistersStringsSequence,strTmp.size(), strTmp);
 	GlobalRegistersStringsSequence+=strTmp.size();
+    //qDebug() << "peak time                   : " << GlobalRegistersStrings[1];
 
 	GlobalRegistersStrings[1].replace(GlobalRegistersStringsSequence,1, QString::number(_doubleleak));//doubles the leakage current
 	GlobalRegistersStringsSequence++;
+    //qDebug() << "doubles the leakage current : " << GlobalRegistersStrings[1];
 
 	//gain
 	strTmp = QString("%1").arg(_gain, 3, 2, QChar('0'));
 	GlobalRegistersStrings[1].replace(GlobalRegistersStringsSequence,strTmp.size(), strTmp);
 	GlobalRegistersStringsSequence+=strTmp.size();
+    //qDebug() << "gain                        : " << GlobalRegistersStrings[1];
 
 	GlobalRegistersStrings[1].replace(GlobalRegistersStringsSequence,1, QString::number(_ntrig));//neighbor
 	GlobalRegistersStringsSequence++;
+    //qDebug() << "neighbor trigger            : " << GlobalRegistersStrings[1];
 	GlobalRegistersStrings[1].replace(GlobalRegistersStringsSequence,1, QString::number(_dtimeMode[1]));//Direct outputs setting
 	GlobalRegistersStringsSequence++;
+    //qDebug() << "direct outputs setting      : " << GlobalRegistersStrings[1];
 	GlobalRegistersStrings[1].replace(GlobalRegistersStringsSequence,1, QString::number(_dtime));//direct timing
 	GlobalRegistersStringsSequence++;
+    //qDebug() << "direct timing               : " << GlobalRegistersStrings[1];
 	GlobalRegistersStrings[1].replace(GlobalRegistersStringsSequence,1, QString::number(_hyst));//hysterisis
 	GlobalRegistersStringsSequence++;
+    //qDebug() << "hysteriesis                 : " << GlobalRegistersStrings[1];
 
 	//TAC slope adjustment
 	strTmp = QString("%1").arg(_TACslop, 2, 2, QChar('0'));
 	GlobalRegistersStrings[1].replace(GlobalRegistersStringsSequence,strTmp.size(), strTmp);
 	GlobalRegistersStringsSequence+=strTmp.size();
+    //qDebug() << "TAC slope adjustment        : " << GlobalRegistersStrings[1];
 
 	//thr dac
 	strTmp = QString("%1").arg(_thresDAC, 10, 2, QChar('0'));
 	GlobalRegistersStrings[1].replace(GlobalRegistersStringsSequence,strTmp.size(), strTmp);
 	GlobalRegistersStringsSequence+=strTmp.size();
+    //qDebug() << "thr DAC                     : " << GlobalRegistersStrings[1];
 
 	//pulse dac
 	strTmp = QString("%1").arg(_tpDAC, 10, 2, QChar('0'));
 	GlobalRegistersStrings[1].replace(GlobalRegistersStringsSequence,strTmp.size(), strTmp);
 	GlobalRegistersStringsSequence+=strTmp.size();
+    //qDebug() << "pulse DAC                   : " << GlobalRegistersStrings[1];
 
 	if (debug) qDebug()<<"GL1: "<<GlobalRegistersStrings[1];
 
@@ -711,12 +1260,15 @@ int Configuration::SendConfig(){
 		channelRegistersStrings[i].replace(bitSequenceCh,1, QString::number(ST[i]));bitSequenceCh++;
 		channelRegistersStrings[i].replace(bitSequenceCh,1, QString::number(SM[i]));bitSequenceCh++;
 
+
 		//trim
+        strTmp = "0000";
 		strTmp = QString("%1").arg(trim[i], 4, 2, QChar('0'));
 		reverse(strTmp.begin(),strTmp.end()); //bug in VMM2, needs to be reverted
 		channelRegistersStrings[i].replace(bitSequenceCh,strTmp.size(), strTmp);
 		bitSequenceCh+=strTmp.size();
 
+        //smx
 		channelRegistersStrings[i].replace(bitSequenceCh,1, QString::number(SMX[i]));bitSequenceCh++;
 
 		//10 bit adc lsb
@@ -762,19 +1314,21 @@ int Configuration::SendConfig(){
 		out<<(quint32)cmd.toUInt(&ok,16)<<(quint32)0;
 		if (debug) qDebug()<<"out: " <<datagramSPI.toHex();
 	
-	
+	    //channel SPI
 		for(unsigned int i=firstRegisterChannelSPI;i<=lastRegisterChannelSPI;++i){
 			out<<(quint32)(i)<<(quint32)channelRegistersStrings[i].toUInt(&ok,2);
 			if (debug) qDebug()<<"out: " <<datagramSPI.toHex();
 			if (debug) qDebug()<<"Address:"<<i<<", value:"<<(quint32)channelRegistersStrings[i].toUInt(&ok,2);
 		}
+        //attach global SPI
 		for(unsigned int i=firstRegisterGlobalSPI;i<=lastRegisterGlobalSPI;++i){
 			out<<(quint32)(i)<<(quint32)GlobalRegistersStrings[i-firstRegisterGlobalSPI].toUInt(&ok,2);
 			if (debug) qDebug()<<"out: " <<datagramSPI.toHex();
 			if (debug) qDebug()<<"Address:"<<i<<", value:"<<(quint32)GlobalRegistersStrings[i-firstRegisterGlobalSPI].toUInt(&ok,2);
 		}
-	
+
 		//Download the SPI (??)
+	
 		out<<(quint32)128<<(quint32)1;
 		if (debug) qDebug()<<"out: " <<datagramSPI.toHex();
 
@@ -783,15 +1337,21 @@ int Configuration::SendConfig(){
 		if(read){
 			processReply(ip, socket);
 			//should validate datagram content here
+        //    socket->close();
+        //    socket->disconnectFromHost();
 	
 		}else{
-			qDebug()<<"WaitForReadyRead timed out on big configuration package acknowledgement.";
+			qDebug()<< "[Configuration::SendConfig]    WARNING WaitForReadyRead timed out on big configuration package acknowledgement. Exitting.";
 			socket->close();
 			socket->disconnectFromHost();
 			abort();
 		}
 			
 	} //end if foreach ip
+
+    if(debug) qDebug() << "[Configuration::SendConfig]    Call socket close() and disconnectFromHost().";
+    socket->close();
+    socket->disconnectFromHost();
 
 	return 0;
 		
@@ -826,27 +1386,45 @@ QByteArray Configuration::bitsToBytes(QBitArray bits) {
 	return bytes;
 }
 
-void Configuration::Sender(QByteArray blockOfData, const QString &ip, quint16 destPort, QUdpSocket& socket)
+QBitArray Configuration::bytesToBits(QByteArray bytes) {
+	// Create a bit array of the appropriate size
+	QBitArray bits(bytes.count()*8);
+ 
+	// Convert from QByteArray to QBitArray
+	for(int i=0; i<bytes.count(); ++i) {
+		for(int b=0; b<8;++b) {
+			bits.setBit( i*8+b, bytes.at(i)&(1<<(7-b)) );
+		}
+	}
+
+	return bits;
+
+}
+
+void Configuration::Sender(QByteArray blockOfData, const QString &ip, quint16 destPort, QUdpSocket& socket_)
 {
     // SocketState enum (c.f. http://doc.qt.io/qt-5/qabstractsocket.html#SocketState-enum)
-    bool boards_pinged = pinged;
-    bool socket_bound = socket.state() == QAbstractSocket::BoundState;
+    //bool boards_pinged = pinged;
+    bool boards_pinged = true;
+    bool socket_bound = socket_.state() == QAbstractSocket::BoundState;
     bool send_ok = (boards_pinged && socket_bound);
     if(!send_ok) {
         if(!boards_pinged) {
             qDebug() << "[Configuration::Sender]    Ping status: " << boards_pinged;
         }
         if(!socket_bound) {
-            qDebug() << "[Configuration::Sender]    Socket is not in bound state. Error from socket: " << socket.errorString() << ", Local Port: " << socket.localPort();
+            qDebug() << "[Configuration::Sender]    Socket is not in bound state. Error from socket: " << socket_.errorString() << ", Local Port: " << socket_.localPort();
         }
-        socket.close();
-        socket.disconnectFromHost();
+        qDebug() << "[Configuration::Sender]    Calling socket close() and disconnectFromHost()";
+        socket_.close();
+        socket_.disconnectFromHost();
         abort();
     }
     else if(send_ok) {
         qDebug() << "[Configuration::Sender]    Pinged and bound";
-        socket.writeDatagram(blockOfData, QHostAddress(ip), destPort);
-        if(debug) qDebug() << "IP: " << ip << ", data sent: " << blockOfData.toHex() << ", size: " << blockOfData.size();
+        socket_.writeDatagram(blockOfData, QHostAddress(ip), destPort);
+        qDebug() << "IP: " << ip << ", data sent: " << blockOfData.toHex() << ", size: " << blockOfData.size();
+        //if(debug) qDebug() << "IP: " << ip << ", data sent: " << blockOfData.toHex() << ", size: " << blockOfData.size();
     }
 }
 
@@ -944,6 +1522,14 @@ bool Configuration::OnOffChannel(const QString &childKey, const QString &tmp, in
 	}
 		
 	return val;
+}
+
+QString Configuration::ValToOnOffXML(bool value, QString valOn, QString valOff){
+	if (value){
+		return valOn;
+	}else{
+		return valOff;
+	}
 }
 
 void Configuration::Validate(QString sectionname){

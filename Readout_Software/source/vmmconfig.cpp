@@ -1,7 +1,7 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore>
 #include <iostream>
-#include <configuration_module.h>
+#include "configuration_module.h"
 
 using namespace std;
 
@@ -37,6 +37,10 @@ int main(int argc, char *argv[])
 		filename = theargs[1];
 	}
 */
+
+  int test=conf->WriteCFile(filename);
+	if (test==0) {cout << "XML file creation successful" << endl;}
+	else {cout << "XML file creation fail" << endl;}
 
   int readable=conf->ReadCFile(filename);
   if (readable==0){cout<<"XML file read successfully"<<endl;}

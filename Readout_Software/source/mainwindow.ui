@@ -146,8 +146,8 @@
        <rect>
         <x>10</x>
         <y>60</y>
-        <width>111</width>
-        <height>18</height>
+        <width>116</width>
+        <height>22</height>
        </rect>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_23">
@@ -188,7 +188,7 @@
         <x>10</x>
         <y>20</y>
         <width>111</width>
-        <height>41</height>
+        <height>48</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_2">
@@ -887,10 +887,10 @@
      <widget class="QLabel" name="label_11">
       <property name="geometry">
        <rect>
-        <x>18</x>
+        <x>12</x>
         <y>31</y>
-        <width>25</width>
-        <height>16</height>
+        <width>31</width>
+        <height>20</height>
        </rect>
       </property>
       <property name="font">
@@ -1780,7 +1780,7 @@ p, li { white-space: pre-wrap; }
        <x>340</x>
        <y>23</y>
        <width>81</width>
-       <height>32</height>
+       <height>36</height>
       </rect>
      </property>
      <layout class="QGridLayout" name="gridLayout_4">
@@ -3558,6 +3558,20 @@ p, li { white-space: pre-wrap; }
        </property>
       </widget>
      </item>
+     <item row="5" column="1">
+      <widget class="QPushButton" name="loadConfigXMLFile">
+       <property name="text">
+        <string>Load Config</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="2">
+      <widget class="QPushButton" name="writeConfigXMLFile">
+       <property name="text">
+        <string>Write Config</string>
+       </property>
+      </widget>
+     </item>
     </layout>
     <widget class="QLabel" name="dacmvLabel">
      <property name="geometry">
@@ -4947,7 +4961,7 @@ p, li { white-space: pre-wrap; }
        <rect>
         <x>10</x>
         <y>24</y>
-        <width>110</width>
+        <width>128</width>
         <height>27</height>
        </rect>
       </property>
@@ -6159,8 +6173,8 @@ p, li { white-space: pre-wrap; }
       <rect>
        <x>127</x>
        <y>120</y>
-       <width>110</width>
-       <height>21</height>
+       <width>122</width>
+       <height>22</height>
       </rect>
      </property>
      <layout class="QFormLayout" name="formLayout">
