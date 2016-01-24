@@ -1253,6 +1253,8 @@ void MainWindow::SendRunParamsToDAQModule()
                                   ui->trgPeriod->text(),
                                   ui->acqSync->value(),
                                   ui->acqWindow->value());
+    _runDAQ->LoadChannelMap(channelMap);
+    _runDAQ->LoadIPList(_config->getIPs());
     m_daqConstantsLoaded = true;
 }
 

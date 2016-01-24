@@ -154,6 +154,19 @@ void RunDAQ::LoadDAQConstantsFromGUI(int pulserDelay, QString trigPeriod, int ac
     m_acqsync = acqSync;
     m_acqwindow = acqWindow;
 }
+void RunDAQ::LoadIPList(QStringList ipListIn)
+{
+    if(ipListIn.size()==0) {
+        qDebug() << "[RunDAQ::LoadIPList]    WARNING Input list of IPs is empty! Exitting.";
+        abort();
+    }
+
+    foreach (const QString &ip, ipListIn) {
+        if(m_dbg) qDebug() << "[RunDAQ::LoadIPList]    Loading IP address : " << ip;
+        m_ips << ip;
+    }
+
+}
 
 void RunDAQ::SetTrigAcqConstants()
 {

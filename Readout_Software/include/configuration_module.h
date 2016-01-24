@@ -78,6 +78,7 @@ class Configuration : public QObject
         QString getGain() {return _gainstring;}
         int getPeakTime() {return _peakint;}
         QString getNeighborTrigger() {return _ntrigstring;}
+        QStringList getIPs() { return _ips; }
         void getIPs(QStringList &list) {list=_ips;}
         void getVMMIDs(QStringList &list) {list=_ids;}
         QString getComment() {return _comment;}
