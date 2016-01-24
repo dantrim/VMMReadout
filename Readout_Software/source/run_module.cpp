@@ -188,8 +188,8 @@ void RunDAQ::SetTrigAcqConstants()
         
 
     // temporarily add the IP here --> will need to grab them from the configuration object if using the GUI
-    m_ips.clear();
-    m_ips << "10.0.0.2";
+    //m_ips.clear();
+    //m_ips << "10.0.0.2";
 
     foreach(const QString &ip, m_ips) {
         UpdateCounter();
@@ -203,7 +203,7 @@ void RunDAQ::SetTrigAcqConstants()
         cmdType     = "AA";
         cmdLength   = "FFFF";
         msbCounter = "0x80000000";
-        m_channelmap = 3;
+        //m_channelmap = 3;
         out<<(quint32)(n_command_counter + msbCounter.toUInt(&ok,16))<<(quint16)0<<(quint16)m_channelmap;
         //out<<(quint32)(n_command_counter + msbCounter.toUInt(&ok,16))<<(quint16)9<<(quint16)m_channelmap;
         out<<(quint8)cmd.toUInt(&ok,16)<<(quint8)cmdType.toUInt(&ok,16)<<(quint16)cmdLength.toUInt(&ok,16);
@@ -256,8 +256,8 @@ void RunDAQ::SetTriggerMode(bool externalRunMode)
     }
 
     // temporarily add the IP here --> will need to grab them from the configuration object if using the GUI!
-    m_ips.clear();
-    m_ips << "10.0.0.2";
+    //m_ips.clear();
+    //m_ips << "10.0.0.2";
 
     foreach(const QString &ip, m_ips) {
         UpdateCounter();
@@ -271,7 +271,7 @@ void RunDAQ::SetTriggerMode(bool externalRunMode)
         QString cmdLength   = "FFFF";
         QString msbCounter  = "0x80000000";
         // temporarily add the channel map here --> will need to grab them from the configuration object if using the GUI!
-        m_channelmap=3;
+        //m_channelmap=3;
         out<<(quint32)(n_command_counter + msbCounter.toUInt(&ok,16))<<(quint16)0<<(quint16)m_channelmap;
         out<<(quint8)cmd.toUInt(&ok,16)<<(quint8)cmdType.toUInt(&ok,16)<<(quint16)cmdLength.toUInt(&ok,16);
         out<<(quint32)0;
@@ -327,8 +327,8 @@ void RunDAQ::ACQOn()
     }
 
     // temporarily add the IP here
-    m_ips.clear();
-    m_ips << "10.0.0.2";
+    //m_ips.clear();
+    //m_ips << "10.0.0.2";
 
     foreach(const QString &ip, m_ips) {
         UpdateCounter();
@@ -343,7 +343,7 @@ void RunDAQ::ACQOn()
         cmdLength   = "FFFF";
         msbCounter  = "0x80000000";
         // temporarily fix the channel map until grabbing it from GUI
-        m_channelmap = 3;
+        //m_channelmap = 3;
         out << (quint32)(n_command_counter+msbCounter.toUInt(&ok,16)) << (quint16)0 << (quint16)m_channelmap;
         out << (quint8)cmd.toUInt(&ok,16) << (quint8)cmdType.toUInt(&ok,16) << (quint16)cmdLength.toUInt(&ok,16);
         out << (quint32)0;
@@ -413,8 +413,8 @@ void RunDAQ::ACQOff()
     }
 
     // temporarily add the ips here
-    m_ips.clear();
-    m_ips << "10.0.0.2";
+    //m_ips.clear();
+    //m_ips << "10.0.0.2";
 
     foreach(const QString &ip, m_ips) {
         UpdateCounter();
@@ -429,7 +429,7 @@ void RunDAQ::ACQOff()
         cmdLength   = "FFFF";
         msbCounter  = "0x80000000";
         //temporarily add the channel map
-        m_channelmap = 3;
+        //m_channelmap = 3;
         out << (quint32)(n_command_counter+msbCounter.toUInt(&ok,16)) << (quint16)0 << (quint16)m_channelmap;
         out << (quint8)cmd.toUInt(&ok,16) << (quint8)cmdType.toUInt(&ok,16) << (quint16)cmdLength.toUInt(&ok,16);
         out << (quint32)0;
