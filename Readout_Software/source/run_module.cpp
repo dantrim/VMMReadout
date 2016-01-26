@@ -665,9 +665,22 @@ void RunDAQ::PulserRun()
 
 void RunDAQ::SendPulse()
 {
-    if(m_dbg) qDebug() << "[RunDAQ::SendPulse]    Sending pulse";
+    //if(m_dbg) qDebug() << "[RunDAQ::SendPulse]    Sending pulse";
+    qDebug() << "[RunDAQ::SendPulse]    Sending pulse";
     bool ok;
     QByteArray datagram;
+
+    // connect the socket for this word
+    if(m_socket->state()==QAbstractSocket::UnconnectedState) {
+        if(m_dbg) qDebug() << "[RunDAQ::SetTrigAcqConstants]    About to rebind the socket";
+        bool bnd = m_socket->bind(6007, QUdpSocket::ShareAddress); // connect to FECPort
+        if(!bnd) {
+            qDebug() << "[RunDAQ::SetTrigAcqConstants]    WARNING Unable to bind socket to FECPort (6007). Exitting.";
+            abort();
+        } else {
+            if(m_dbg) qDebug() << "[RunDAQ::SetTrigAcqConstants]    Socket binding to FECPort (6007) successful";
+        }
+    }
 
     foreach(const QString &ip, m_ips) {
         UpdateCounter();
@@ -702,6 +715,9 @@ void RunDAQ::SendPulse()
             qDebug() << "[RunDAQ::SendPulse]    Timeout (2) while waitinf for replies from VMM inpulser. Pulse lost.";
         }
     } // loop over ips
+
+    m_socket->close();
+    m_socket->disconnectFromHost();
 
     n_pulse_count++;
     if(n_pulse_count == m_runcount) {
