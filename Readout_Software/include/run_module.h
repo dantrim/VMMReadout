@@ -27,6 +27,8 @@ class RunDAQ : public QObject
         void SetOutputFileName(QString name) { m_useCustomName = true; m_userGivenName = name; }
         void ReadRFile(QString &file);
         void LoadDAQConstantsFromGUI(int pulserDelay, QString trigPeriod, int acqSync, int acqWindow);
+        void LoadChannelMap(quint16 chanMapIn) { m_channelmap = chanMapIn; }
+        void LoadIPList(QStringList ipListIn);
 
         // methods to set up the DAQ from the information read in ReadRFile
         void PrepareRun();

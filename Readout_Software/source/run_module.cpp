@@ -154,6 +154,19 @@ void RunDAQ::LoadDAQConstantsFromGUI(int pulserDelay, QString trigPeriod, int ac
     m_acqsync = acqSync;
     m_acqwindow = acqWindow;
 }
+void RunDAQ::LoadIPList(QStringList ipListIn)
+{
+    if(ipListIn.size()==0) {
+        qDebug() << "[RunDAQ::LoadIPList]    WARNING Input list of IPs is empty! Exitting.";
+        abort();
+    }
+
+    foreach (const QString &ip, ipListIn) {
+        if(m_dbg) qDebug() << "[RunDAQ::LoadIPList]    Loading IP address : " << ip;
+        m_ips << ip;
+    }
+
+}
 
 void RunDAQ::SetTrigAcqConstants()
 {
@@ -175,8 +188,8 @@ void RunDAQ::SetTrigAcqConstants()
         
 
     // temporarily add the IP here --> will need to grab them from the configuration object if using the GUI
-    m_ips.clear();
-    m_ips << "10.0.0.2";
+    //m_ips.clear();
+    //m_ips << "10.0.0.2";
 
     foreach(const QString &ip, m_ips) {
         UpdateCounter();
@@ -190,7 +203,7 @@ void RunDAQ::SetTrigAcqConstants()
         cmdType     = "AA";
         cmdLength   = "FFFF";
         msbCounter = "0x80000000";
-        m_channelmap = 3;
+        //m_channelmap = 3;
         out<<(quint32)(n_command_counter + msbCounter.toUInt(&ok,16))<<(quint16)0<<(quint16)m_channelmap;
         //out<<(quint32)(n_command_counter + msbCounter.toUInt(&ok,16))<<(quint16)9<<(quint16)m_channelmap;
         out<<(quint8)cmd.toUInt(&ok,16)<<(quint8)cmdType.toUInt(&ok,16)<<(quint16)cmdLength.toUInt(&ok,16);
@@ -243,8 +256,8 @@ void RunDAQ::SetTriggerMode(bool externalRunMode)
     }
 
     // temporarily add the IP here --> will need to grab them from the configuration object if using the GUI!
-    m_ips.clear();
-    m_ips << "10.0.0.2";
+    //m_ips.clear();
+    //m_ips << "10.0.0.2";
 
     foreach(const QString &ip, m_ips) {
         UpdateCounter();
@@ -258,7 +271,7 @@ void RunDAQ::SetTriggerMode(bool externalRunMode)
         QString cmdLength   = "FFFF";
         QString msbCounter  = "0x80000000";
         // temporarily add the channel map here --> will need to grab them from the configuration object if using the GUI!
-        m_channelmap=3;
+        //m_channelmap=3;
         out<<(quint32)(n_command_counter + msbCounter.toUInt(&ok,16))<<(quint16)0<<(quint16)m_channelmap;
         out<<(quint8)cmd.toUInt(&ok,16)<<(quint8)cmdType.toUInt(&ok,16)<<(quint16)cmdLength.toUInt(&ok,16);
         out<<(quint32)0;
@@ -314,8 +327,8 @@ void RunDAQ::ACQOn()
     }
 
     // temporarily add the IP here
-    m_ips.clear();
-    m_ips << "10.0.0.2";
+    //m_ips.clear();
+    //m_ips << "10.0.0.2";
 
     foreach(const QString &ip, m_ips) {
         UpdateCounter();
@@ -330,7 +343,7 @@ void RunDAQ::ACQOn()
         cmdLength   = "FFFF";
         msbCounter  = "0x80000000";
         // temporarily fix the channel map until grabbing it from GUI
-        m_channelmap = 3;
+        //m_channelmap = 3;
         out << (quint32)(n_command_counter+msbCounter.toUInt(&ok,16)) << (quint16)0 << (quint16)m_channelmap;
         out << (quint8)cmd.toUInt(&ok,16) << (quint8)cmdType.toUInt(&ok,16) << (quint16)cmdLength.toUInt(&ok,16);
         out << (quint32)0;
@@ -400,8 +413,8 @@ void RunDAQ::ACQOff()
     }
 
     // temporarily add the ips here
-    m_ips.clear();
-    m_ips << "10.0.0.2";
+    //m_ips.clear();
+    //m_ips << "10.0.0.2";
 
     foreach(const QString &ip, m_ips) {
         UpdateCounter();
@@ -416,7 +429,7 @@ void RunDAQ::ACQOff()
         cmdLength   = "FFFF";
         msbCounter  = "0x80000000";
         //temporarily add the channel map
-        m_channelmap = 3;
+        //m_channelmap = 3;
         out << (quint32)(n_command_counter+msbCounter.toUInt(&ok,16)) << (quint16)0 << (quint16)m_channelmap;
         out << (quint8)cmd.toUInt(&ok,16) << (quint8)cmdType.toUInt(&ok,16) << (quint16)cmdLength.toUInt(&ok,16);
         out << (quint32)0;
@@ -652,9 +665,22 @@ void RunDAQ::PulserRun()
 
 void RunDAQ::SendPulse()
 {
-    if(m_dbg) qDebug() << "[RunDAQ::SendPulse]    Sending pulse";
+    //if(m_dbg) qDebug() << "[RunDAQ::SendPulse]    Sending pulse";
+    qDebug() << "[RunDAQ::SendPulse]    Sending pulse";
     bool ok;
     QByteArray datagram;
+
+    // connect the socket for this word
+    if(m_socket->state()==QAbstractSocket::UnconnectedState) {
+        if(m_dbg) qDebug() << "[RunDAQ::SetTrigAcqConstants]    About to rebind the socket";
+        bool bnd = m_socket->bind(6007, QUdpSocket::ShareAddress); // connect to FECPort
+        if(!bnd) {
+            qDebug() << "[RunDAQ::SetTrigAcqConstants]    WARNING Unable to bind socket to FECPort (6007). Exitting.";
+            abort();
+        } else {
+            if(m_dbg) qDebug() << "[RunDAQ::SetTrigAcqConstants]    Socket binding to FECPort (6007) successful";
+        }
+    }
 
     foreach(const QString &ip, m_ips) {
         UpdateCounter();
@@ -689,6 +715,9 @@ void RunDAQ::SendPulse()
             qDebug() << "[RunDAQ::SendPulse]    Timeout (2) while waitinf for replies from VMM inpulser. Pulse lost.";
         }
     } // loop over ips
+
+    m_socket->close();
+    m_socket->disconnectFromHost();
 
     n_pulse_count++;
     if(n_pulse_count == m_runcount) {

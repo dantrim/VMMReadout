@@ -10,7 +10,7 @@
 	<general.info>
 		<config.version>0.1</config.version>
 		<vmm.id>L115</vmm.id>
-		<ip>10.0.0.16</ip>
+		<ip>10.0.0.2</ip>
 		<comment>This is a config file</comment>
 		<debug>off</debug>
 	</general.info>
