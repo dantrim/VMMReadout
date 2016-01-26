@@ -8,6 +8,7 @@
 #include <QBitArray>
 #include <QByteArray>
 #include <QDebug>
+#include <QDir>
 
 
 DataProcessor::DataProcessor() :
@@ -137,6 +138,9 @@ void DataProcessor::parseData(QByteArray array)
     m_buffer.resize(array.size());
     m_buffer.append(array);
 
+    if(m_dbg) << "[DataProcessor::parseData]    Clearing data.";
+    DataProcessor::clearData();
+
     if(m_buffer.size() == 12) {
         // we only received the header, there is no data
         qDebug() << "[DataProcessor::parseData]    Empty event.";
@@ -264,6 +268,22 @@ void DataProcessor::parseData(QByteArray array)
 
         if(m_writeData) {
             // TODO : implmenet nutple filling here!
+            //if(!m_treesSetup) { }
+            m_triggerTimeStamp.push_back(data_TrigTimeStampStr.toInt(&ok,16));
+            m_triggerCounter.push_back(data_TrigCounterStr.toInt(&ok,16));
+            m_chipId.push_back(data_ChipNumberStr.toInt(&ok,16));
+            m_eventSize.push_back(m_buffer.size()-12);
+
+            m_tdo.push_back(_tdo);
+            m_pdo.push_back(_pdo);
+            m_flag.push_back(_flag);
+            m_threshold.push_back(_thresh);
+            m_bcid.push_back(_bcid);
+            m_channelId.push_back(_channelNo);
+            m_grayDecoded.push_back(_gray);
+            
+            //vector<int> _neighbor;      _neighbor.clear(); // TODO: add m_neighbor trigger variable
+            
 
         } // writeData
 
@@ -271,6 +291,26 @@ void DataProcessor::parseData(QByteArray array)
     else if(data_FrameCounterStr == "fafafafa") {
         // TODO : implement ntuple writing!
         // TODO : add data members to DataProcessor to hold the ouptut values (we may want them outside of this fucntion!)
+        if(m_writeData) {
+
+            if(m_dbg) {
+                qDebug() << "[DataProcessor::parseData]    Writing event with size (# chips) : " << m_chanId.size();
+                for(int iChip = 0; iChip  < (int)m_channelId.size(); iChip++) {
+                    qDebug() << "                              > # " << iChip << " chipId = " << m_chipId[iChip] << ": ";
+                    for(int jChan = 0; jChan < (int)m_channelId[iChip].size(); jChan++) {
+                        qDebug() << "                                    # " << jChan << " channelId = " << m_channelId[iChip][jChan];
+                    } // jChan
+                } // iChip
+            } // dbg
+
+            // fill the output ntuples
+            m_vmm2->Fill();
+            m_vmm2->Write("", TObject::kOverwrite);
+
+            // clear the data containers before the next chip gets read in
+            DataProcessor::clearData();
+
+        } // writeData
 
 
     } // == "fafafafa"
@@ -352,4 +392,62 @@ uint DataProcessor::grayToBinary(uint num)
         num = num ^ mask;
     }
     return num;
+}
+
+// ----------------------- DATA HANDLING ------------------------- //
+void DataProcessor::setupOutputFile()
+{
+    qDebug() << "[DataProcessor::setOutputFile]    WARNING FIXING OUTPUT FILENAME";
+    if(m_outputDirectory=="") {
+        qDebug() << "[DataProcessor::setOutputFile]    Name of output directory has not been set. Exiting.";
+        abort();
+    } 
+
+    QDir outDir(m_outputDirectory);
+    if(outDir.exists()) {
+        QString spacer = "";
+        if(!m_outputDirectory.endswith("/")) spacer = "/";
+        
+        m_fileDAQ = new TFile(m_outputDirectory.toStdString().c_str() + spacer.toStdString().c_str() + "test_DAQ.root", "UPDATE"); 
+        // TODO: will need to have the output file name configurable with the run/event number!
+    }
+    else {
+        qDebug() << "[DataProcessor::setOutputFile]    Output directory does not exist. Exiting.";
+        abort();
+        // TODO : maybe just make it not write out anything if the directory does not exist ?
+    }
+
+}
+void DataProcessor::setupOutputTrees()
+{
+
+
+}
+void DataProcessor::clearData()
+{
+
+    // clear the run configuration data
+    m_gain          = -999;
+    m_runNumber     = -999;
+    m_tacSlope      = -999;
+    m_peakTime      = -999;
+    m_dacCounts     = -999;
+    m_pulserCounts  = -999;
+    m_angle         = -999;
+
+    // clear the event data
+    m_eventNumberFAFA   = -999;
+    m_daqCnt            = -999;
+    m_triggerTimeStamp.clear();
+    m_triggerCounter.clear();
+    m_chipId.clear();
+    m_eventSize.clear();
+    m_tdo.clear();
+    m_pdo.clear();
+    m_flag.clear();
+    m_threshold.clear();
+    m_bcid.clear();
+    m_channelId.clear();
+    m_grayDecoded.clear();
+
 }
