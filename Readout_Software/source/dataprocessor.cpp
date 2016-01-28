@@ -12,14 +12,20 @@
 
 
 DataProcessor::DataProcessor() :
+    m_writeData(false),
     m_dbg(false),
     m_daqXmlFileName(""),
     m_daqConfigFile(NULL),
     m_dataType(""),
     m_mapFileName(""),
     m_outputDirectory(""),
-    m_parser(NULL)
+    m_outFileOK(false),
+    m_fileDAQ(NULL),
+    m_treesSetup(false),
+    m_vmm2(NULL),
+    m_runProperties(NULL)
 {
+    DataProcessor::clearData();
 }
 
 DataProcessor::setDAQConfig(QString infile)
@@ -213,7 +219,7 @@ void DataProcessor::parseData(QByteArray array)
 
             // --- amplitude / pdo --- //
             QString q_1 = bytes1_str.left(8);
-            QString q_2 = bytes1_str.mid(14,2); // TODO : check this against the data format (and George)!
+            QString q_2 = bytes1_str.mid(14,2);
             QString q_final;
             q_final.append(q_2);
             q_final.append(q_1);
@@ -226,7 +232,6 @@ void DataProcessor::parseData(QByteArray array)
             _pdo.push_back(outCharge_); 
 
             // --- TAC --- //
-            // TODO : check this against the data format (and George)!
             QString tac_1 = bytes1_str.mid(8, 6);
             QString tac_2 = bytes1_str.mid(22, 2);
             QString tac_final;
@@ -292,26 +297,12 @@ void DataProcessor::parseData(QByteArray array)
         // TODO : implement ntuple writing!
         // TODO : add data members to DataProcessor to hold the ouptut values (we may want them outside of this fucntion!)
         if(m_writeData) {
-
-            if(m_dbg) {
-                qDebug() << "[DataProcessor::parseData]    Writing event with size (# chips) : " << m_chanId.size();
-                for(int iChip = 0; iChip  < (int)m_channelId.size(); iChip++) {
-                    qDebug() << "                              > # " << iChip << " chipId = " << m_chipId[iChip] << ": ";
-                    for(int jChan = 0; jChan < (int)m_channelId[iChip].size(); jChan++) {
-                        qDebug() << "                                    # " << jChan << " channelId = " << m_channelId[iChip][jChan];
-                    } // jChan
-                } // iChip
-            } // dbg
-
-            // fill the output ntuples
-            m_vmm2->Fill();
-            m_vmm2->Write("", TObject::kOverwrite);
-
-            // clear the data containers before the next chip gets read in
-            DataProcessor::clearData();
-
+            DataProcessor::fillEventData();
         } // writeData
 
+        // clear the data containers before the next chip gets read in
+        // TODO : should this be done regardless of writing out?
+        DataProcessor::clearData();
 
     } // == "fafafafa"
 
@@ -397,7 +388,7 @@ uint DataProcessor::grayToBinary(uint num)
 // ----------------------- DATA HANDLING ------------------------- //
 void DataProcessor::setupOutputFile()
 {
-    qDebug() << "[DataProcessor::setOutputFile]    WARNING FIXING OUTPUT FILENAME";
+    qDebug() << "[DataProcessor::setOutputFile]    WARNING FIXING OUTPUT FILENAME to 'test_DAQ.root'";
     if(m_outputDirectory=="") {
         qDebug() << "[DataProcessor::setOutputFile]    Name of output directory has not been set. Exiting.";
         abort();
@@ -410,6 +401,7 @@ void DataProcessor::setupOutputFile()
         
         m_fileDAQ = new TFile(m_outputDirectory.toStdString().c_str() + spacer.toStdString().c_str() + "test_DAQ.root", "UPDATE"); 
         // TODO: will need to have the output file name configurable with the run/event number!
+        m_outFileOK = true;
     }
     else {
         qDebug() << "[DataProcessor::setOutputFile]    Output directory does not exist. Exiting.";
@@ -420,9 +412,96 @@ void DataProcessor::setupOutputFile()
 }
 void DataProcessor::setupOutputTrees()
 {
+    // clear the data
+    DataProcessor::clearData();
 
+    // --- run properties --- //
+    m_runProperties = new TTree("run_properties", "run_properties");
+
+    br_runNumber    = m_runProperties->Branch("runNumber", &m_runNumber);
+    br_gain         = m_runProperties->Branch("gain", &m_gain);
+    br_tacSlope     = m_runProperties->Branch("tacSlope", &m_tacSlope);
+    br_peakTime     = m_runProperties->Branch("peakTime", &m_peakTime);
+    br_dacCounts    = m_runProperties->Branch("dacCounts", &m_dacCounts);
+    br_pulserCounts = m_runProperties->Branch("pulserCounts", &m_pulserCounts);
+    br_angle        = m_runProperties->Branch("angle", &m_angle);
+
+    // --- event data --- //
+    m_vmm2 = new TTree("vmm2", "vmm2");
+    br_eventNumberFAFA      = m_vmm2->Branch("eventFAFA", "std::vector<int>", &m_eventNumberFAFA);
+    br_triggerTimeStamp     = m_vmm2->Branch("triggerTimeStamp", "std::vector<int>", &m_triggerTimeStamp);
+    br_triggerCounter       = m_vmm2->Branch("triggerCounter", "std::vector<int>", &m_triggerCounter);
+    br_chipId               = m_vmm2->Branch("chip", "std::vector<int>", &m_chipId);
+    br_evSize               = m_vmm2->Branch("eventSize", "std::vector<int>", &m_eventSize);
+    br_tdo                  = m_vmm2->Branch("tdo", "std::vector< vector<int> >", &m_tdo);
+    br_pdo                  = m_vmm2->Branch("pdo", "std::vector< vector<int> >", &m_pdo);
+    br_flag                 = m_vmm2->Branch("flag", "std::vector< vector<int> >", &m_flag);
+    br_thresh               = m_vmm2->Branch("treshold", "std::vector< vector<int> >", &m_threshold);
+    br_bcid                 = m_vmm2->Branch("bcid", "std::vector< <vector<int> >", &m_bcid);
+    br_grayDecoded          = m_vmm2->Branch("grayDecoded", "std::vector< vector<int> >", &m_grayDecoded);
+    br_channelId            = m_vmm2->Branch("channel", "std::vector< vector<int> >", &m_channelId);
+
+    m_treesSetup = true;
 
 }
+void DataProcessor::fillRunProperties(int gain, int tacSlope, int peakTime, int dacCounts, int pulserCounts)
+{
+    if((!m_treesSetup || !m_runProperties || !m_outFileOK) && m_writeData) {
+        qDebug() << "[DataProcessor::fillRunProperties]    DAQ config tree not setup! Exiting.";
+        if(m_dbg) {
+            qDebug() << "[DataProcessor::fillRunProperties]    treesSetup OK? : " << (m_treesSetup ? "yes" : "no");
+            qDebug() << "[DataProcessor::fillRunProperties]    runProperties TTree OK? : " << (m_runProperties ? "yes" : "no");
+            qDebug() << "[DataProcessor::fillRunProperties]    outFile OK? : " << (m_outFileOK ? "yes" : "no");
+        }
+        abort();
+    }
+
+    m_gain = gain;
+    m_tacSlope = tacSlope;
+    m_peakTime = peakTime;
+    m_dacCounts = dacCounts;
+    m_pulserCounts = pulserCounts;
+
+    if(m_writeData) {
+        m_runProperties->Fill(); // as the branches are connected to the variables, we do not need to fill each individually
+        m_runProperties->Write("", TObject::kOverwrite);
+        delete m_runProperties;
+    }
+}
+
+void DataProcessor::fillEventData()
+{
+    if(!m_writeData) {
+        if(m_dbg) qDebug() << "[DataProcessor::fillEventData]    This function should be called only if you are writing an output ntuple. Skipping this.";
+        return;
+    }
+
+    if((!m_treesSetup || !m_vmm2 || !m_outFileOK) && m_writeData) {
+        qDebug() << "[DataProcessor::fillEventData]    Event data tree unable to be filled! Exiting.";
+        if(m_dbg) {
+            qDebug() << "[DataProcessor::fillEventData]    treesSetup OK? : " << (m_treesSetup > "yes" : "no");
+            qDebug() << "[DataProcessor::fillEventData]    vmm2 TTree OK? : " << (m_vmm2 > "yes" : "no");
+            qDebug() << "[DataProcessor::fillEventData]    outFile OK ?   : " << (m_outFileOK ? "yes" : "no");
+        }
+        abort();
+    }
+
+    if(m_dbg) {
+        qDebug() << "[DataProcessor::fillEventData]    Writing event with size (# chips) : " << m_chanId.size();
+        for(int iChip = 0; iChip  < (int)m_channelId.size(); iChip++) {
+            qDebug() << "                              > # " << iChip << " chipId = " << m_chipId[iChip] << ": ";
+            for(int jChan = 0; jChan < (int)m_channelId[iChip].size(); jChan++) {
+                qDebug() << "                                    # " << jChan << " channelId = " << m_channelId[iChip][jChan];
+            } // jChan
+        } // iChip
+    } // dbg
+
+    // fill the output ntuples
+    m_vmm2->Fill();
+
+}
+
+
 void DataProcessor::clearData()
 {
 

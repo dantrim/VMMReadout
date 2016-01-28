@@ -21,6 +21,7 @@ class DataProcessor
         DataProcessor();
         virtual ~DataProcessor(){};
         void setDebug(bool dbg) { m_dbg = dbg; };
+        void setWriteData(bool writeOut) { m_writeData = writeOut; };
         void setDAQConfig(QString file);
         void getDAQConfig();
         int mappedChannel(int chipNumber, int channelNumber);
@@ -31,10 +32,13 @@ class DataProcessor
         // for output if writing data
         void setupOutputFile();
         void setupOutputTrees();
+        void fillRunProperties(int gain, int tacSlope, int peakTime, int dacCounts, int pulserCounts);
+        void fillEventData();
         //fill run_properties / getRunProperties(x, y, z, t) from GUI perhaps
         //fill event_data(from or in parseData)
 
     private :
+        bool m_writeData;
 
         // private methods
         void fillChannelMaps();
@@ -91,6 +95,7 @@ class DataProcessor
         // --------- OUTPUT ------------ //
         
         TFile* m_fileDAQ; // output file for ntuples
+        bool m_outFileOK;
         bool m_treesSetup;
 
         // output trees
