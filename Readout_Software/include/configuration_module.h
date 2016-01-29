@@ -95,7 +95,6 @@ class Configuration : public QObject
 		    	ilist.push_back(ACQ_Window);
 		    	ilist.push_back(Run_count);
         }
-
 		void getChannelArrays (bool (&SPBool)[64], bool (&SCBool)[64], bool (&SLBool)[64],
                         bool (&STBool)[64], bool (&SMBool)[64], quint8 (&SDVoltage)[64],
                         bool (&SMXBool)[64], quint8 (&SZ010bCBox)[64], quint8 (&SZ08bCBox)[64],
@@ -119,6 +118,10 @@ class Configuration : public QObject
         quint16 getVMMASICPort()  { return VMMASICPort; }
         quint16 getVMMAPPPort()   { return VMMAPPPort; }
         quint16 getS6Port()       { return S6Port; }
+        QString getGainString()   { return _gainstring; }
+        int getTACSlope()         { return _TACslop; }
+        int getPeakInt()          { return _peakint; }
+        
 
     private:
 

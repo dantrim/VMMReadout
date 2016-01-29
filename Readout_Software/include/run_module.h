@@ -13,6 +13,7 @@
 
 //vmmrun
 #include "configuration_module.h"
+#include "eventbuilder.h"
 
 class RunDAQ : public QObject
 {
@@ -24,6 +25,7 @@ class RunDAQ : public QObject
         void UpdateCounter();
         void SetDebugMode(bool doDbg) { m_dbg = doDbg; }
         void SetTestMode(bool doTest) { m_is_testmode = doTest; }
+        void SetWriteEvent(bool doWrite) { m_writeEvent = doWrite; }
         void SetOutputFileName(QString name) { m_useCustomName = true; m_userGivenName = name; }
         void ReadRFile(QString &file);
         void LoadDAQConstantsFromGUI(int pulserDelay, QString trigPeriod, int acqSync, int acqWindow);
@@ -37,6 +39,9 @@ class RunDAQ : public QObject
         void ACQOn();
         void ACQOff();
 
+        // setup the decoding/writing of the event data
+        void InitializeEventBuilder();
+
         // event loop method
         void DataHeader();
         void TimedRun(long time); 
@@ -48,9 +53,11 @@ class RunDAQ : public QObject
     private :
         // global configuration parameters (c.f. vmmconfig/configuration_module.h)
         Configuration* m_config;
+        EventBuilder*  m_builder;
 
         bool m_has_config;
         bool m_is_testmode;
+        bool m_writeEvent;
         bool m_dbg;
         quint32 n_command_counter; // keep track of number of commands passed to DAQ
 

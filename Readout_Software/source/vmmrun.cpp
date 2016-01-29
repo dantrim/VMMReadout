@@ -34,6 +34,7 @@ int main(int argc, char *argv[])
     bool dbg = false;
     bool testMode = false;
     bool useCustomName = false;
+    bool writeEvent = false;
     QString customName("");
 
     // ---------------------------------------
@@ -46,6 +47,7 @@ int main(int argc, char *argv[])
         else if(cmd == "--test-mode") { testMode = true; }
         else if(cmd == "-d" || cmd == "--dbg") { dbg = true; }
         else if(cmd == "-h" || cmd == "--help") { help(); exit(0); }
+        else if(cmd == "-w" || cmd == "--writeEvent") { writeEvent = true; }
         else {
             qDebug() << "Incorrect command-line options! Printing expected usage below.";
             help();
@@ -77,6 +79,7 @@ int main(int argc, char *argv[])
     }
     daq.SetDebugMode(dbg);
     daq.SetTestMode(testMode);
+    daq.SetWriteEvent(writeEvent);
     // process the input file and grab the daq configuration
     daq.ReadRFile(inputXMLFile);
     // set up the acquisition mode

@@ -6,8 +6,10 @@ RunDAQ::RunDAQ(QObject *parent)
     : QObject(parent)
 {
     m_config = new Configuration();
+    m_builder = NULL;
     m_has_config  = false;
     m_is_testmode = false;
+    m_writeEvent = false;
     m_dbg = false;
     n_command_counter = 0;
 
@@ -51,13 +53,13 @@ void RunDAQ::ReadRFile(QString &file)
         abort();
     }
 
-    if(m_dbg) qDebug() << "[RunDAQ::ReadRFile]    Reading config in Run block";
+    if(m_dbg) qDebug() << "[RunDAQ::ReadRFile]    Reading DAQ configuration from input file (" << file << ")";
 
     // ReadCFile method (c.f. include/configuration_module.h)
     // > Aborts if tags are not found. If this method succeeds then the datamembers of m_config will be filled.
     m_config->ReadCFile(file);
     m_has_config = true;
-    // grab the IP's for the configured boards/hdmis/boards
+    // grab the IP's for the configured boards/hdmis
     m_config->getIPs(m_ips);
     qDebug() << "[RunDAQ::ReadRFile]    Pinging boards";
     m_config->Ping();
@@ -492,6 +494,11 @@ void RunDAQ::Run()
         qDebug() << "[RunDAQ::Run]    DAQ socket not able to be bound.";
         abort();
     }
+    if(m_writeEvent) {
+        InitializeEventBuilder();
+    //    connect(m_socketDAQ, SIGNAL(readyRead()), m_builder, SLOT(dataPending())); // EventBuilder no longer a Qt app
+    }
+    //#warning BINARY DUMP IS COMMENTED OUT!!!
     connect(m_socketDAQ, SIGNAL(readyRead()), this, SLOT(ReadEvent())); // call ReadEvent on any incoming data
 
     DataHeader();
@@ -502,6 +509,16 @@ void RunDAQ::Run()
     else {
         PulserRun();
     }
+}
+
+void RunDAQ::InitializeEventBuilder()
+{
+    if(m_dbg) qDebug() << "[InitializeEventBuilder]";
+    m_builder = new EventBuilder();
+    m_builder->setDebug(m_dbg);
+    m_builder->setWriteData(m_writeEvent);
+    m_builder->initialize(m_socketDAQ, m_config);
+     
 }
 
 void RunDAQ::DataHeader()
@@ -596,10 +613,10 @@ void RunDAQ::processReply(const QString &sentip, int command_delay)
             qDebug() << "[RunDAQ::processReply]    VMM with IP: " << ip << " sent a reply to command: " << command_count_to_check;
         } // ip
     } // dbg
-    if(m_replies.size()>1) {
+    if(m_replies.size()>0) {
         foreach(const QString &ip, m_replies) {
             if(ip != sentip) {
-                qDebug() << "[RunDAQ::processReply]    VMM with IP: " << ip << " sent a packet at command number: " << command_count_to_check << " which was not actually to it. Out fo sync.";
+                qDebug() << "[RunDAQ::processReply]    VMM with IP: " << ip << " sent a packet at command number: " << command_count_to_check << " which was not actually to it. Out of sync.";
                 abort();
             }
         } // ip loop
@@ -633,8 +650,16 @@ void RunDAQ::ReadEvent()
         QString ipstr(vmmip.toString());
         QList<QByteArray> arr = datamap.value(ipstr); // { IP : ByteArray = buffer }
         arr.append(m_bufferDAQ);
-
         datamap.insert(ipstr, arr);
+
+        if(m_writeEvent) {
+            // send the datagram to EventBuilder
+            if(!m_builder) {
+                qDebug() << "[RunDAQ::ReadEvent]    Attempting to write output ntuple but EventBuilder object has not been initialized!";
+                abort();
+            }
+            m_builder->writeData(m_bufferDAQ);
+        }
     }
     QMap<QString, QList<QByteArray> >::iterator it;
     for(it = datamap.begin(); it!=datamap.end(); it++) {
@@ -712,7 +737,7 @@ void RunDAQ::SendPulse()
             processReply(ip);
         }
         else {
-            qDebug() << "[RunDAQ::SendPulse]    Timeout (2) while waitinf for replies from VMM inpulser. Pulse lost.";
+            qDebug() << "[RunDAQ::SendPulse]    Timeout (2) while waiting for replies from VMM in pulser. Pulse lost.";
         }
     } // loop over ips
 
