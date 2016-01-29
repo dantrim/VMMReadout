@@ -10,17 +10,24 @@
 #include <QDebug>
 #include <QDir>
 
+//std
+#include <vector>
+
+using namespace std;
+
 
 DataProcessor::DataProcessor() :
     m_writeData(false),
+    m_useChannelMap(false),
+    m_ignore16(false),
     m_dbg(false),
     m_daqXmlFileName(""),
     m_daqConfigFile(NULL),
     m_dataType(""),
     m_mapFileName(""),
     m_outputDirectory(""),
-    m_outFileOK(false),
     m_fileDAQ(NULL),
+    m_outFileOK(false),
     m_treesSetup(false),
     m_vmm2(NULL),
     m_runProperties(NULL)
@@ -28,7 +35,7 @@ DataProcessor::DataProcessor() :
     DataProcessor::clearData();
 }
 
-DataProcessor::setDAQConfig(QString infile)
+void DataProcessor::setDAQConfig(QString infile)
 {
     QFile tmpDAQFile(infile);
     if(!tmpDAQFile.exists()) {
@@ -38,7 +45,7 @@ DataProcessor::setDAQConfig(QString infile)
     m_daqXmlFileName = infile;
 }
 
-DataProcessor::getDAQConfig()
+void DataProcessor::getDAQConfig()
 {
     if(m_daqXmlFileName=="") {
         qDebug() << "[DataProcessor::getDAQConfig]    DAQ config file is \"\"! Set first using DataProcessor::setDAQConfig.";
@@ -46,10 +53,10 @@ DataProcessor::getDAQConfig()
     }
     QFile daqConfigFile(m_daqXmlFileName);
 
-    bool fileOpenedOk = m_daqConfigFile.open(QIODevice::ReadOnly);
+    bool fileOpenedOk = m_daqConfigFile->open(QIODevice::ReadOnly);
     if(fileOpenedOk) {
-        qDebug() << "[DataProcessor::getDAQConfig]    DAQ config opened : " << m_daqConfigFile.fileName() << ".";
-        m_daqConfigFile = daqConfigFile;
+        qDebug() << "[DataProcessor::getDAQConfig]    DAQ config opened : " << m_daqConfigFile->fileName() << ".";
+        m_daqConfigFile = &daqConfigFile;
     } else {
         qDebug() << "[DataProcessor::getDAQConfig]    Error opening DAQ config : " << m_daqXmlFileName << ".";
         abort();
@@ -78,7 +85,7 @@ DataProcessor::getDAQConfig()
 
     QString fn = "[DataProcessor::getDAQConfig]    ";
     if(m_dbg) {
-        qDebug() << fn << "DAQ config loaded:";
+        qDebug() << fn << "DAQ config loaded from XML:";
         qDebug() << fn << "    > data type        : " << m_dataType;
         qDebug() << fn << "    > map file         : " << m_mapFileName;
         qDebug() << fn << "    > output directory : " << m_outputDirectory;
@@ -103,7 +110,7 @@ void DataProcessor::fillChannelMaps()
 {
     // fill the map for the provided type
 
-    QFile mapFile(&m_mapFileName);
+    QFile mapFile(m_mapFileName);
     if(!mapFile.exists()) {
         qDebug() << "[DataProcessor::fillChannelMaps]    Map file (" << m_mapFileName << ") not found.";
         abort();
@@ -116,18 +123,18 @@ void DataProcessor::fillChannelMaps()
         abort();
     }
 
-    QTestStream in(&mapFile);
+    QTextStream in(&mapFile);
     while(!in.atEnd()) {
         QString line = in.readLine();
         if(line.left(1)!="#") {
 
             // ------------ mini2 case ------------ //
-            if(m_type=="MINI2") {
+            if(m_dataType=="MINI2") {
                 QStringList line_list = line.split("  ", QString::SkipEmptyParts); // assume columns separated by 2 spaces
                 std::vector<int> chip_list;
                 chip_list.push_back(line_list.at(1).toInt());
                 chip_list.push_back(line_list.at(2).toInt());
-                m_mini2_map.insert(line_list.at(0).toInt(), chip_list);
+                m_map_mini2.insert(line_list.at(0).toInt(), chip_list);
             } // mini2
         } // if not #
     } // while
@@ -144,7 +151,7 @@ void DataProcessor::parseData(QByteArray array)
     m_buffer.resize(array.size());
     m_buffer.append(array);
 
-    if(m_dbg) << "[DataProcessor::parseData]    Clearing data.";
+    if(m_dbg) qDebug() << "[DataProcessor::parseData]    Clearing data.";
     DataProcessor::clearData();
 
     if(m_buffer.size() == 12) {
@@ -225,7 +232,7 @@ void DataProcessor::parseData(QByteArray array)
             q_final.append(q_1);
             uint outCharge_ = 0;
             if(q_final.right(4) == "0000" && m_ignore16) {
-                outCharge_ = q_final.toUint(&ok,2);
+                outCharge_ = q_final.toUInt(&ok,2);
             } else {
                 outCharge_ = q_final.toUInt(&ok,2);
             }
@@ -237,7 +244,7 @@ void DataProcessor::parseData(QByteArray array)
             QString tac_final;
             tac_final.append(tac_2);
             tac_final.append(tac_1);
-            uint outTac_ = tac_final.toUint(&ok, 2);
+            uint outTac_ = tac_final.toUInt(&ok, 2);
             _tdo.push_back(outTac_);
 
             // --- bcid --- //
@@ -255,15 +262,15 @@ void DataProcessor::parseData(QByteArray array)
 
             if(m_dbg) {
                 QString fn = "[DataProcessor::parseData]    ";
-                QDebug() << fn << "channel          : " << channel_no;
-                QDebug() << fn << "flag             : " << flag;
-                QDebug() << fn << "threshold        : " << threshold;
-                QDebug() << fn << "charge           : " << outCharge_;
-                QDebug() << fn << "q_1              : " << q_1;
-                QDebug() << fn << "q_2              : " << q_2;
-                QDebug() << fn << "q_final          : " << q_final;
-                QDebug() << fn << "tac              : " << outTac_;
-                QDebug() << fn << "bcid             : " << outBCID_;
+                qDebug() << fn << "channel          : " << channel_no;
+                qDebug() << fn << "flag             : " << flag;
+                qDebug() << fn << "threshold        : " << threshold;
+                qDebug() << fn << "charge           : " << outCharge_;
+                qDebug() << fn << "q_1              : " << q_1;
+                qDebug() << fn << "q_2              : " << q_2;
+                qDebug() << fn << "q_final          : " << q_final;
+                qDebug() << fn << "tac              : " << outTac_;
+                qDebug() << fn << "bcid             : " << outBCID_;
             }
 
             // move to next channel (8 bytes forward)
@@ -313,13 +320,13 @@ void DataProcessor::parseData(QByteArray array)
 int DataProcessor::mappedChannel(int chipNumber, int channelNumber)
 {
     int out_strip_number = 0;
-    if(m_type=="") {
+    if(m_dataType=="") {
         qDebug() << "[DataProcessor::mappedChannel]    Data type is \"\".";
         abort();
     }
 
     // ------------ mini2 case --------------- //
-    if(m_type=="MINI2") {
+    if(m_dataType=="MINI2") {
 
         if(m_map_mini2.size()==0) {
             qDebug() << "[DataProcessor::mappedChannel]    Attempting to access the MINI2 mapping but this map is empty.";
@@ -327,13 +334,13 @@ int DataProcessor::mappedChannel(int chipNumber, int channelNumber)
         }
 
         if(chipNumber%2==0) {
-            strip = m_map_mini2[channelNumber][0];
+            out_strip_number = m_map_mini2[channelNumber][0];
         } else {
-            strip = m_map_mini2[channelNumber][1];
+            out_strip_number = m_map_mini2[channelNumber][1];
         }
     } // mini2
 
-    return strip;
+    return out_strip_number;
 }
 
 // --------------------- Utility Methods ---------------------------- //
@@ -350,13 +357,13 @@ quint32 DataProcessor::reverse32(QString datagramHex)
     // turn input array into QBitArray
     for(int i = 0; i < datagramBin.size(); i++) {
         QString bit = datagramBin.at(i);
-        wordReceived.setBit(32-datagramBin.size() + i, bit.toUint(&ok, 10)); // pad left with 0's 
+        wordReceieved.setBit(32-datagramBin.size() + i, bit.toUInt(&ok, 10)); // pad left with 0's 
     } // i
 
     // now reverse the input QBitArray
     QBitArray wordReversed(32, false);
     for(int j = 0; j < 32; j++) {
-        wordReversed.setBit(31 - j, wordReceived[j]);
+        wordReversed.setBit(31 - j, wordReceieved[j]);
     } // j
 
     // turn reversed array into QByteArray
@@ -386,27 +393,63 @@ uint DataProcessor::grayToBinary(uint num)
 }
 
 // ----------------------- DATA HANDLING ------------------------- //
-void DataProcessor::setupOutputFile()
+void DataProcessor::setupOutputFile(QString outdir, QString filename)
 {
-    qDebug() << "[DataProcessor::setOutputFile]    WARNING FIXING OUTPUT FILENAME to 'test_DAQ.root'";
-    if(m_outputDirectory=="") {
-        qDebug() << "[DataProcessor::setOutputFile]    Name of output directory has not been set. Exiting.";
-        abort();
-    } 
+    // there are two methods here:
+    //  1. If the function is provided an output directory (outdir) and filename (filename) it will use those
+    //  2. If the outdir and filename are "" then it will use the values grabbed from the DAQ config XML
 
-    QDir outDir(m_outputDirectory);
-    if(outDir.exists()) {
-        QString spacer = "";
-        if(!m_outputDirectory.endswith("/")) spacer = "/";
-        
-        m_fileDAQ = new TFile(m_outputDirectory.toStdString().c_str() + spacer.toStdString().c_str() + "test_DAQ.root", "UPDATE"); 
-        // TODO: will need to have the output file name configurable with the run/event number!
-        m_outFileOK = true;
+    QString output_name = "";
+
+    // --------- use the DAQ config XML ----------- //
+    if(outdir=="" && filename=="") {
+        qDebug() << "[DataProcessor::setOutputFile]    WARNING FIXING OUTPUT FILENAME to 'test_DAQ.root'";
+        if(m_outputDirectory=="") {
+            qDebug() << "[DataProcessor::setOutputFile]    Name of output directory has not been set. Exiting.";
+            abort();
+        } 
+
+        QDir outDir(m_outputDirectory);
+        if(outDir.exists()) {
+            QString spacer = "";
+            if(!m_outputDirectory.endsWith("/")) spacer = "/";
+            output_name = m_outputDirectory + spacer + "test_DAQ.root";
+            
+            //m_fileDAQ = new TFile(m_outputDirectory.toStdString().c_str() + spacer.toStdString().c_str() + "test_DAQ.root", "UPDATE"); 
+            // TODO: will need to have the output file name configurable with the run/event number!
+            m_outFileOK = true;
+        }
+        else {
+            qDebug() << "[DataProcessor::setOutputFile]    Output directory from DAQ XML does not exist. Exiting.";
+            abort();
+            // TODO : maybe just make it not write out anything if the directory does not exist ?
+        }
+    }
+    // ----------- use provided names (a la GUI) ------------ //
+    else if(! (outdir=="" && filename=="") ) {
+        m_outputDirectory.clear(); // clear the loaded name
+        m_outputDirectory = outdir;
+
+        QDir outDir(m_outputDirectory);
+        if(outDir.exists()) {
+            QString spacer = "";
+            if(!m_outputDirectory.endsWith("/")) spacer = "/";
+            output_name = m_outputDirectory + spacer + filename;
+
+            m_outFileOK = true;
+        }
+        else {
+            qDebug() << "[DataProcessor::setOutputFile]    Provided output directory does not exist. Exiting.";
+            abort();
+        }
     }
     else {
-        qDebug() << "[DataProcessor::setOutputFile]    Output directory does not exist. Exiting.";
+        qDebug() << "[DataProcessor::setOutputFile]    Error in setting up output file. Exiting.";
         abort();
-        // TODO : maybe just make it not write out anything if the directory does not exist ?
+    }
+
+    if(m_outFileOK) {
+        m_fileDAQ = new TFile(output_name.toStdString().c_str(), "UPDATE");
     }
 
 }
@@ -444,7 +487,7 @@ void DataProcessor::setupOutputTrees()
     m_treesSetup = true;
 
 }
-void DataProcessor::fillRunProperties(int gain, int tacSlope, int peakTime, int dacCounts, int pulserCounts)
+void DataProcessor::fillRunProperties(int runNumber, int gain, int tacSlope, int peakTime, int dacCounts, int pulserCounts, int angle)
 {
     if((!m_treesSetup || !m_runProperties || !m_outFileOK) && m_writeData) {
         qDebug() << "[DataProcessor::fillRunProperties]    DAQ config tree not setup! Exiting.";
@@ -456,11 +499,13 @@ void DataProcessor::fillRunProperties(int gain, int tacSlope, int peakTime, int 
         abort();
     }
 
+    m_runNumber = runNumber;
     m_gain = gain;
     m_tacSlope = tacSlope;
     m_peakTime = peakTime;
     m_dacCounts = dacCounts;
     m_pulserCounts = pulserCounts;
+    m_angle = angle;
 
     if(m_writeData) {
         m_runProperties->Fill(); // as the branches are connected to the variables, we do not need to fill each individually
@@ -479,15 +524,15 @@ void DataProcessor::fillEventData()
     if((!m_treesSetup || !m_vmm2 || !m_outFileOK) && m_writeData) {
         qDebug() << "[DataProcessor::fillEventData]    Event data tree unable to be filled! Exiting.";
         if(m_dbg) {
-            qDebug() << "[DataProcessor::fillEventData]    treesSetup OK? : " << (m_treesSetup > "yes" : "no");
-            qDebug() << "[DataProcessor::fillEventData]    vmm2 TTree OK? : " << (m_vmm2 > "yes" : "no");
+            qDebug() << "[DataProcessor::fillEventData]    treesSetup OK? : " << (m_treesSetup ? "yes" : "no");
+            qDebug() << "[DataProcessor::fillEventData]    vmm2 TTree OK? : " << (m_vmm2 ? "yes" : "no");
             qDebug() << "[DataProcessor::fillEventData]    outFile OK ?   : " << (m_outFileOK ? "yes" : "no");
         }
         abort();
     }
 
     if(m_dbg) {
-        qDebug() << "[DataProcessor::fillEventData]    Writing event with size (# chips) : " << m_chanId.size();
+        qDebug() << "[DataProcessor::fillEventData]    Writing event with size (# chips) : " << m_channelId.size();
         for(int iChip = 0; iChip  < (int)m_channelId.size(); iChip++) {
             qDebug() << "                              > # " << iChip << " chipId = " << m_chipId[iChip] << ": ";
             for(int jChan = 0; jChan < (int)m_channelId[iChip].size(); jChan++) {

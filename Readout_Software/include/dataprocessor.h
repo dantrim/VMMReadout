@@ -2,9 +2,11 @@
 #define DATAPROCESSOR_H
 
 //qt
+#include <QByteArray>
+#include <QString>
+#include <QMap>
 class QFile;
-class QMap;
-class QByteArray;
+class QBitArray;
 
 //us
 class XMLParser;
@@ -22,6 +24,8 @@ class DataProcessor
         virtual ~DataProcessor(){};
         void setDebug(bool dbg) { m_dbg = dbg; };
         void setWriteData(bool writeOut) { m_writeData = writeOut; };
+        void setUseChannelMap(bool useIt) { m_useChannelMap = useIt; };
+        void setIgnore16(bool ignoreIt) { m_ignore16 = ignoreIt; };
         void setDAQConfig(QString file);
         void getDAQConfig();
         int mappedChannel(int chipNumber, int channelNumber);
@@ -30,15 +34,17 @@ class DataProcessor
 
 
         // for output if writing data
-        void setupOutputFile();
+        void setupOutputFile(QString outdirectory = "", QString filename = "");
         void setupOutputTrees();
-        void fillRunProperties(int gain, int tacSlope, int peakTime, int dacCounts, int pulserCounts);
+        void fillRunProperties(int runNumber, int gain, int tacSlope, int peakTime, int dacCounts, int pulserCounts, int angle);
         void fillEventData();
         //fill run_properties / getRunProperties(x, y, z, t) from GUI perhaps
         //fill event_data(from or in parseData)
 
     private :
         bool m_writeData;
+        bool m_useChannelMap;
+        bool m_ignore16;
 
         // private methods
         void fillChannelMaps();

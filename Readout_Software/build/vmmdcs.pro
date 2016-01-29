@@ -43,7 +43,8 @@ SOURCES += $$sourcepath_/main.cpp\
            $$sourcepath_/sleeper.cpp \
            $$sourcepath_/mythread.cpp \
            $$sourcepath_/tcphandlerthread.cpp \
-           $$sourcepath_/tcphandler.cpp
+           $$sourcepath_/tcphandler.cpp \
+           $$sourcepath_/dataprocessor.cpp
 
 HEADERS  += $$includepath_/mainwindow.h \
             $$includepath_/constants.h \
@@ -52,7 +53,8 @@ HEADERS  += $$includepath_/mainwindow.h \
             $$includepath_/tcphandlerthread.h \
             $$includepath_/tcphandler.h \
             $$includepath_/rootSpecific.h \
-		    $$includepath_/configuration_module.h
+		    $$includepath_/configuration_module.h \
+            $$includepath_/dataprocessor.h
     #mydict.h
 
 FORMS    += $$sourcepath_/mainwindow.ui
