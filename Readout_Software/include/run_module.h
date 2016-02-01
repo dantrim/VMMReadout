@@ -13,7 +13,7 @@
 
 //vmmrun
 #include "configuration_module.h"
-#include "eventbuilder.h"
+//#include "eventbuilder.h"
 
 class RunDAQ : public QObject
 {
@@ -53,7 +53,7 @@ class RunDAQ : public QObject
     private :
         // global configuration parameters (c.f. vmmconfig/configuration_module.h)
         Configuration* m_config;
-        EventBuilder*  m_builder;
+        //EventBuilder*  m_builder;
 
         bool m_has_config;
         bool m_is_testmode;

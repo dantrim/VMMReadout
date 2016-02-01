@@ -17,10 +17,11 @@ using namespace std;
 
 
 DataProcessor::DataProcessor() :
-    m_writeData(false),
+    m_writeData(true),
     m_useChannelMap(false),
     m_ignore16(false),
-    m_dbg(false),
+    n_daqCnt(0),
+    m_dbg(true),
     m_daqXmlFileName(""),
     m_daqConfigFile(NULL),
     m_dataType(""),
@@ -487,7 +488,7 @@ void DataProcessor::setupOutputTrees()
     m_treesSetup = true;
 
 }
-void DataProcessor::fillRunProperties(int runNumber, int gain, int tacSlope, int peakTime, int dacCounts, int pulserCounts, int angle)
+void DataProcessor::fillRunProperties(int runNumber, double gain, int tacSlope, int peakTime, int dacCounts, int pulserCounts, int angle)
 {
     if((!m_treesSetup || !m_runProperties || !m_outFileOK) && m_writeData) {
         qDebug() << "[DataProcessor::fillRunProperties]    DAQ config tree not setup! Exiting.";
@@ -507,7 +508,9 @@ void DataProcessor::fillRunProperties(int runNumber, int gain, int tacSlope, int
     m_pulserCounts = pulserCounts;
     m_angle = angle;
 
-    if(m_writeData) {
+    //if(m_writeData) {
+    if(true) {
+        m_fileDAQ->cd();
         m_runProperties->Fill(); // as the branches are connected to the variables, we do not need to fill each individually
         m_runProperties->Write("", TObject::kOverwrite);
         delete m_runProperties;
@@ -543,6 +546,34 @@ void DataProcessor::fillEventData()
 
     // fill the output ntuples
     m_vmm2->Fill();
+
+}
+
+void DataProcessor::writeAndCloseDataFile()
+{
+    if(m_dbg) qDebug() << "[DataProcessor::writeAndCloseDataFile]    Writing and saving the output ROOT file.";
+
+    if(!m_vmm2 || !m_treesSetup) {
+        qDebug() << "[DataProcessor::writeandCloseDataFile]    The event data tree has not been set! Exiting.";
+        abort();
+    }
+
+    if(!m_fileDAQ || !m_outFileOK) {
+        qDebug() << "[DataProcessor::writeAndCloseDataFile]    The output ROOT file has not been set! Exiting.";
+        abort();
+    }
+
+    qDebug() << "[DataProcessor::writeAndCloseDataFile]    >>> Saving data to : " << m_fileDAQ->GetName();
+
+    // ensure that we are writing to the file
+    m_fileDAQ->cd();
+    if(!(m_vmm2->Write("", TObject::kOverwrite))) {
+        qDebug() << "[DataProcessor::writeAndCloseDataFile]    ERROR writing event data tree to file!";
+    }
+    if(!(m_fileDAQ->Write())) {
+        qDebug() << "[DataProcessor::writeAndCloseDataFile]    ERROR Unable to correctly write output DAQ ROOT file!";
+    }
+    m_fileDAQ->Close();
 
 }
 

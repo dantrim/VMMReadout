@@ -8,6 +8,7 @@
 #include <vector>
 #include "configuration_module.h"
 #include "run_module.h"
+#include "dataprocessor.h"
 //using std::vector;
 using namespace std;
 
@@ -254,6 +255,7 @@ private:
     tcpHandler triggerTCP;
     Configuration* _config;
     RunDAQ* _runDAQ;
+    DataProcessor* _dataProcessor;
     bool m_daqConstantsLoaded;
 
 public slots:

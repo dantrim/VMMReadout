@@ -6,7 +6,6 @@ RunDAQ::RunDAQ(QObject *parent)
     : QObject(parent)
 {
     m_config = new Configuration();
-    m_builder = NULL;
     m_has_config  = false;
     m_is_testmode = false;
     m_writeEvent = false;
@@ -494,10 +493,6 @@ void RunDAQ::Run()
         qDebug() << "[RunDAQ::Run]    DAQ socket not able to be bound.";
         abort();
     }
-    if(m_writeEvent) {
-        InitializeEventBuilder();
-    //    connect(m_socketDAQ, SIGNAL(readyRead()), m_builder, SLOT(dataPending())); // EventBuilder no longer a Qt app
-    }
     //#warning BINARY DUMP IS COMMENTED OUT!!!
     connect(m_socketDAQ, SIGNAL(readyRead()), this, SLOT(ReadEvent())); // call ReadEvent on any incoming data
 
@@ -509,16 +504,6 @@ void RunDAQ::Run()
     else {
         PulserRun();
     }
-}
-
-void RunDAQ::InitializeEventBuilder()
-{
-    if(m_dbg) qDebug() << "[InitializeEventBuilder]";
-    m_builder = new EventBuilder();
-    m_builder->setDebug(m_dbg);
-    m_builder->setWriteData(m_writeEvent);
-    m_builder->initialize(m_socketDAQ, m_config);
-     
 }
 
 void RunDAQ::DataHeader()
@@ -652,14 +637,14 @@ void RunDAQ::ReadEvent()
         arr.append(m_bufferDAQ);
         datamap.insert(ipstr, arr);
 
-        if(m_writeEvent) {
-            // send the datagram to EventBuilder
-            if(!m_builder) {
-                qDebug() << "[RunDAQ::ReadEvent]    Attempting to write output ntuple but EventBuilder object has not been initialized!";
-                abort();
-            }
-            m_builder->writeData(m_bufferDAQ);
-        }
+     //   if(m_writeEvent) {
+     //       // send the datagram to EventBuilder
+     //       if(!m_builder) {
+     //           qDebug() << "[RunDAQ::ReadEvent]    Attempting to write output ntuple but EventBuilder object has not been initialized!";
+     //           abort();
+     //       }
+     //       m_builder->writeData(m_bufferDAQ);
+     //   }
     }
     QMap<QString, QList<QByteArray> >::iterator it;
     for(it = datamap.begin(); it!=datamap.end(); it++) {

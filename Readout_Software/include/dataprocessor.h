@@ -28,6 +28,9 @@ class DataProcessor
         void setIgnore16(bool ignoreIt) { m_ignore16 = ignoreIt; };
         void setDAQConfig(QString file);
         void getDAQConfig();
+        void resetDAQCount() { n_daqCnt = 0; };
+        void updateDAQCount() { n_daqCnt++; };
+        int getDAQCount() { return n_daqCnt; };
         int mappedChannel(int chipNumber, int channelNumber);
 
         void parseData(QByteArray array);
@@ -36,8 +39,9 @@ class DataProcessor
         // for output if writing data
         void setupOutputFile(QString outdirectory = "", QString filename = "");
         void setupOutputTrees();
-        void fillRunProperties(int runNumber, int gain, int tacSlope, int peakTime, int dacCounts, int pulserCounts, int angle);
+        void fillRunProperties(int runNumber, double gain, int tacSlope, int peakTime, int dacCounts, int pulserCounts, int angle);
         void fillEventData();
+        void writeAndCloseDataFile();
         //fill run_properties / getRunProperties(x, y, z, t) from GUI perhaps
         //fill event_data(from or in parseData)
 
@@ -45,6 +49,7 @@ class DataProcessor
         bool m_writeData;
         bool m_useChannelMap;
         bool m_ignore16;
+        int n_daqCnt;
 
         // private methods
         void fillChannelMaps();

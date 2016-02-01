@@ -17,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
   	_config = new Configuration();
     _runDAQ = new RunDAQ(); 
+    _dataProcessor = new DataProcessor();
     m_daqConstantsLoaded = false;
 
     idForCustomCommands=0;
@@ -2549,6 +2550,77 @@ void MainWindow::triggerHandler(){
     if(ui->checkTriggers == QObject::sender()){
         bool ok;
         if(ui->writeData->isChecked()){
+
+            // setup the output root file
+
+            QString rootFileDir = ui->runDirectoryField->text() + "/";
+            QString filename_init = "run_%4d.root";
+            const char* filename_formed = Form(filename_init.toStdString().c_str(), ui->runNumber->text().toInt(&ok,10));
+            QString rootFileName = QString(filename_formed);
+            _dataProcessor->setupOutputFile(rootFileDir, rootFileName);
+
+            // setup the output ttrees
+
+            _dataProcessor->setupOutputTrees();
+
+            // send dataprocessor the run parameters and fill the associated tree if writing the data out
+
+            int run_number, tac_slope, peak_time, dac_counts, pulser_counts, angle_; // dataprocessor doesn't do anly calibration things yet this is a TODO item
+            double gain_;
+            run_number = ui->runNumber->value();
+            tac_slope = ui->stc->currentText().left(4).toInt();
+            peak_time = ui->st->currentText().left(3).toInt();
+            dac_counts = ui->sdt->value();
+            pulser_counts = ui->sdp_2->value();
+            angle_ = ui->angle->value();
+            gain_ = ui->sg->currentText().left(3).toDouble();
+
+            _dataProcessor->fillRunProperties(run_number, gain_, tac_slope, peak_time, dac_counts, pulser_counts, angle_);
+
+            // DAQ counter
+            _dataProcessor->resetDAQCount();
+            QString cnt_;
+            ui->triggerCntLabel->setText(cnt_.number(_dataProcessor->getDAQCount(), 10));
+           
+            // setup the DAQ socket for listening 
+            socketDAQ = new QUdpSocket(this);
+            bool bounding = socketDAQ->bind(DAQPort);
+            if(bounding){
+                qDebug()<<"************  DAQ PORT READY ******************";
+                connect( socketDAQ, SIGNAL(readyRead()), this, SLOT(dataDAQPending()) );
+            }
+            else{
+                qDebug()<<"[MainWindow::triggerHandler]    DAQ socket unable to bind! Disconnecting and closing.";
+                socketDAQ->disconnectFromHost();
+                socketDAQ->close();
+            }
+
+            ui->runStatusField->setText("Run:"+ui->runNumber->text()+" ongoing");
+            ui->runStatusField->setStyleSheet("background-color:green");
+            ui->checkTriggers->setEnabled(0);
+            ui->stopTriggerCnt->setEnabled(1);
+
+            // TODO : ADD IN CALIBRATION LOOPS (ask George/Andree about this)
+
+            //calibrationStop =0;
+            //if(ui->calibration->isChecked()){
+            // if(ui->autoCalib->isChecked())
+            //    startCalibration();
+            // else if(ui->manCalib->isChecked())
+            //     qDebug()<<"Manual Calibration";
+            //}
+
+        } else { // if not writing data, skip setting up the trees
+            socketDAQ = new QUdpSocket(this);
+            bool bounding = socketDAQ->bind(DAQPort);
+            if(bounding)
+                connect(socketDAQ, SIGNAL(readyRead()), this, SLOT(dataDAQPending()) );
+            ui->checkTriggers->setEnabled(0);
+            ui->stopTriggerCnt->setEnabled(1);
+        }
+
+
+       /*     /// [below] original ----------------------------------- ///
             QString runNumber;
             QTextStream daqInput(&fileDaq);
             QString rootFile = ui->runDirectoryField->text()+"/run_%4d.root";
@@ -2673,23 +2745,30 @@ void MainWindow::triggerHandler(){
             ui->checkTriggers->setEnabled(0);
             ui->stopTriggerCnt->setEnabled(1);
         }
+        */
     }
     if(ui->clearTriggerCnt == QObject::sender()){
-        daqCnt=0;
-        daqCntTemp=0;
-        QString tempString;
-        ui->triggerCntLabel->setText(tempString.number(daqCnt,10));
+        _dataProcessor->resetDAQCount();
+        QString cnt_;
+        ui->triggerCntLabel->setText(cnt_.number(_dataProcessor->getDAQCount(), 10));
+        //daqCnt=0;
+        //daqCntTemp=0;
+        //QString tempString;
+        //ui->triggerCntLabel->setText(tempString.number(daqCnt,10));
     }
     if(ui->stopTriggerCnt == QObject::sender()){
         calibrationStop = 1;
         socketDAQ->close();
         ui->runStatusField->setText("Run:"+ui->runNumber->text()+" finished");
         ui->runStatusField->setStyleSheet("background-color:lightGray");
-        if(ui->writeData->isChecked()){
-            vmm2->Write("", TObject::kOverwrite);
-            fileDaqRoot->Write();
-            fileDaqRoot->Close();
+        if(ui->writeData->isChecked()) {
+            _dataProcessor->writeAndCloseDataFile();
         }
+   //     if(ui->writeData->isChecked()){
+   //         vmm2->Write("", TObject::kOverwrite);
+   //         fileDaqRoot->Write();
+   //         fileDaqRoot->Close();
+   //     }
         ui->runNumber->setValue(ui->runNumber->value()+1);
         ui->checkTriggers->setEnabled(1);
         ui->stopTriggerCnt->setEnabled(0);
