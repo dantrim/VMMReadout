@@ -2487,6 +2487,10 @@ void MainWindow::showDebugScreen(int state){
     }else if(ui->hideChannels->isChecked() && !ui->enableDebugPB->isChecked()){
         this->setFixedSize(1400,725);
     }
+
+    // dantrim -- maybe this isn't the best place for this, but will see if it works
+    // when ACQ is on
+    _dataProcessor->setDebug(ui->enableDebugPB->isChecked());
 }
 //_________________________________________________________________________________________
 void MainWindow::clearDebugScreen(){
@@ -2547,12 +2551,16 @@ void MainWindow::sendDis(int){
 
 //_________________________________________________________________________________________________
 void MainWindow::triggerHandler(){
+
+    // set the write flag for dataprocessor
+    _dataProcessor->setWriteData(static_cast<bool>(ui->writeData->isChecked()));
+    _dataProcessor->setUseChannelMap(static_cast<bool>(ui->useMapping->isChecked()));
+    _dataProcessor->setIgnore16(static_cast<bool>(ui->ignore16->isChecked()));
+
     if(ui->checkTriggers == QObject::sender()){
         bool ok;
         if(ui->writeData->isChecked()){
-
             // setup the output root file
-
             QString rootFileDir = ui->runDirectoryField->text() + "/";
             QString filename_init = "run_%4d.root";
             const char* filename_formed = Form(filename_init.toStdString().c_str(), ui->runNumber->text().toInt(&ok,10));

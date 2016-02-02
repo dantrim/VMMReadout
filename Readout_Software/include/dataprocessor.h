@@ -24,6 +24,7 @@ class DataProcessor
         virtual ~DataProcessor(){};
         void setDebug(bool dbg) { m_dbg = dbg; };
         void setWriteData(bool writeOut) { m_writeData = writeOut; };
+        bool writeData() { return m_writeData; }
         void setUseChannelMap(bool useIt) { m_useChannelMap = useIt; };
         void setIgnore16(bool ignoreIt) { m_ignore16 = ignoreIt; };
         void setDAQConfig(QString file);
@@ -37,6 +38,7 @@ class DataProcessor
 
 
         // for output if writing data
+        QString getOutputFileName(QString outputDirectory);
         void setupOutputFile(QString outdirectory = "", QString filename = "");
         void setupOutputTrees();
         void fillRunProperties(int runNumber, double gain, int tacSlope, int peakTime, int dacCounts, int pulserCounts, int angle);
@@ -67,6 +69,7 @@ class DataProcessor
         QString m_outputDirectory; 
 
         bool m_configOK;
+        bool m_runPropertiesFilled;
 
         // possible maps
         QMap<int, std::vector<int> > m_map_mini2;

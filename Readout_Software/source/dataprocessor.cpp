@@ -27,6 +27,8 @@ DataProcessor::DataProcessor() :
     m_dataType(""),
     m_mapFileName(""),
     m_outputDirectory(""),
+    m_configOK(false),
+    m_runPropertiesFilled(false),
     m_fileDAQ(NULL),
     m_outFileOK(false),
     m_treesSetup(false),
@@ -80,6 +82,15 @@ void DataProcessor::getDAQConfig()
             else if(child.tagName()=="data_directory") {
                 m_outputDirectory = child.text();
             }
+            else if(child.tagName()=="daq.config") {
+                if(child.hasChildNodes()) {
+                    m_useChannelMap = ((child.firstChildElement("use.chan.map").text() == "true") ? true : false);
+                    m_ignore16 = ((child.firstChildElement("ignore16").text() == "true") ? true : false);
+                } else {
+                    qDebug() << "[DataProcessor::getDAQConfig]    daq.config elements are empty! Will use defaults.";
+                }
+            }
+                
             child = child.nextSiblingElement("");
         } // while
     }
@@ -394,11 +405,47 @@ uint DataProcessor::grayToBinary(uint num)
 }
 
 // ----------------------- DATA HANDLING ------------------------- //
+QString DataProcessor::getOutputFileName(QString directoryToStoreFile)
+{
+    // here we match the output file naming convention as in VMMDCS : i.e. "run_XXXX.root"
+    // where XXXX corresponds to the run number. If a file with the same XXXX exists in the
+    // provided directory, we will increment this number until it is OK
+
+    int number = 0;
+
+    // grab it from the 
+    if(m_runPropertiesFilled && !(m_runNumber<0)) {
+        number = m_runNumber;
+    }
+    else {
+        qDebug() << "[DataProcessor::getOutputFileName]    Run properties have not been filled. Will set initial filename to run_0000.root";
+    }
+
+    QString spacer = "";
+    if(!m_outputDirectory.endsWith("/")) spacer = "/";
+    QString fname = directoryToStoreFile + spacer + "run_%4d.root";
+    const char* fname_formed = Form(fname.toStdString().c_str(), number);
+    QString fname_final = QString(fname_formed);
+    QFile tmp_checkFile(fname_final);
+    bool exists = tmp_checkFile.exists();
+    while(exists) {
+        number += 1;
+        fname_formed = Form(fname.toStdString().c_str(), number);
+        fname_final = QString(fname_formed);
+        QFile check(fname_final);
+        exists = check.exists();
+    }
+
+    return fname_final;
+}
+
+
 void DataProcessor::setupOutputFile(QString outdir, QString filename)
 {
     // there are two methods here:
     //  1. If the function is provided an output directory (outdir) and filename (filename) it will use those
-    //  2. If the outdir and filename are "" then it will use the values grabbed from the DAQ config XML
+    //  2. If the outdir and filename are "" then it will use the output directory from the DAQ config XML and 
+    //     set the filename accordingly
 
     QString output_name = "";
 
@@ -412,9 +459,14 @@ void DataProcessor::setupOutputFile(QString outdir, QString filename)
 
         QDir outDir(m_outputDirectory);
         if(outDir.exists()) {
-            QString spacer = "";
-            if(!m_outputDirectory.endsWith("/")) spacer = "/";
-            output_name = m_outputDirectory + spacer + "test_DAQ.root";
+            output_name = DataProcessor::getOutputFileName(m_outputDirectory);
+
+            if(m_dbg) qDebug() << "[DataProcessor::setOutputFile]    Setting output file to : " << output_name;
+
+            //QString spacer = "";
+            //if(!m_outputDirectory.endsWith("/")) spacer = "/";
+
+            //output_name = m_outputDirectory + spacer + "test_DAQ.root";
             
             //m_fileDAQ = new TFile(m_outputDirectory.toStdString().c_str() + spacer.toStdString().c_str() + "test_DAQ.root", "UPDATE"); 
             // TODO: will need to have the output file name configurable with the run/event number!
@@ -508,13 +560,14 @@ void DataProcessor::fillRunProperties(int runNumber, double gain, int tacSlope, 
     m_pulserCounts = pulserCounts;
     m_angle = angle;
 
-    //if(m_writeData) {
-    if(true) {
+    if(m_writeData) {
         m_fileDAQ->cd();
         m_runProperties->Fill(); // as the branches are connected to the variables, we do not need to fill each individually
         m_runProperties->Write("", TObject::kOverwrite);
         delete m_runProperties;
     }
+
+    m_runPropertiesFilled = true;
 }
 
 void DataProcessor::fillEventData()
@@ -561,6 +614,11 @@ void DataProcessor::writeAndCloseDataFile()
     if(!m_fileDAQ || !m_outFileOK) {
         qDebug() << "[DataProcessor::writeAndCloseDataFile]    The output ROOT file has not been set! Exiting.";
         abort();
+    }
+
+    if(!m_writeData) {
+        qDebug() << "[DataProcessor::writeAndCloseDataFile]    DataProcessor is currently set to not write the output file! Returning.";
+        return;
     }
 
     qDebug() << "[DataProcessor::writeAndCloseDataFile]    >>> Saving data to : " << m_fileDAQ->GetName();

@@ -24,8 +24,8 @@ class RunDAQ : public QObject
         virtual ~RunDAQ(){};
         void UpdateCounter();
         void SetDebugMode(bool doDbg) { m_dbg = doDbg; }
+        void SetWriteEvent(bool write) { m_writeEvent = write; }
         void SetTestMode(bool doTest) { m_is_testmode = doTest; }
-        void SetWriteEvent(bool doWrite) { m_writeEvent = doWrite; }
         void SetOutputFileName(QString name) { m_useCustomName = true; m_userGivenName = name; }
         void ReadRFile(QString &file);
         void LoadDAQConstantsFromGUI(int pulserDelay, QString trigPeriod, int acqSync, int acqWindow);

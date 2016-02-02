@@ -5,6 +5,12 @@
 
 <daq_config>
 
+    <!-- daq configuration -->
+    <daq.config>
+        <use.chan.map>true</use.chan.map>
+        <ignore16>true</ignore16>
+    </daq.config>
+
     <!-- electronics file -->
     <elx_file>mini2_map.txt</elx_file>
 

@@ -44,6 +44,7 @@ class Configuration : public QObject
         QBitArray bytesToBits(QByteArray bytes);
 
         //Getters
+        bool getDebug() { return debug; }
 		int getChPolarity() {return _chSP;}
 		int getLeakCurrent() {return _leak;}
 		int getAnalogTristates() {return _nanaltri;}
