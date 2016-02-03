@@ -309,6 +309,9 @@ public slots:
     void HandleRecipe();
     void LoadConfigurationFromFile();
     void WriteConfigurationFromFile();
+    void LoadDAQConfigurationFromFile();
+    void WriteDAQConfigurationFile();
+    void setChannelMaps(int);
 	void SendParamsToConfigModule();
     void SendRunParamsToDAQModule();
     void CreateChannelMap(int state);

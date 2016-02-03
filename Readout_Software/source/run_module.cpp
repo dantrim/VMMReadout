@@ -6,6 +6,7 @@ RunDAQ::RunDAQ(QObject *parent)
     : QObject(parent)
 {
     m_config = new Configuration();
+    m_dataProcessor = new DataProcessor();
     m_has_config  = false;
     m_is_testmode = false;
     m_writeEvent = false;
@@ -75,30 +76,30 @@ void RunDAQ::ReadRFile(QString &file)
         abort();
     }
 
-    // grab the DAQ configuration items parsed and filled in ReadCFile
-    QStringList daqList_str;
-    vector<int> daqList_int;
-    // getTrigDAQ(QstringList &strList, vector<int> &intList) method (c.f. include/configuration_module.h)
-    //  > strList : { Trig_Period, Run_mode, Out_Path, Out_File }
-    //  > intList : { TP_Delay, ACQ_Sync, ACQ_Window, Run_count }
-    m_config->getTrigDAQ(daqList_str, daqList_int);
+//    // grab the DAQ configuration items parsed and filled in ReadCFile
+//    QStringList daqList_str;
+//    vector<int> daqList_int;
+//    // getTrigDAQ(QstringList &strList, vector<int> &intList) method (c.f. include/configuration_module.h)
+//    //  > strList : { Trig_Period, Run_mode, Out_Path, Out_File }
+//    //  > intList : { TP_Delay, ACQ_Sync, ACQ_Window, Run_count }
+//    m_config->getTrigDAQ(daqList_str, daqList_int);
+//
+//    // trig period
+//    if(daqList_str[0] != "") { m_trigperiod = daqList_str[0]; }
+//    else {
+//        qDebug() << "[RunDAQ::ReadRFile]    trigger.period variable returned by ReadCFile is \"\". Aborting.";
+//        abort();
+//    }
 
-    // trig period
-    if(daqList_str[0] != "") { m_trigperiod = daqList_str[0]; }
-    else {
-        qDebug() << "[RunDAQ::ReadRFile]    trigger.period variable returned by ReadCFile is \"\". Aborting.";
-        abort();
-    }
+//    // run mode
+//    if     (daqList_str[1] == "pulser")   { m_runmode = daqList_str[1]; m_timedrun = false; }
+//    else if(daqList_str[1] == "external") { m_runmode = daqList_str[1]; m_timedrun = true; }
+//    else {
+//        qDebug() << "[RunDAQ::ReadRFile]    run.mode value must be one of: pulser or external. You have: " << daqList_str[1];
+//        abort();
+//    }
 
-    // run mode
-    if     (daqList_str[1] == "pulser")   { m_runmode = daqList_str[1]; m_timedrun = false; }
-    else if(daqList_str[1] == "external") { m_runmode = daqList_str[1]; m_timedrun = true; }
-    else {
-        qDebug() << "[RunDAQ::ReadRFile]    run.mode value must be one of: pulser or external. You have: " << daqList_str[1];
-        abort();
-    }
-
-
+/*
     // tp.delay
     if(daqList_int[0] >= 0) { m_tpdelay = daqList_int[0]; }
     else { qDebug() << "[RunDAQ::ReadRFile]    tp.delay variable returned by ReadCFile is < 0. Aborting."; abort(); }
@@ -126,20 +127,121 @@ void RunDAQ::ReadRFile(QString &file)
     // from the output path and output file name, construct the full path'ed output file
     if(!m_outfilepath.endsWith("/")) { m_outfilepath.append("/"); }
     m_outfilepath.append(m_outfilename);
-
+*/
     // if the user provided an output file name, use that one instead of the xml-defined one
     if(m_useCustomName) {
         qDebug() << "[RunDAQ::ReadRFile]    Overriding output filename set in configuration. Using the user-provided name (" << m_userGivenName << ").";
         m_outfilepath = m_userGivenName;
     }
 
-    //set run time from seconds to milliseconds if the run is timed
-    if(m_timedrun) { m_runcount = m_runcount * 1000; }
+//    //set run time from seconds to milliseconds if the run is timed
+//    if(m_timedrun) { m_runcount = m_runcount * 1000; }
 
     //grab the channel map (filled in ReadCFile)
     m_channelmap = m_config->getChannelMap(); 
 }
 
+void RunDAQ::getDAQConfig(QString infile)
+{
+    QString fn = "[RunDAQ::getDAQConfig]    ";
+    if(infile=="") {
+        qDebug() << fn << "DAQ config file is \"\"! Exiting.";
+        abort();
+    }
+    QFile daqFile(infile);
+    bool fileOpenedOk = daqFile.open(QIODevice::ReadOnly);
+    if(fileOpenedOk) {
+        qDebug() << fn << "DAQ config opened : " << daqFile.fileName() << ".";
+    }
+    else {
+        qDebug() << fn << "Error opening DAQ config : " << infile << ".";
+        abort();
+    } 
+
+    // ---------------- parse to get the DAQ config settings -------------------- //
+    QDomDocument daqConf;
+    daqConf.setContent(&daqFile);
+    QDomElement root = daqConf.documentElement();
+    QDomElement child = root.firstChildElement("");
+
+    QString dataType, mapFileName;
+
+    if(!child.isNull()) {
+        while(!child.isNull()) {
+            if(child.tagName() == "elx_file") {
+                if(child.tagName().contains("mini2")) dataType = "MINI2";
+                mapFileName = child.text();
+            }
+            else if(child.tagName()=="data_directory") {
+                m_outputDirectory = child.text();
+            } 
+            else if(child.tagName()=="general.config") {
+                if(child.hasChildNodes()) {
+                    m_useChannelMap = ((child.firstChildElement("use.chan.map").text() == "true") ? true : false);
+                    m_ignore16 = ((child.firstChildElement("ignore16").text() == "true") ? true : false);
+                } else {
+                    qDebug() << fn << "WARNING general.config elements are empty! Will use defaults.";
+                }
+            }
+            // trigger settings
+            else if(child.tagName()=="trigger.daq") {
+                if(child.hasChildNodes()) {
+                    m_tpdelay = child.firstChildElement("tp.delay").text().toInt();
+                    m_trigperiod = child.firstChildElement("trigger.period").text();
+                    m_acqsync = child.firstChildElement("acq.sync").text().toInt();
+                    m_acqwindow = child.firstChildElement("acq.window").text().toInt();
+                    m_runmode = child.firstChildElement("run.mode").text();
+                    m_runcount = child.firstChildElement("run.count").text().toInt();
+
+                }
+            } // trigger.daq
+            child = child.nextSiblingElement("");
+        } // while
+    }
+    else {
+        qDebug() << fn << "WARNING DAQ configuration xml is empty! Exiting.";
+        abort();
+    }
+
+    if(m_runmode == "pulser") { m_timedrun = false; }
+    else if (m_runmode == "external") { m_timedrun = true; }
+    else {
+        qDebug() << fn << "WARNING Run mode can only be \"pulser\" or \"external\"! The DAQ config has provided the run mode \"" << m_runmode << "\". Exiting";
+        abort();
+    }
+    if(m_timedrun) { m_runcount = m_runcount * 1000; }
+
+    if(m_dbg) {
+        qDebug() << fn << " # ------------------------------------- # ";
+        qDebug() << fn << "     Printing DAQ Configuration";
+        qDebug() << fn << "   - - - - - - - - - - - - - - - - - - - ";
+        qDebug() << fn << "     peripheral          : " << dataType;
+        qDebug() << fn << "     map filename        : " << mapFileName;
+        qDebug() << fn << "     output directory    : " << m_outputDirectory;  
+        qDebug() << fn << "     use channel map ?   : " << (m_useChannelMap ? "yes" : "no");
+        qDebug() << fn << "     ignore16 ?          : " << (m_ignore16 ? "yes" : "no");
+        qDebug() << fn << "     TP delay            : " << m_tpdelay;
+        qDebug() << fn << "     trigger period      : " << m_trigperiod;
+        qDebug() << fn << "     acq sync            : " << m_acqsync;
+        qDebug() << fn << "     acq window          : " << m_acqwindow;
+        qDebug() << fn << "     run mode            : " << m_runmode;
+        qDebug() << fn << "     timed run ?         : " << (m_timedrun ? "yes" : "no");
+        qDebug() << fn << "     run count           : " << m_runcount;
+        qDebug() << fn << " # ------------------------------------- # ";
+    }
+
+    m_dataProcessor->setUseChannelMap(m_useChannelMap);
+    m_dataProcessor->setIgnore16(m_ignore16);
+    // set the name/type of the peripheral
+    m_dataProcessor->setDataType(dataType);
+    // set the name of the file containing the channel <-> strip map
+    m_dataProcessor->setMapFileName(mapFileName);
+    // set the output directory for storing any output binary files
+    m_dataProcessor->setOutputDirectory(m_outputDirectory);
+    // fill the channel maps for the data decoding
+    m_dataProcessor->fillChannelMaps();
+
+}
 
 void RunDAQ::PrepareRun()
 {
@@ -745,6 +847,7 @@ void RunDAQ::FinishRun()
     qDebug() << "[RunDAQ::FinishRun]    Ending run.";
     ACQOff();
     m_socketDAQ->close();
+    m_socketDAQ->disconnectFromHost();
     m_fileDaq.close();
     emit ExitLoop();
 }

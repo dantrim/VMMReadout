@@ -26,7 +26,7 @@
       <x>10</x>
       <y>0</y>
       <width>261</width>
-      <height>391</height>
+      <height>401</height>
      </rect>
     </property>
     <property name="font">
@@ -80,7 +80,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>66</y>
+       <y>70</y>
        <width>141</width>
        <height>111</height>
       </rect>
@@ -146,7 +146,7 @@
        <rect>
         <x>10</x>
         <y>60</y>
-        <width>116</width>
+        <width>111</width>
         <height>22</height>
        </rect>
       </property>
@@ -683,7 +683,7 @@
      <property name="geometry">
       <rect>
        <x>160</x>
-       <y>64</y>
+       <y>60</y>
        <width>101</width>
        <height>281</height>
       </rect>
@@ -1290,8 +1290,8 @@
     <widget class="QComboBox" name="evbld_mode">
      <property name="geometry">
       <rect>
-       <x>13</x>
-       <y>359</y>
+       <x>10</x>
+       <y>370</y>
        <width>81</width>
        <height>26</height>
       </rect>
@@ -1324,8 +1324,8 @@
     <widget class="QComboBox" name="evebld_infodata">
      <property name="geometry">
       <rect>
-       <x>93</x>
-       <y>359</y>
+       <x>90</x>
+       <y>370</y>
        <width>81</width>
        <height>26</height>
       </rect>
@@ -1373,8 +1373,8 @@
     <widget class="QPushButton" name="setEvbld">
      <property name="geometry">
       <rect>
-       <x>169</x>
-       <y>357</y>
+       <x>180</x>
+       <y>370</y>
        <width>61</width>
        <height>31</height>
       </rect>
@@ -1386,6 +1386,42 @@
      </property>
      <property name="text">
       <string>Set</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="loadDAQXMLFile">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>340</y>
+       <width>121</width>
+       <height>32</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Load DAQ Config</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="writeDAQXMLFile">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>340</y>
+       <width>121</width>
+       <height>32</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Write DAQ Config</string>
      </property>
     </widget>
    </widget>

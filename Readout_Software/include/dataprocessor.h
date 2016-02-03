@@ -25,10 +25,17 @@ class DataProcessor
         void setDebug(bool dbg) { m_dbg = dbg; };
         void setWriteData(bool writeOut) { m_writeData = writeOut; };
         bool writeData() { return m_writeData; }
+
+        void setDataType(QString type) { m_dataType = type; }
+        void setMapFileName(QString file) { m_mapFileName = file; }
+        void setOutputDirectory(QString dir) { m_outputDirectory = dir; }
+
         void setUseChannelMap(bool useIt) { m_useChannelMap = useIt; };
         void setIgnore16(bool ignoreIt) { m_ignore16 = ignoreIt; };
-        void setDAQConfig(QString file);
-        void getDAQConfig();
+        void fillChannelMaps();
+        //void setDAQConfig(QString file); // -> run_module
+        //void getDAQConfig(); // -> run_module
+        //void printDAQConfig(); // -> run_module
         void resetDAQCount() { n_daqCnt = 0; };
         void updateDAQCount() { n_daqCnt++; };
         int getDAQCount() { return n_daqCnt; };
@@ -36,6 +43,12 @@ class DataProcessor
 
         void parseData(QByteArray array);
 
+        //QString getTrigPeriod() { return m_trigPeriod; } // -> run_module
+        //QString getRunMode() { return m_runMode; } // -> run_module
+        //int getTPDelay() { return m_tpDelay; } // -> run_module
+        //int getACQSync() { return m_acqSync; } // -> run_module
+        //int getACQWindow() { return m_acqWindow; } // -> run_module
+        //int getRunCount() { return m_runCount; } // -> run_module
 
         // for output if writing data
         QString getOutputFileName(QString outputDirectory);
@@ -53,22 +66,17 @@ class DataProcessor
         bool m_ignore16;
         int n_daqCnt;
 
-        // private methods
-        void fillChannelMaps();
         // utility methods
         quint32 reverse32(QString hexDataGramString);
         QByteArray bitsToBytes(QBitArray bits); 
         uint grayToBinary(uint num);
 
         bool m_dbg; // debug level
-        QString m_daqXmlFileName;
-        QFile *m_daqConfigFile;
 
         QString m_dataType;
         QString m_mapFileName;
         QString m_outputDirectory; 
 
-        bool m_configOK;
         bool m_runPropertiesFilled;
 
         // possible maps
@@ -76,6 +84,14 @@ class DataProcessor
 
         // data buffer
         QByteArray m_buffer;
+
+        // ----- trigger daq ---------- //
+        // -> run_module //QString m_trigPeriod;
+        // -> run_module //QString m_runMode; 
+        // -> run_module //int m_tpDelay;
+        // -> run_module //int m_acqSync;
+        // -> run_module //int m_acqWindow;
+        // -> run_module //int m_runCount;
 
 
         // --------- DATA ----------- //

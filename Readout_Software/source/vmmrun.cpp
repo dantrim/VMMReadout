@@ -16,7 +16,8 @@ void help()
     qDebug() << " vmmrun usage : ";
     qDebug() << "   $ ./vmmrun -i (--input-xml) <path-to-xml-file> [options]";
     qDebug() << " options :";
-    qDebug() << "    -i / --input-xml   : (required) input configuration xml";
+    qDebug() << "    --daq              : (required) input daq configuration xml";
+    qDebug() << "    --config           : (required) input vmm configuration xml";
     qDebug() << "    -o / --output-name : (optional) provide an output filename";
     qDebug() << "                         to be used instead of the one defined";
     qDebug() << "                         in the input-xml file";
@@ -30,7 +31,8 @@ void help()
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
-    QString inputXMLFile("");
+    QString inputDAQFile("");
+    QString inputConfigFile("");
     bool dbg = false;
     bool testMode = false;
     bool useCustomName = false;
@@ -42,7 +44,8 @@ int main(int argc, char *argv[])
     int optin(1);
     while(optin < argc) {
         string cmd = argv[optin];
-        if(cmd == "-i" || cmd == "--input-xml") { inputXMLFile = argv[++optin]; }
+        if(cmd == "--daq") { inputDAQFile = argv[++optin]; }
+        else if(cmd == "--config") { inputConfigFile = argv[++optin]; }
         else if(cmd == "-o" || cmd == "--output-name") { useCustomName = true; customName = argv[++optin]; } 
         else if(cmd == "--test-mode") { testMode = true; }
         else if(cmd == "-d" || cmd == "--dbg") { dbg = true; }
@@ -55,15 +58,26 @@ int main(int argc, char *argv[])
         }
         optin++;
     } // while optin
-    if(inputXMLFile == "") {
-        qDebug() << "You did not provide an input file. Use the -i or --input-xml command line option to specify this.";
+    if(inputDAQFile == "") {
+        qDebug() << "You did not provide an input DAQ configuration file. Use the \"--daq\" command line option to specify this.";
+        help();
+        exit(1);
+    }
+    else if(inputConfigFile == "") {
+        qDebug() << "You did not provide an input VMM configuration file. Use the \"--config\" command line option to specify this.";
         help();
         exit(1);
     }
     else {
-        QFileInfo checkFile(inputXMLFile);
-        if(!(checkFile.exists() && checkFile.isFile())) {
-            qDebug() << "The provided input file (" << inputXMLFile << ") is not found. Please check that th epath, etc... are correct.";
+        QFileInfo checkDAQFile(inputDAQFile);
+        if(!(checkDAQFile.exists() && checkDAQFile.isFile())) {
+            qDebug() << "The provided input DAQ configuration file (" << inputDAQFile << ") is not found. Please check that the path, etc... are correct.";
+            help();
+            exit(1);
+        }
+        QFileInfo checkConf(inputConfigFile);
+        if(!(checkConf.exists() && checkConf.isFile())) {
+            qDebug() << "The provided input vmm configuration file (" << inputConfigFile << ") is not found. Please check that the path, etc... are correct.";
             help();
             exit(1);
         }
@@ -80,8 +94,10 @@ int main(int argc, char *argv[])
     daq.SetDebugMode(dbg);
     daq.SetTestMode(testMode);
     daq.SetWriteEvent(writeEvent);
-    // process the input file and grab the daq configuration
-    daq.ReadRFile(inputXMLFile);
+    // process the input configuration file
+    daq.ReadRFile(inputConfigFile);
+    // process the input DAQ configuration file
+    daq.getDAQConfig(inputDAQFile);
     // set up the acquisition mode
     daq.PrepareRun();
 

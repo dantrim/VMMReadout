@@ -13,6 +13,7 @@
 
 //vmmrun
 #include "configuration_module.h"
+#include "dataprocessor.h"
 //#include "eventbuilder.h"
 
 class RunDAQ : public QObject
@@ -28,6 +29,17 @@ class RunDAQ : public QObject
         void SetTestMode(bool doTest) { m_is_testmode = doTest; }
         void SetOutputFileName(QString name) { m_useCustomName = true; m_userGivenName = name; }
         void ReadRFile(QString &file);
+
+        void getDAQConfig(QString daqXMLFile);
+        QString getOutputDirectory() { return m_outputDirectory; }
+        bool useChannelMap() { return m_useChannelMap; }
+        bool ignore16() { return m_ignore16; }
+        int tpDelay() { return m_tpdelay; }
+        int acqSync() { return m_acqsync; }
+        int acqWindow() { return m_acqwindow; }
+        QString trigPeriod() { return m_trigperiod; }
+        QString runMode() { return m_runmode; }
+
         void LoadDAQConstantsFromGUI(int pulserDelay, QString trigPeriod, int acqSync, int acqWindow);
         void LoadChannelMap(quint16 chanMapIn) { m_channelmap = chanMapIn; }
         void LoadIPList(QStringList ipListIn);
@@ -53,6 +65,7 @@ class RunDAQ : public QObject
     private :
         // global configuration parameters (c.f. vmmconfig/configuration_module.h)
         Configuration* m_config;
+        DataProcessor* m_dataProcessor;
         //EventBuilder*  m_builder;
 
         bool m_has_config;
@@ -70,6 +83,9 @@ class RunDAQ : public QObject
         QByteArray m_bufferDAQ;
 
         // configuration parameters
+        QString m_outputDirectory;
+        bool m_useChannelMap;
+        bool m_ignore16;
         int m_tpdelay;
         int m_acqsync;
         int m_acqwindow;

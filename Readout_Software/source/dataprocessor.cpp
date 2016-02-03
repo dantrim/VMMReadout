@@ -22,12 +22,9 @@ DataProcessor::DataProcessor() :
     m_ignore16(false),
     n_daqCnt(0),
     m_dbg(true),
-    m_daqXmlFileName(""),
-    m_daqConfigFile(NULL),
     m_dataType(""),
     m_mapFileName(""),
     m_outputDirectory(""),
-    m_configOK(false),
     m_runPropertiesFilled(false),
     m_fileDAQ(NULL),
     m_outFileOK(false),
@@ -38,17 +35,17 @@ DataProcessor::DataProcessor() :
     DataProcessor::clearData();
 }
 
-void DataProcessor::setDAQConfig(QString infile)
-{
-    QFile tmpDAQFile(infile);
-    if(!tmpDAQFile.exists()) {
-        qDebug() << "[DataProcessor::setDAQConfig]    DAQ config file provided (" << infile << ") is not found.";
-        abort();
-    }
-    m_daqXmlFileName = infile;
-}
+//void DataProcessor::setDAQConfig(QString infile)
+//{
+//    QFile tmpDAQFile(infile);
+//    if(!tmpDAQFile.exists()) {
+//        qDebug() << "[DataProcessor::setDAQConfig]    DAQ config file provided (" << infile << ") is not found.";
+//        abort();
+//    }
+//    m_daqXmlFileName = infile;
+//}
 
-void DataProcessor::getDAQConfig()
+/*void DataProcessor::getDAQConfig()
 {
     if(m_daqXmlFileName=="") {
         qDebug() << "[DataProcessor::getDAQConfig]    DAQ config file is \"\"! Set first using DataProcessor::setDAQConfig.";
@@ -56,7 +53,7 @@ void DataProcessor::getDAQConfig()
     }
     QFile daqConfigFile(m_daqXmlFileName);
 
-    bool fileOpenedOk = m_daqConfigFile->open(QIODevice::ReadOnly);
+    bool fileOpenedOk = daqConfigFile->open(QIODevice::ReadOnly);
     if(fileOpenedOk) {
         qDebug() << "[DataProcessor::getDAQConfig]    DAQ config opened : " << m_daqConfigFile->fileName() << ".";
         m_daqConfigFile = &daqConfigFile;
@@ -82,7 +79,7 @@ void DataProcessor::getDAQConfig()
             else if(child.tagName()=="data_directory") {
                 m_outputDirectory = child.text();
             }
-            else if(child.tagName()=="daq.config") {
+            else if(child.tagName()=="general.config") {
                 if(child.hasChildNodes()) {
                     m_useChannelMap = ((child.firstChildElement("use.chan.map").text() == "true") ? true : false);
                     m_ignore16 = ((child.firstChildElement("ignore16").text() == "true") ? true : false);
@@ -90,6 +87,17 @@ void DataProcessor::getDAQConfig()
                     qDebug() << "[DataProcessor::getDAQConfig]    daq.config elements are empty! Will use defaults.";
                 }
             }
+            // trigger settings
+            else if(child.tagName()=="trigger.daq") {
+                if(child.hasChildNodes()) {
+                    m_tpDelay = child.firstChildElement("tp.delay").text().toInt();
+                    m_trigPeriod = child.firstChildElement("trigger.period").text();
+                    m_acqSync = child.firstChildElement("acq.sync").text().toInt();
+                    m_acqWindow = child.firstChildElement("acq.window").text().toInt();
+                    m_runMode = child.firstChildElement("run.mode").text();
+                    m_runCount = child.firstChildElement("run.count").text().toInt(); 
+                }
+            } // trigger.daq
                 
             child = child.nextSiblingElement("");
         } // while
@@ -105,6 +113,7 @@ void DataProcessor::getDAQConfig()
 
     if(!(m_dataType=="" || m_mapFileName=="" || m_outputDirectory=="")) {
         m_configOK = true;
+        if(m_dbg) DataProcessor::printDAQConfig();
     } else {
         m_configOK = false;
         qDebug() << fn << "DAQ config not completely loaded:";
@@ -117,11 +126,11 @@ void DataProcessor::getDAQConfig()
     // ------------ now fill the maps --------------- //
     fillChannelMaps();
 }
+*/
 
 void DataProcessor::fillChannelMaps()
 {
     // fill the map for the provided type
-
     QFile mapFile(m_mapFileName);
     if(!mapFile.exists()) {
         qDebug() << "[DataProcessor::fillChannelMaps]    Map file (" << m_mapFileName << ") not found.";
@@ -139,14 +148,15 @@ void DataProcessor::fillChannelMaps()
     while(!in.atEnd()) {
         QString line = in.readLine();
         if(line.left(1)!="#") {
-
             // ------------ mini2 case ------------ //
             if(m_dataType=="MINI2") {
                 QStringList line_list = line.split("  ", QString::SkipEmptyParts); // assume columns separated by 2 spaces
-                std::vector<int> chip_list;
-                chip_list.push_back(line_list.at(1).toInt());
-                chip_list.push_back(line_list.at(2).toInt());
-                m_map_mini2.insert(line_list.at(0).toInt(), chip_list);
+                if(line_list.size()){
+                    std::vector<int> chip_list;
+                    chip_list.push_back(line_list.at(1).toInt());
+                    chip_list.push_back(line_list.at(2).toInt());
+                    m_map_mini2.insert(line_list.at(0).toInt(), chip_list);
+                } // non-empty line
             } // mini2
         } // if not #
     } // while
@@ -351,6 +361,10 @@ int DataProcessor::mappedChannel(int chipNumber, int channelNumber)
             out_strip_number = m_map_mini2[channelNumber][1];
         }
     } // mini2
+    else {
+        qDebug() << "[DataProcessor::mappedChannel]    ERROR No channel mapping for type : " << m_dataType << ". Exiting.";
+        abort();
+    }
 
     return out_strip_number;
 }

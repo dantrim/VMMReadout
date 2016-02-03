@@ -60,6 +60,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->SendConfiguration, SIGNAL(clicked()), this , SLOT(HandleRecipe()));
     connect(ui->loadConfigXMLFile, SIGNAL(clicked()), this , SLOT(LoadConfigurationFromFile()));
     connect(ui->writeConfigXMLFile, SIGNAL(clicked()), this , SLOT(WriteConfigurationFromFile()));
+    connect(ui->loadDAQXMLFile, SIGNAL(clicked()), this , SLOT(LoadDAQConfigurationFromFile()));
+    connect(ui->writeDAQXMLFile, SIGNAL(clicked()), this, SLOT(WriteDAQConfigurationFile()));
+    connect(ui->useMapping, SIGNAL(stateChanged(int)), this , SLOT(setChannelMaps(int)));
     //    connect(ui->SendConfiguration_tr, SIGNAL(clicked()), this , SLOT(MergerFPGA()));
     connect(ui->onAcq_fpga, SIGNAL(clicked()), this , SLOT(MergerFPGA()));
     connect(ui->offAcq_fpga, SIGNAL(clicked()), this , SLOT(MergerFPGA()));
@@ -1697,6 +1700,34 @@ void MainWindow::LoadConfigurationFromFile(){
 
 }
 //_________________________________________________________________________________________
+void MainWindow::LoadDAQConfigurationFromFile(){
+
+    ui->useMapping->blockSignals(true);
+    // open the file
+    QString filename = QFileDialog::getOpenFileName(this,
+        tr("Open DAQ Configuration XML File"), "../configs/", tr("XML Files (*.xml)"));
+    if(filename.isNull()) return;
+    qDebug() << "[MainWindow::LoadDAQConfigurationFromFile]    Loading DAQ config file : " << filename;
+
+    // load the daq configuration
+    _runDAQ->getDAQConfig(filename);
+   
+    // set the output directory 
+    ui->runDirectoryField->setText(_runDAQ->getOutputDirectory());
+   
+    // trigger acquisition constants
+    ui->pulserDelay->setValue(_runDAQ->tpDelay());  // TP delay
+    ui->trgPeriod->setText(_runDAQ->trigPeriod());
+    ui->acqSync->setValue(_runDAQ->acqSync());
+    ui->acqWindow->setValue(_runDAQ->acqWindow());
+
+    // general run configuration
+    ui->useMapping->setChecked(_runDAQ->useChannelMap());
+    ui->ignore16->setChecked(_runDAQ->ignore16());
+    ui->useMapping->blockSignals(false);
+
+}
+//_________________________________________________________________________________________
 void MainWindow::WriteConfigurationFromFile(){
 	//bool ok;
 
@@ -1719,6 +1750,26 @@ void MainWindow::WriteConfigurationFromFile(){
 	_config->WriteCFile(filename);
 
 }
+//_________________________________________________________________________________________
+void MainWindow::WriteDAQConfigurationFile()
+{
+    // TODO :: need to implement writing of DAQ configuration file
+}
+//_________________________________________________________________________________________
+void MainWindow::setChannelMaps(int)
+{
+    if(ui->useMapping->isChecked()) {
+        QString mapfilename = QFileDialog::getOpenFileName(this,
+                tr("Open Peripheral Channel Map File"), "../configs/", tr("TXT Files (*.txt)"));
+        if(mapfilename.isNull()) return;
+        qDebug() << "[MainWindow::setChannelMaps]    Loading peripherla channel map file : " << mapfilename;
+        _dataProcessor->setDataType("MINI2");
+        _dataProcessor->setMapFileName(mapfilename);
+        _dataProcessor->fillChannelMaps();
+    }
+
+}
+
 //_________________________________________________________________________________________
 void MainWindow::customCommandHandler(){//if to be called from datapending - responce = 1
     bool ok;
