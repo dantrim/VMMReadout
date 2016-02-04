@@ -143,18 +143,17 @@ void RunDAQ::ReadRFile(QString &file)
 
 void RunDAQ::getDAQConfig(QString infile)
 {
-    QString fn = "[RunDAQ::getDAQConfig]    ";
     if(infile=="") {
-        qDebug() << fn << "DAQ config file is \"\"! Exiting.";
+        qDebug() << "[RunDAQ::getDAQConfig]    DAQ config file is \"\"! Exiting.";
         abort();
     }
     QFile daqFile(infile);
     bool fileOpenedOk = daqFile.open(QIODevice::ReadOnly);
     if(fileOpenedOk) {
-        qDebug() << fn << "DAQ config opened : " << daqFile.fileName() << ".";
+        qDebug() << "[RunDAQ::getDAQConfig]    DAQ config opened : " << daqFile.fileName();
     }
     else {
-        qDebug() << fn << "Error opening DAQ config : " << infile << ".";
+        qDebug() << "[RunDAQ::getDAQConfig]    Error opening DAQ config : " << infile;
         abort();
     } 
 
@@ -169,7 +168,7 @@ void RunDAQ::getDAQConfig(QString infile)
     if(!child.isNull()) {
         while(!child.isNull()) {
             if(child.tagName() == "elx_file") {
-                if(child.tagName().contains("mini2")) dataType = "MINI2";
+                if(child.tagName().indexOf("mini2", 0)) dataType = "MINI2";
                 mapFileName = child.text();
             }
             else if(child.tagName()=="data_directory") {
@@ -180,7 +179,7 @@ void RunDAQ::getDAQConfig(QString infile)
                     m_useChannelMap = ((child.firstChildElement("use.chan.map").text() == "true") ? true : false);
                     m_ignore16 = ((child.firstChildElement("ignore16").text() == "true") ? true : false);
                 } else {
-                    qDebug() << fn << "WARNING general.config elements are empty! Will use defaults.";
+                    qDebug() << "[RunDAQ::getDAQConfig]    WARNING general.config elements are empty! Will use defaults.";
                 }
             }
             // trigger settings
@@ -199,35 +198,36 @@ void RunDAQ::getDAQConfig(QString infile)
         } // while
     }
     else {
-        qDebug() << fn << "WARNING DAQ configuration xml is empty! Exiting.";
+        qDebug() << "[RunDAQ::getDAQConfig]    WARNING DAQ configuration xml is empty! Exiting.";
         abort();
     }
 
     if(m_runmode == "pulser") { m_timedrun = false; }
     else if (m_runmode == "external") { m_timedrun = true; }
     else {
-        qDebug() << fn << "WARNING Run mode can only be \"pulser\" or \"external\"! The DAQ config has provided the run mode \"" << m_runmode << "\". Exiting";
+        qDebug() << "[RunDAQ::getDAQConfig]    WARNING Run mode can only be \"pulser\" or \"external\"! The DAQ config has provided the run mode \"" << m_runmode << "\". Exiting";
         abort();
     }
     if(m_timedrun) { m_runcount = m_runcount * 1000; }
 
-    if(m_dbg) {
-        qDebug() << fn << " # ------------------------------------- # ";
-        qDebug() << fn << "     Printing DAQ Configuration";
-        qDebug() << fn << "   - - - - - - - - - - - - - - - - - - - ";
-        qDebug() << fn << "     peripheral          : " << dataType;
-        qDebug() << fn << "     map filename        : " << mapFileName;
-        qDebug() << fn << "     output directory    : " << m_outputDirectory;  
-        qDebug() << fn << "     use channel map ?   : " << (m_useChannelMap ? "yes" : "no");
-        qDebug() << fn << "     ignore16 ?          : " << (m_ignore16 ? "yes" : "no");
-        qDebug() << fn << "     TP delay            : " << m_tpdelay;
-        qDebug() << fn << "     trigger period      : " << m_trigperiod;
-        qDebug() << fn << "     acq sync            : " << m_acqsync;
-        qDebug() << fn << "     acq window          : " << m_acqwindow;
-        qDebug() << fn << "     run mode            : " << m_runmode;
-        qDebug() << fn << "     timed run ?         : " << (m_timedrun ? "yes" : "no");
-        qDebug() << fn << "     run count           : " << m_runcount;
-        qDebug() << fn << " # ------------------------------------- # ";
+    //if(m_dbg) {
+    if(true) {
+        qDebug() << "[RunDAQ::getDAQConfig]    # ------------------------------------- # ";
+        qDebug() << "[RunDAQ::getDAQConfig]        Printing DAQ Configuration";
+        qDebug() << "[RunDAQ::getDAQConfig]      - - - - - - - - - - - - - - - - - - - ";
+        qDebug() << "[RunDAQ::getDAQConfig]        peripheral          : " << dataType;
+        qDebug() << "[RunDAQ::getDAQConfig]        map filename        : " << mapFileName;
+        qDebug() << "[RunDAQ::getDAQConfig]        output directory    : " << m_outputDirectory;  
+        qDebug() << "[RunDAQ::getDAQConfig]        use channel map ?   : " << (m_useChannelMap ? "yes" : "no");
+        qDebug() << "[RunDAQ::getDAQConfig]        ignore16 ?          : " << (m_ignore16 ? "yes" : "no");
+        qDebug() << "[RunDAQ::getDAQConfig]        TP delay            : " << m_tpdelay;
+        qDebug() << "[RunDAQ::getDAQConfig]        trigger period      : " << m_trigperiod;
+        qDebug() << "[RunDAQ::getDAQConfig]        acq sync            : " << m_acqsync;
+        qDebug() << "[RunDAQ::getDAQConfig]        acq window          : " << m_acqwindow;
+        qDebug() << "[RunDAQ::getDAQConfig]        run mode            : " << m_runmode;
+        qDebug() << "[RunDAQ::getDAQConfig]        timed run ?         : " << (m_timedrun ? "yes" : "no");
+        qDebug() << "[RunDAQ::getDAQConfig]        run count           : " << m_runcount;
+        qDebug() << "[RunDAQ::getDAQConfig]    # ------------------------------------- # ";
     }
 
     m_dataProcessor->setUseChannelMap(m_useChannelMap);
@@ -240,6 +240,127 @@ void RunDAQ::getDAQConfig(QString infile)
     m_dataProcessor->setOutputDirectory(m_outputDirectory);
     // fill the channel maps for the data decoding
     m_dataProcessor->fillChannelMaps();
+
+}
+
+void RunDAQ::writeNewDAQConfigFile(QString outfile, bool useMap, bool ignore16, QString runmode, QString mapfile, QString outdir)
+{
+    // read in default config for building template 
+    QString default_file = "../configs/DAQ_config.xml";
+    QFile defCon(default_file);
+    if(!defCon.open( QIODevice::ReadOnly | QIODevice::Text )) {
+        qDebug() << "[RunDAQ::writeNewDAQConfigFile]    Failed to open default DAQ configuration file " << default_file << " for reading.";
+        qDebug() << "[RunDAQ::writeNewDAQConfigFile]     >>> Will not make new DAQ configuration file.";
+        defCon.close();
+        return;
+    }
+
+    // load in the XML from the default
+    QDomDocument doc;
+    if(!doc.setContent(&defCon)) {
+        qDebug() << "[RunDAQ::writeNewDAQConfigFile]    Failed to parse the default DAQ configuration file " << default_file << " into a DOM tree.";
+        qDebug() << "[RunDAQ::writeNewDAQConfigFile]     >>> Will not make new DAQ configuration file.";
+        defCon.close();
+        return;
+    }
+
+    defCon.close(); // we've got what we need
+
+    QString use_chan_map = (useMap ? "true" : "false");
+    QString ignore_16 = (ignore16 ? "true" : "false");
+    int tp_ = tpDelay();
+    QString tp_delay = QString::number(tp_);
+    QString trigger_period = trigPeriod();
+    int sync_ = acqSync();
+    QString acq_sync = QString::number(sync_);
+    int window_ = acqWindow();
+    QString acq_window = QString::number(window_);
+
+
+
+    QDomElement root = doc.documentElement();
+    QDomElement nodeTag, subnodeTag, newNodeTag;
+    QDomText newNodeText;
+
+    // ---- general.config ---- //
+    nodeTag = root.firstChildElement("general.config");
+    // channel mapping
+    subnodeTag = nodeTag.firstChildElement("use.chan.map");
+    if(QString::compare(subnodeTag.text(), use_chan_map, Qt::CaseInsensitive)!=0) {
+        newNodeTag = doc.createElement(QString("use.chan.map"));
+        newNodeText = doc.createTextNode(use_chan_map);
+        newNodeTag.appendChild(newNodeText);
+        nodeTag.replaceChild(newNodeTag, subnodeTag);
+    }
+    // ignore 16
+    subnodeTag = nodeTag.firstChildElement("ignore16");
+    if(QString::compare(subnodeTag.text(), ignore_16, Qt::CaseInsensitive)!=0) {
+        newNodeTag = doc.createElement(QString("ignore16"));
+        newNodeText = doc.createTextNode(ignore_16);
+        newNodeTag.appendChild(newNodeText);
+        nodeTag.replaceChild(newNodeTag, subnodeTag);
+    }
+
+    // ---- trigger.daq ---- //
+    nodeTag = root.firstChildElement("trigger.daq");
+    std::string tags_arr[] = { "tp.delay", "trigger.period", "acq.sync", "acq.window", "run.mode", "run.count" };
+    std::vector<std::string> tdaqTags (tags_arr, tags_arr + sizeof(tags_arr) / sizeof(std::string));
+
+    int count_ = 20; // just fix the run count to 20
+    QString run_count = QString::number(count_);
+
+    QString new_arr[] = { tp_delay, trigger_period, acq_sync, acq_window, runmode, run_count };
+    std::vector<QString> newTags ( new_arr, new_arr + sizeof(new_arr) / sizeof(QString));
+    // tp delay
+    for(int itag = 0; itag < (int)tdaqTags.size(); itag++) {
+        subnodeTag = nodeTag.firstChildElement(QString(tdaqTags[itag].c_str()));
+        if(QString::compare(subnodeTag.text(), newTags[itag], Qt::CaseInsensitive)!=0) {
+            newNodeTag = doc.createElement(QString(QString(tdaqTags[itag].c_str())));
+            newNodeText = doc.createTextNode(newTags[itag]);
+            newNodeTag.appendChild(newNodeText);
+            nodeTag.replaceChild(newNodeTag, subnodeTag);
+        } 
+    }
+
+    // ---- electronics map file ---- //
+    nodeTag = root.firstChildElement("elx_file");
+    if(QString::compare(nodeTag.text(), mapfile)!=0) {
+        newNodeTag = doc.createElement(QString("elx_file"));
+        newNodeText = doc.createTextNode(mapfile);
+        newNodeTag.appendChild(newNodeText);
+        root.replaceChild(newNodeTag, nodeTag);
+    }
+
+    // ---- path to store files ---- //
+    nodeTag = root.firstChildElement("data_directory");
+    if(QString::compare(nodeTag.text(), outdir)!=0) {
+        newNodeTag = doc.createElement(QString("data_directory"));
+        newNodeText = doc.createTextNode(outdir);
+        newNodeTag.appendChild(newNodeText);
+        root.replaceChild(newNodeTag, nodeTag);
+    }
+   
+
+    // check that outfile exists
+    QFileInfo checkFile(outfile);
+    if(checkFile.exists() || (checkFile.exists() && !checkFile.isFile()) ) {
+        qDebug() << "[RunDAQ::writeNewDAQConfigFile]    DAQ configuration file not written.";
+        qDebug() << "[RunDAQ::writeNewDAQConfigFile]     >>> File already exists or is not a file. Try again.";
+        return;
+    }
+
+    QFile file(outfile);
+    if(!file.open(QIODevice::WriteOnly)) {
+        qDebug() << "[RunDAQ::writeNewDAQConfigFile]    Error opening output DAQ configuration file for writing.";
+        return;
+    }
+
+    QTextStream stream(&file);
+    stream << doc.toString();
+
+    qDebug() << "[RunDAQ::writeNewDAQConfigFile]    Writing new DAQ configuration file to : " << file.fileName();
+    file.close();
+    return;
 
 }
 

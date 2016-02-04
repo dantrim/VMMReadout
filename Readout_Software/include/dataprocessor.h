@@ -28,10 +28,14 @@ class DataProcessor
 
         void setDataType(QString type) { m_dataType = type; }
         void setMapFileName(QString file) { m_mapFileName = file; }
+        QString getMapFileName() { return m_mapFileName; }
         void setOutputDirectory(QString dir) { m_outputDirectory = dir; }
+        QString getOutputDirectory() { return m_outputDirectory; }
 
         void setUseChannelMap(bool useIt) { m_useChannelMap = useIt; };
+        bool useChannelMap() { return m_useChannelMap; }
         void setIgnore16(bool ignoreIt) { m_ignore16 = ignoreIt; };
+        bool ignore16() { return m_ignore16; }
         void fillChannelMaps();
         //void setDAQConfig(QString file); // -> run_module
         //void getDAQConfig(); // -> run_module

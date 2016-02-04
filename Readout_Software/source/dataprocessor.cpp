@@ -21,7 +21,7 @@ DataProcessor::DataProcessor() :
     m_useChannelMap(false),
     m_ignore16(false),
     n_daqCnt(0),
-    m_dbg(true),
+    m_dbg(false),
     m_dataType(""),
     m_mapFileName(""),
     m_outputDirectory(""),
@@ -138,9 +138,9 @@ void DataProcessor::fillChannelMaps()
     }
     bool fileOpened = mapFile.open(QIODevice::ReadOnly);
     if(fileOpened) {
-        qDebug() << "[DataProcessor::fillChannelMaps]    Map file opened : " << mapFile.fileName() << ".";
+        qDebug() << "[DataProcessor::fillChannelMaps]    Map file opened : " << mapFile.fileName();
     } else {
-        qDebug() << "[DataProcessor::fillChannelMaps]    Error opening map file : " << m_mapFileName << ".";
+        qDebug() << "[DataProcessor::fillChannelMaps]    Error opening map file : " << m_mapFileName;
         abort();
     }
 
@@ -166,7 +166,7 @@ void DataProcessor::fillChannelMaps()
 // -------------------------------------------------------------------- //
 void DataProcessor::parseData(QByteArray array)
 {
-    qDebug() << "[DataProcessor::parseData]    Parsing input data array.";
+    //qDebug() << "[DataProcessor::parseData]    Parsing input data array.";
 
     bool ok;
     m_buffer.clear();
@@ -174,7 +174,6 @@ void DataProcessor::parseData(QByteArray array)
     m_buffer.append(array);
 
     if(m_dbg) qDebug() << "[DataProcessor::parseData]    Clearing data.";
-    DataProcessor::clearData();
 
     if(m_buffer.size() == 12) {
         // we only received the header, there is no data
@@ -283,16 +282,15 @@ void DataProcessor::parseData(QByteArray array)
             _gray.push_back(gray);
 
             if(m_dbg) {
-                QString fn = "[DataProcessor::parseData]    ";
-                qDebug() << fn << "channel          : " << channel_no;
-                qDebug() << fn << "flag             : " << flag;
-                qDebug() << fn << "threshold        : " << threshold;
-                qDebug() << fn << "charge           : " << outCharge_;
-                qDebug() << fn << "q_1              : " << q_1;
-                qDebug() << fn << "q_2              : " << q_2;
-                qDebug() << fn << "q_final          : " << q_final;
-                qDebug() << fn << "tac              : " << outTac_;
-                qDebug() << fn << "bcid             : " << outBCID_;
+                qDebug() << "[DataProcessor::parseData]    channel          : " << channel_no;
+                qDebug() << "[DataProcessor::parseData]    flag             : " << flag;
+                qDebug() << "[DataProcessor::parseData]    threshold        : " << threshold;
+                qDebug() << "[DataProcessor::parseData]    charge           : " << outCharge_;
+                qDebug() << "[DataProcessor::parseData]    q_1              : " << q_1;
+                qDebug() << "[DataProcessor::parseData]    q_2              : " << q_2;
+                qDebug() << "[DataProcessor::parseData]    q_final          : " << q_final;
+                qDebug() << "[DataProcessor::parseData]    tac              : " << outTac_;
+                qDebug() << "[DataProcessor::parseData]    bcid             : " << outBCID_;
             }
 
             // move to next channel (8 bytes forward)
@@ -300,7 +298,8 @@ void DataProcessor::parseData(QByteArray array)
 
         } // i
 
-        if(m_writeData) {
+        //if(m_writeData) {
+        if(true) {
             // TODO : implmenet nutple filling here!
             //if(!m_treesSetup) { }
             m_triggerTimeStamp.push_back(data_TrigTimeStampStr.toInt(&ok,16));
@@ -324,8 +323,8 @@ void DataProcessor::parseData(QByteArray array)
     } // != fafafafa
     else if(data_FrameCounterStr == "fafafafa") {
         // TODO : implement ntuple writing!
-        // TODO : add data members to DataProcessor to hold the ouptut values (we may want them outside of this fucntion!)
-        if(m_writeData) {
+        //if(m_writeData) {
+        if(true) {
             DataProcessor::fillEventData();
         } // writeData
 
@@ -663,8 +662,8 @@ void DataProcessor::clearData()
     m_angle         = -999;
 
     // clear the event data
-    m_eventNumberFAFA   = -999;
-    m_daqCnt            = -999;
+    m_eventNumberFAFA   = 0;
+    m_daqCnt            = 0;
     m_triggerTimeStamp.clear();
     m_triggerCounter.clear();
     m_chipId.clear();

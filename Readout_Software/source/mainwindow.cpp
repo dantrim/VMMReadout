@@ -1754,6 +1754,41 @@ void MainWindow::WriteConfigurationFromFile(){
 void MainWindow::WriteDAQConfigurationFile()
 {
     // TODO :: need to implement writing of DAQ configuration file
+
+    QString outfilename = QFileDialog::getSaveFileName(this,
+        tr("Save DAQ Configuration XML"), "../configs", tr("XML Files (*.xml)"));
+    if(outfilename.isNull()) return;
+
+    _runDAQ->LoadDAQConstantsFromGUI(ui->pulserDelay->value(),
+                                        ui->trgPeriod->text(),
+                                        ui->acqSync->value(),
+                                        ui->acqWindow->value());
+
+    QString runmode_ = "";
+    if(ui->trgPulser->isChecked() && !(ui->trgExternal->isChecked())) runmode_ = "pulser";
+    else if(!(ui->trgPulser->isChecked()) && ui->trgExternal->isChecked()) runmode_ = "external";
+    else {
+        // set to default
+        runmode_ = "pulser";
+    }
+    QString mapfile_ = "";
+    bool usemap = false;
+    if(ui->useMapping->isChecked()) {
+        usemap = true;
+        // this datamember will always be filled if useMapping has been set
+        mapfile_ = _dataProcessor->getMapFileName();
+    }
+    QString outdir_ = ui->runDirectoryField->text(); 
+    bool ignore16_ = false;
+    if(ui->ignore16->isChecked()) ignore16_ = true;
+
+    _runDAQ->writeNewDAQConfigFile(outfilename,
+                                    usemap,
+                                    ignore16_,
+                                    runmode_,
+                                    mapfile_,
+                                    outdir_);
+
 }
 //_________________________________________________________________________________________
 void MainWindow::setChannelMaps(int)
@@ -2890,13 +2925,18 @@ void MainWindow::triggerHandler_fpga(){
 //_________________________________________________________________________________________________
 void MainWindow::dataDAQPending()
 {
-    bool ok;
-    bool debug=0;
-    QString tempString;
+    //bool ok;
+    //bool debug=0;
+    //QString tempString;
+    QByteArray bufferNow;
     while(socketDAQ->hasPendingDatagrams())
     {
-        bufferDAQ.resize(socketDAQ->pendingDatagramSize());
-        socketDAQ->readDatagram(bufferDAQ.data(), bufferDAQ.size());
+       // qDebug() << "MAINWINDOW SENDING DATAGRAM";
+        bufferNow.clear();
+        bufferNow.resize(socketDAQ->pendingDatagramSize());
+        socketDAQ->readDatagram(bufferNow.data(), bufferNow.size());
+        _dataProcessor->parseData(bufferNow);
+/*
         QString frmCounter = bufferDAQ.mid(0,4).toHex();
 
         if(debug){
@@ -3095,6 +3135,7 @@ void MainWindow::dataDAQPending()
                 neighborVariableForCalibration.clear();
             }
         }
+//    */
     }
 }
 //_________________________________________________________________________________________________

@@ -7,8 +7,8 @@
 
     <!-- daq configuration -->
     <general.config>
-        <use.chan.map>true</use.chan.map>
-        <ignore16>true</ignore16>
+        <use.chan.map>false</use.chan.map>
+        <ignore16>false</ignore16>
     </general.config>
 
     <!-- trigger settings -->
@@ -27,4 +27,4 @@
     <!-- path to save data files -->
     <data_directory>/Users/dantrim/workarea/NSW/VMMReadout/Readout_Software/output</data_directory>
 
-<daq_config>
+</daq_config>

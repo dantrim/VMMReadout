@@ -31,6 +31,7 @@ class RunDAQ : public QObject
         void ReadRFile(QString &file);
 
         void getDAQConfig(QString daqXMLFile);
+        void writeNewDAQConfigFile(QString outfilename, bool useMap, bool ignore16, QString runmode, QString mapfile, QString outdir);
         QString getOutputDirectory() { return m_outputDirectory; }
         bool useChannelMap() { return m_useChannelMap; }
         bool ignore16() { return m_ignore16; }
