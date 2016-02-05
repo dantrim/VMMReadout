@@ -1356,6 +1356,404 @@ int Configuration::SendConfig(){
 	return 0;
 		
 }
+
+// --------------------- FEC configuration ------------------------ //
+void Configuration::setMask()
+{
+    qDebug() << "[Configuration::setMask]    Setting HDMI mask";
+    if(socket->state()==QAbstractSocket::UnconnectedState) {
+        if(debug) qDebug() << "[Configuration::setMask]    About to rebind the socket";
+        bool bnd = socket->bind(FECPort, QUdpSocket::ShareAddress);
+        if(!bnd) {
+            qDebug() << "[Configuration::setMask]    WARNING Unable to bind socket to FECPort. Exiting.";
+            abort();
+        } else {
+            if(debug) qDebug() << "[Configuration::setMask]    Socket binding to FECPort successful";
+        }
+    }
+
+    bool ok;
+    QByteArray datagram;
+    QString cmd, cmdType, cmdLength, msbCounter;
+    cmd = "AA";
+    cmdType = "AA";
+    cmdLength = "FFFF";
+    msbCounter = "0x80000000";
+
+    foreach(const QString &ip, _ips) {
+        UpdateCounter();
+        datagram.clear();
+        QDataStream out(&datagram, QIODevice::WriteOnly);
+        out.device()->seek(0);
+
+        out << (quint32)(commandCounter+msbCounter.toUInt(&ok,16)) << (quint16)0 << (quint16) channelMap;
+        out << (quint8)cmd.toUInt(&ok,16) << (quint8)cmdType.toUInt(&ok,16) << (quint16)cmdLength.toUInt(&ok,16);
+        out << (quint32)0;
+        out << (quint32)8;
+        out << (quint32)channelMap;
+
+        Sender(datagram, ip, VMMAPPPort, *socket);
+
+        bool read = false;
+		read=socket->waitForReadyRead(1000);
+		if(read){
+			processReply(ip, socket);
+		}else{
+            qDebug() << "[Configuration::setMask]    WARNING WaitForReadyRead timed out. Exiting.";
+            socket->close();
+            socket->disconnectFromHost();
+			abort();
+		}
+    }
+    
+    if(debug) qDebug() << "[Configuration::setMask]    Call socket close() and disconnectFromHost()";
+    socket->close();
+    socket->disconnectFromHost();
+}
+
+void Configuration::linkPB()
+{
+    qDebug() << "[Configuration::linkPB]    Querying the link status";
+    if(socket->state()==QAbstractSocket::UnconnectedState) {
+        if(debug) qDebug() << "[Configuration::linkPB]    About to rebind the socket";
+        bool bnd = socket->bind(FECPort, QUdpSocket::ShareAddress);
+        if(!bnd) {
+            qDebug() << "[Configuration::linkPB]    WARNING Unable to bind socket to FECPort. Exiting.";
+            abort();
+        } else {
+            if(debug) qDebug() << "[Configuration::linkPB]    Socket binding to FECPort successful";
+        }
+    }
+
+    bool ok;
+    QByteArray datagram;
+
+    QString cmd = "BBAAFFFF";
+    QString msbCounter = "0x80000000";
+    foreach(const QString &ip, _ips) {
+        UpdateCounter();
+        datagram.clear();
+        QDataStream out(&datagram, QIODevice::WriteOnly);
+        out.device()->seek(0);
+
+        out << (quint32)(commandCounter+msbCounter.toUInt(&ok,16));
+        out << (quint32)channelMap;
+        out << (quint32)cmd.toUInt(&ok,16);
+        out << (quint32)0;
+        out << (quint32)16;
+        
+        Sender(datagram, ip, VMMAPPPort, *socket);
+
+        bool read = false;
+		read=socket->waitForReadyRead(1000);
+		if(read){
+			processReply(ip, socket);
+		}else{
+            qDebug() << "[Configuration::linkPB]    WARNING WaitForReadyRead timed out. Exiting.";
+            socket->close();
+            socket->disconnectFromHost();
+			abort();
+		}
+    }
+        
+
+    if(debug) qDebug() << "[Configuration::linkPB]    Call socket close() and disconnectFromHost()";
+    socket->close();
+    socket->disconnectFromHost();
+
+}
+void Configuration::resetLinks()
+{
+    qDebug() << "[Configuration::resetLinks]    Reset the link status";
+    if(socket->state()==QAbstractSocket::UnconnectedState) {
+        if(debug) qDebug() << "[Configuration::resetLinks]    About to rebind the socket";
+        bool bnd = socket->bind(FECPort, QUdpSocket::ShareAddress);
+        if(!bnd) {
+            qDebug() << "[Configuration::resetLinks]    WARNING Unable to bind socket to FECPort. Exiting.";
+            abort();
+        } else {
+            if(debug) qDebug() << "[Configuration::resetLinks]    Socket binding to FECPort successful";
+        }
+    }
+
+
+    bool ok;
+    QByteArray datagram;
+    QString cmd, cmdType, cmdLength, msbCounter, cmdReset;
+    cmd = "AA";
+    cmdType = "AA";
+    cmdLength = "FFFF";
+    msbCounter = "0x80000000"; 
+    cmdReset = "FF";
+
+    foreach(const QString &ip, _ips) {
+        UpdateCounter();
+        datagram.clear();
+        QDataStream out(&datagram, QIODevice::WriteOnly);
+        out.device()->seek(0);
+        out << (quint32)(commandCounter+msbCounter.toUInt(&ok,16)) << (quint16)0 << (quint16)channelMap;
+        out << (quint8)cmd.toUInt(&ok,16) << (quint8)cmdType.toUInt(&ok,16) << (quint16)cmdLength.toUInt(&ok,16);
+        out << (quint32)13;
+        out << (quint32)cmdReset.toUInt(&ok,16);
+        Sender(datagram, ip, VMMAPPPort, *socket);
+
+        bool read = false;
+		read=socket->waitForReadyRead(1000);
+		if(read){
+			processReply(ip, socket);
+		}else{
+            qDebug() << "[Configuration::resetLinks]    (1) WARNING WaitForReadyRead timed out. Exiting.";
+            socket->close();
+            socket->disconnectFromHost();
+			abort();
+		}
+
+        datagram.clear();
+        out.device()->seek(0);
+        UpdateCounter();
+        out << (quint32)(commandCounter+msbCounter.toUInt(&ok,16)) << (quint16)0 << (quint16)channelMap;
+        out << (quint8)cmd.toUInt(&ok,16) << (quint8)cmdType.toUInt(&ok,16) << (quint16)cmdLength.toUInt(&ok,16);
+        out << (quint32)13;
+        out << (quint32)0;
+        Sender(datagram, ip, VMMAPPPort, *socket);
+
+        read = false;
+		read=socket->waitForReadyRead(1000);
+		if(read){
+			processReply(ip, socket);
+		}else{
+            qDebug() << "[Configuration::resetLinks]    (2) WARNING WaitForReadyRead timed out. Exiting.";
+            socket->close();
+            socket->disconnectFromHost();
+			abort();
+		}
+    }
+
+    if(debug) qDebug() << "[Configuration::resetLinks]    Call socket close() and disconnectFromHost()";
+    socket->close();
+    socket->disconnectFromHost();
+
+}
+void Configuration::setEventHeaders(int bldInfo, int bldMode)
+{
+    qDebug() << "[Configuration::setEventHeaders]    Setting headers";
+    if(socket->state()==QAbstractSocket::UnconnectedState) {
+        if(debug) qDebug() << "[Configuration::setEventHeaders]    About to rebind the socket";
+        bool bnd = socket->bind(FECPort, QUdpSocket::ShareAddress);
+        if(!bnd) {
+            qDebug() << "[Configuration::setEventHeaders]    WARNING Unable to bind socket to FECPort. Exiting.";
+            abort();
+        } else {
+            if(debug) qDebug() << "[Configuration::setEventHeaders]    Socket binding to FECPort successful";
+        }
+    }
+    bool ok;
+    QByteArray datagram;
+    QString cmd, msbCounter;
+    cmd = "AAAAFFFF";
+    msbCounter = "0x80000000"; 
+
+    quint32 evbldInfo = 0;
+    quint32 evbldMode = (quint32)bldMode;
+
+    if(bldInfo==0) evbldInfo = 256;
+    else if(bldInfo==1) evbldInfo = 512;
+    else if(bldInfo==2) evbldInfo = 1024;
+    else if(bldInfo==3) evbldInfo = 2048;
+    else if(bldInfo==4) evbldInfo = 4096;
+    else if(bldInfo==5) evbldInfo = 8192;
+
+    foreach(const QString &ip, _ips) {
+        UpdateCounter();
+        datagram.clear();
+        QDataStream out(&datagram, QIODevice::WriteOnly);
+        out.device()->seek(0);
+
+        out << (quint32)(commandCounter+msbCounter.toUInt(&ok,16));
+        out << (quint32)channelMap;
+        out << (quint32)cmd.toUInt(&ok,16) << (quint32)0;
+        out << (quint32)10 << (quint32)evbldMode;
+        out << (quint32)12 << (quint32)1280; // evbldInfo;
+        
+        Sender(datagram, ip, VMMAPPPort, *socket);
+
+        bool read = false;
+		read=socket->waitForReadyRead(1000);
+		if(read){
+			processReply(ip, socket);
+		}else{
+            qDebug() << "[Configuration::setEventHeaders]    WARNING WaitForReadyRead timed out. Exiting.";
+            socket->close();
+            socket->disconnectFromHost();
+			abort();
+		}
+    } // ip loop
+
+    if(debug) qDebug() << "[Configuration::setEventHeaders]    Call socket close() and disconnectFromHost()";
+    socket->close();
+    socket->disconnectFromHost();
+
+}
+
+void Configuration::checkFEC(bool reset)
+{
+    qDebug() << "[Configuration::checkFEC]    " << (reset ? "Reset" : "Warm Init") << " FEC"; 
+    if(socket->state()==QAbstractSocket::UnconnectedState) {
+        if(debug) qDebug() << "[Configuration::checkFEC]    About to rebind the socket";
+        bool bnd = socket->bind(FECPort, QUdpSocket::ShareAddress);
+        if(!bnd) {
+            qDebug() << "[Configuration::checkFEC]    WARNING Unable to bind socket to FECPort. Exiting.";
+            abort();
+        } else {
+            if(debug) qDebug() << "[Configuration::checkFEC]    Socket binding to FECPort successful";
+        }
+    }
+
+    QString address = "FFFFFFFF";
+    QString value = "";
+    if(reset) {
+        value = "FFFF8000";
+    } else {
+        value = "FFFF0001";
+    }
+
+    bool ok;
+    QByteArray datagram;
+    QString cmd, cmdType, cmdLength, msbCounter;
+    cmd = "AA";
+    cmdType = "AA";
+    cmdLength = "FFFF";
+    msbCounter = "0x80000000";
+
+    foreach(const QString &ip, _ips) {
+        UpdateCounter();
+        datagram.clear();
+        QDataStream out(&datagram, QIODevice::WriteOnly);
+        out.device()->seek(0);
+        out << (quint32)(commandCounter+msbCounter.toUInt(&ok,16)) << (quint16)0 << (quint16)channelMap;
+        out << (quint8)cmd.toUInt(&ok,16) << (quint8)cmdType.toUInt(&ok,16) << (quint16)cmdLength.toUInt(&ok,16);
+        out << (quint32)0;
+        out << (quint32)(address.toUInt(&ok,16));
+        out << (quint32)(value.toUInt(&ok,16));
+
+        Sender(datagram, ip, FECPort, *socket); 
+        
+        bool read = false;
+		read=socket->waitForReadyRead(1000);
+		if(read){
+			processReply(ip, socket);
+		}else{
+            qDebug() << "[Configuration::checkFEC]    WARNING WaitForReadyRead timed out. Exiting.";
+            socket->close();
+            socket->disconnectFromHost();
+			abort();
+		}
+
+    } // ip
+
+    if(debug) qDebug() << "[Configuration::checkFEC]    Call socket close() and disconnectFromHost()";
+    socket->close();
+    socket->disconnectFromHost();
+}
+void Configuration::setS6_ck(int cktk, int ckbc, int ckbc_skew)
+{
+    qDebug() << "[Configuration::setS6_ck]    Setting CKBC & CKTK";
+    if(socket->state()==QAbstractSocket::UnconnectedState) {
+        if(debug) qDebug() << "[Configuration::setS6_ck]    About to rebind the socket";
+        bool bnd = socket->bind(FECPort, QUdpSocket::ShareAddress);
+        if(!bnd) {
+            qDebug() << "[Configuration::setS6_ck]    WARNING Unable to bind socket to FECPort. Exiting.";
+            abort();
+        } else {
+            if(debug) qDebug() << "[Configuration::setS6_ck]    Socket binding to FECPort successful";
+        }
+    }
+
+    bool ok;
+    QByteArray datagram;
+    QString cmd, msbCounter;
+    cmd = "AAAAFFFF";
+    msbCounter = "0x80000000";
+
+    foreach(const QString &ip, _ips) {
+        UpdateCounter();
+        datagram.clear();
+        QDataStream out(&datagram, QIODevice::WriteOnly);
+        out.device()->seek(0);
+
+        out << (quint32)(commandCounter+msbCounter.toUInt(&ok,16));
+        out << (quint32)channelMap;
+        out << (quint32)cmd.toUInt(&ok,16) << (quint32)0;
+        out << (quint32)6 << (quint32)(cktk*16);
+        out << (quint32)7 << (quint32)(ckbc + (ckbc_skew*16));
+
+        Sender(datagram, ip, S6Port, *socket);
+
+        bool read = false;
+		read=socket->waitForReadyRead(1000);
+		if(read){
+			processReply(ip, socket);
+		}else{
+            qDebug() << "[Configuration::setS6_ck]    WARNING WaitForReadyRead timed out. Exiting.";
+            socket->close();
+            socket->disconnectFromHost();
+			abort();
+		}
+    } // ip
+
+    if(debug) qDebug() << "[Configuration::setS6_ck]    Call socket close() and disconnectFromHost()";
+    socket->close();
+    socket->disconnectFromHost();
+
+}
+void Configuration::setS6_Tp(int tp_skew, int tp_width, int tp_polarity)
+{
+    qDebug() << "[Configuration::setS6_Tp]    Setting test pulse settings";
+    if(socket->state()==QAbstractSocket::UnconnectedState) {
+        if(debug) qDebug() << "[Configuration::setS6_Tp]    About to rebind the socket";
+        bool bnd = socket->bind(FECPort, QUdpSocket::ShareAddress);
+        if(!bnd) {
+            qDebug() << "[Configuration::setS6_Tp]    WARNING Unable to bind socket to FECPort. Exiting.";
+            abort();
+        } else {
+            if(debug) qDebug() << "[Configuration::setS6_Tp]    Socket binding to FECPort successful";
+        }
+    }
+
+    bool ok;
+    QByteArray datagram;
+    QString cmd, msbCounter;
+    cmd = "AAAAFFFF";
+    msbCounter = "0x80000000";
+
+    foreach(const QString &ip, _ips) {
+        UpdateCounter();
+        datagram.clear();
+        QDataStream out(&datagram, QIODevice::WriteOnly);
+        out.device()->seek(0);
+        out << (quint32)(commandCounter+msbCounter.toUInt(&ok,16));
+        out << (quint32)channelMap;
+        out << (quint32)cmd.toUInt(&ok,16) << (quint32)0;
+        out << (quint32)2 << (quint32)(tp_skew + (tp_width*16) + (tp_polarity*128));
+
+        Sender(datagram, ip, S6Port, *socket);
+
+        bool read = false;
+		read=socket->waitForReadyRead(1000);
+		if(read){
+			processReply(ip, socket);
+		}else{
+            qDebug() << "[Configuration::setS6_Tp]    WARNING WaitForReadyRead timed out. Exiting.";
+            socket->close();
+            socket->disconnectFromHost();
+			abort();
+		}
+    } // ip
+
+    if(debug) qDebug() << "[Configuration::setS6_Tp]    Call socket close() and disconnectFromHost()";
+    socket->close();
+    socket->disconnectFromHost();
+}
 		
 
 		

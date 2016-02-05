@@ -8,9 +8,6 @@
 class QFile;
 class QBitArray;
 
-//us
-class XMLParser;
-
 //root
 #include "TROOT.h"
 #include "TTree.h"

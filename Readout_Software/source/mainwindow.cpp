@@ -2079,6 +2079,17 @@ void MainWindow::customCommandWithoutResponse(){
         Sender(datagramAll);
 */
     }else if(ui->fec_reset==QObject::sender()||ui->fec_WarmInit==QObject::sender()){
+        bool do_reset = (ui->fec_reset==QObject::sender() ? true : false);
+        _config->checkFEC(do_reset);
+        ui->fecRB->setChecked(1);
+        ui->trgExternal->setStyleSheet("background-color: lightGray");
+        ui->trgPulser->setStyleSheet("background-color: lightGray");
+        ui->setMask->setStyleSheet("background-color: lightGray");
+        ui->onACQ->setStyleSheet("background-color: lightGray");
+        ui->offACQ->setStyleSheet("background-color: lightGray");
+        ui->setTrgAcqConst->setStyleSheet("background-color: lightGray");
+    /*
+        //original
         QString from;
         if(ui->fec_reset==QObject::sender())
             from = "Reset";
@@ -2115,6 +2126,7 @@ void MainWindow::customCommandWithoutResponse(){
         ui->offACQ->setStyleSheet("background-color: lightGray");
         ui->setTrgAcqConst->setStyleSheet("background-color: lightGray");
         Sender(datagramAll);
+    */
     }else if(ui->setTrgAcqConst==QObject::sender()){
 
         ///////////////////////////////// use run_module [begin] dantrim
@@ -2204,6 +2216,11 @@ void MainWindow::customCommandWithoutResponse(){
         Sender(datagramAll);
 */
     }else if(ui->setMask==QObject::sender()){
+        _config->setMask();
+        ui->appRB->setChecked(1);
+        ui->setMask->setStyleSheet("background-color: green");
+    /*
+        // original
         qDebug()<<"Setting HDMI Mask";
         bool ok;
         UpdateCounter();
@@ -2222,7 +2239,13 @@ void MainWindow::customCommandWithoutResponse(){
         ui->appRB->setChecked(1);
         ui->setMask->setStyleSheet("background-color: green");
         Sender(datagramAll);
+    */
     }else if(ui->linkPB==QObject::sender()){
+        _config->linkPB();
+        ui->appRB->setChecked(1);
+
+    /*
+        // original
         qDebug()<<"Quering the link status";
         bool ok;
         UpdateCounter();
@@ -2238,7 +2261,13 @@ void MainWindow::customCommandWithoutResponse(){
         out<<(quint32)16;
         ui->appRB->setChecked(1);
         Sender(datagramAll);
+    */
     }else if(ui->resetLinks==QObject::sender()){
+        _config->resetLinks();
+        ui->appRB->setChecked(1);
+
+    /*
+        //original
         qDebug()<<"Reset the link status";
         bool ok;
         UpdateCounter();
@@ -2265,7 +2294,13 @@ void MainWindow::customCommandWithoutResponse(){
         out<<(quint32)0;
         ui->appRB->setChecked(1);
         Sender(datagramAll);
+    */
     }else if(ui->setEvbld==QObject::sender()){
+        _config->setEventHeaders(ui->evebld_infodata->currentIndex(), ui->evbld_mode->currentIndex());
+        ui->appRB->setChecked(1);
+
+    /*
+        // original
         qDebug()<<"Setting headers";
         bool ok;
         UpdateCounter();
@@ -2290,7 +2325,13 @@ void MainWindow::customCommandWithoutResponse(){
         //        qDebug()<<"evbld_mode: "<<ui->evbld_mode->currentIndex();
                 qDebug()<<"evbld_infodata: "<<evbldInfo;
         Sender(datagramAll);
+    */
     }else if(ui->setck_s6==QObject::sender()){
+        _config->setS6_ck(ui->cktk_s6->currentIndex(), ui->ckbc_s6->currentIndex(), ui->ckbc_skew_s6->currentIndex());
+        ui->s6RB->setChecked(1);
+
+    /*
+        //original
         qDebug()<<"Setting CKBC & CKTK";
         bool ok;
         UpdateCounter();
@@ -2306,8 +2347,14 @@ void MainWindow::customCommandWithoutResponse(){
         out<<(quint32)7<<(quint32)(ui->ckbc_s6->currentIndex()+(ui->ckbc_skew_s6->currentIndex()*16));
         ui->s6RB->setChecked(1);
         Sender(datagramAll);
+    */
 
     }else if(ui->setTp_s6==QObject::sender()){
+        _config->setS6_Tp(ui->tpScew->currentIndex(), ui->tpWidth->currentIndex(), ui->tpPolarity->currentIndex());
+        ui->s6RB->setChecked(1);
+
+    /*
+        //original
         qDebug()<<"Setting Test Pulse settings";
         bool ok;
         UpdateCounter();
@@ -2322,6 +2369,7 @@ void MainWindow::customCommandWithoutResponse(){
         out<<(quint32)2<<(quint32)(ui->tpScew->currentIndex()+(ui->tpWidth->currentIndex()*16)+(ui->tpPolarity->currentIndex()*128));
         ui->s6RB->setChecked(1);
         Sender(datagramAll);
+    */
     }
 }
 //_________________________________________________________________________________________

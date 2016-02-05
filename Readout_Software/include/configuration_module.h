@@ -122,6 +122,14 @@ class Configuration : public QObject
         QString getGainString()   { return _gainstring; }
         int getTACSlope()         { return _TACslop; }
         int getPeakInt()          { return _peakint; }
+
+        void setMask();
+        void linkPB();
+        void resetLinks();
+        void setEventHeaders(int bldInfo, int bldMode);
+        void checkFEC(bool reset = false);
+        void setS6_ck(int cktk_, int ckbc_, int ckbc_skew_);
+        void setS6_Tp(int tp_skew_, int tp_width_, int tp_polarity_);
         
 
     private:
