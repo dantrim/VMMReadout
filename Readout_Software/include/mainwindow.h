@@ -319,6 +319,7 @@ public slots:
     void LoadThresholds(int state);
     int TMapping(int PanasonicPin, int ChipNumber);
     int TMappingMini2(int VMMChannel, int ChipNumber);
+    void updateTriggerCount();
 };
 
 

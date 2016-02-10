@@ -22,6 +22,7 @@ Configuration::Configuration(){
 	debug=false;
 	boardip=new QHostAddress();
 	socket = new QUdpSocket(this);
+    connect(socket, SIGNAL(readyRead()), this, SLOT(dataPending()));
 	_gains << "0.5" << "1.0" << "3.0" << "4.5" << "6.0" << "9.0" << "12.0" << "16.0";
 	_peakts << 200 << 100 << 50 << 25;
 	_TACslops << 125 << 250 << 500 << 1000;
@@ -38,6 +39,37 @@ Configuration::~Configuration(){
 
 	cout<<"Deleting configuration object"<<endl;
 
+}
+void Configuration::dataPending()
+{
+  if (socket->state()==QAbstractSocket::UnconnectedState) {
+		qDebug()<<"INFO: About to rebind the socket";
+		//if (debug) qDebug()<<"INFO: About to rebind the socket";
+		bnd = socket->bind(FECPort, QUdpSocket::ShareAddress);
+		if(bnd==false){
+			qDebug()<<"[Configuration::dataPending]    WARNING Binding socket failed. Exitting.";
+		}else{
+			qDebug()<<"[Configuration::dataPending]    Binding socket successful";
+			//if(debug) qDebug()<<"[Configuration::dataPending]    Binding socket successful";
+		}
+	}
+    emit checkStatus();
+
+//	bool bnd = socket->bind(FECPort, QUdpSocket::ShareAddress);
+//	if(bnd==false){
+//        qDebug() << "[Configuration::dataPending]    ERROR BINDING TO SOCKET";
+//    }
+//    else {
+//        qDebug() << "[Configuration::dataPending]    SOCKET BOUND";
+//    }
+}
+QByteArray Configuration::getLinkStatusData()
+{
+    QByteArray testBuff;
+    testBuff.clear();
+    testBuff.resize(socket->pendingDatagramSize());
+    socket->readDatagram(testBuff.data(), testBuff.size());
+    return testBuff; 
 }
 
 int Configuration::Ping(){
@@ -1447,7 +1479,8 @@ void Configuration::linkPB()
         bool read = false;
 		read=socket->waitForReadyRead(1000);
 		if(read){
-			processReply(ip, socket);
+            //qDebug() << "processing linkPB reply";
+			//processReply(ip, socket);
 		}else{
             qDebug() << "[Configuration::linkPB]    WARNING WaitForReadyRead timed out. Exiting.";
             socket->close();
@@ -1497,16 +1530,16 @@ void Configuration::resetLinks()
         out << (quint32)cmdReset.toUInt(&ok,16);
         Sender(datagram, ip, VMMAPPPort, *socket);
 
-        bool read = false;
-		read=socket->waitForReadyRead(1000);
-		if(read){
-			processReply(ip, socket);
-		}else{
-            qDebug() << "[Configuration::resetLinks]    (1) WARNING WaitForReadyRead timed out. Exiting.";
-            socket->close();
-            socket->disconnectFromHost();
-			abort();
-		}
+//        bool read = false;
+//		read=socket->waitForReadyRead(1000);
+//		if(read){
+//			processReply(ip, socket);
+//		}else{
+//            qDebug() << "[Configuration::resetLinks]    (1) WARNING WaitForReadyRead timed out. Exiting.";
+//            socket->close();
+//            socket->disconnectFromHost();
+//			abort();
+//		}
 
         datagram.clear();
         out.device()->seek(0);
@@ -1517,16 +1550,16 @@ void Configuration::resetLinks()
         out << (quint32)0;
         Sender(datagram, ip, VMMAPPPort, *socket);
 
-        read = false;
-		read=socket->waitForReadyRead(1000);
-		if(read){
-			processReply(ip, socket);
-		}else{
-            qDebug() << "[Configuration::resetLinks]    (2) WARNING WaitForReadyRead timed out. Exiting.";
-            socket->close();
-            socket->disconnectFromHost();
-			abort();
-		}
+//        read = false;
+//		read=socket->waitForReadyRead(1000);
+//		if(read){
+//			processReply(ip, socket);
+//		}else{
+//            qDebug() << "[Configuration::resetLinks]    (2) WARNING WaitForReadyRead timed out. Exiting.";
+//            socket->close();
+//            socket->disconnectFromHost();
+//			abort();
+//		}
     }
 
     if(debug) qDebug() << "[Configuration::resetLinks]    Call socket close() and disconnectFromHost()";
@@ -2012,7 +2045,7 @@ void Configuration::processReply(const QString &sentip, QUdpSocket* socket)
 
 	if(debug){
 		foreach (const QString &ip, _replies){
-			qDebug()<<"VMM with IP: "<<ip<<" sent a reply to command: "<<commandCounter;
+			qDebug()<<"[Configuration::processReply]    (1) VMM with IP: "<<ip<<" sent a reply to command: "<<commandCounter;
 			
 		}
 	}
@@ -2022,14 +2055,14 @@ void Configuration::processReply(const QString &sentip, QUdpSocket* socket)
 		foreach (const QString &ip, _replies){
 
 			if(ip != sentip){
-				qDebug()<<"VMM with IP: "<<ip<<" sent a packet at command number: "<<commandCounter<<" which was not actually sent to it.	Out of synch, aborting";
+				qDebug()<<"[Configuration::processReply]    (2) VMM with IP: "<<ip<<" sent a packet at command number: "<<commandCounter<<" which was not actually sent to it.	Out of synch, aborting";
 				abort();
 			}
 		}
 	}
 	
 	if(!_replies.contains(sentip)){
-		qDebug()<<"VMM with IP: "<<sentip<<" did not acknowledge command number: "<<commandCounter;
+		qDebug()<<"[Configuration::processReply]    (3) VMM with IP: "<<sentip<<" did not acknowledge command number: "<<commandCounter;
 		abort();
 	}
 

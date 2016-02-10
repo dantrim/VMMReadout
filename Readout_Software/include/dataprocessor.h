@@ -2,6 +2,7 @@
 #define DATAPROCESSOR_H
 
 //qt
+#include <QObject>
 #include <QByteArray>
 #include <QString>
 #include <QMap>
@@ -13,11 +14,14 @@ class QBitArray;
 #include "TTree.h"
 #include "TBranch.h"
 #include "TFile.h"
+#include <iostream>
 
-class DataProcessor
+class DataProcessor : public QObject
 {
+    Q_OBJECT
+
     public :
-        DataProcessor();
+        explicit DataProcessor(QObject *parent = 0);
         virtual ~DataProcessor(){};
         void setDebug(bool dbg) { m_dbg = dbg; };
         void setWriteData(bool writeOut) { m_writeData = writeOut; };
@@ -152,9 +156,12 @@ class DataProcessor
         TBranch *br_dacCounts;
         TBranch *br_pulserCounts;
         TBranch *br_angle;
-         
-         
 
+    private slots :
+
+    signals :
+        void checkDAQCount();
+         
 
 }; // class DataProcessor
 

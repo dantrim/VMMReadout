@@ -46,4 +46,4 @@ SOURCES +=  $$sourcepath_/vmmrun.cpp\
 
 HEADERS += $$headerpath_/run_module.h\
            $$headerpath_/configuration_module.h\
-           $$headerpath_/dataprocessor.cpp
+           $$headerpath_/dataprocessor.h

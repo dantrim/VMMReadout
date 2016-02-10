@@ -15,7 +15,8 @@
 using namespace std;
 
 
-DataProcessor::DataProcessor() :
+DataProcessor::DataProcessor(QObject *parent) :
+    QObject(parent),
     m_writeData(true),
     m_useChannelMap(false),
     m_ignore16(false),
@@ -189,7 +190,7 @@ void DataProcessor::parseData(QByteArray array)
         QString data_TrigCounterStr = m_buffer.mid(8, 2).toHex();
         QString data_TrigTimeStampStr = m_buffer.mid(10, 2).toHex();
 
-        if(m_dbg) {
+        if(true) {
             qDebug() << "[DataProcessor::parseData]    Data from chip # : " << data_ChipNumberStr;
             qDebug() << "[DataProcessor::parseData]        Header       : " << data_HeaderStr;
             qDebug() << "[DataProcessor::parseData]        Data         : " << data_EventDataFullStr;
@@ -610,6 +611,7 @@ void DataProcessor::fillEventData()
     } // dbg
 
     // fill the output ntuples
+    m_fileDAQ->cd();
     m_vmm2->Fill();
 
 }
@@ -662,7 +664,7 @@ void DataProcessor::clearData()
 
     // clear the event data
     m_eventNumberFAFA   = 0;
-    m_daqCnt            = 0;
+ //   m_daqCnt            = 0;
     m_triggerTimeStamp.clear();
     m_triggerCounter.clear();
     m_chipId.clear();

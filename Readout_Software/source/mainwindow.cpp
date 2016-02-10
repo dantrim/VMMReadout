@@ -16,6 +16,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //gSystem->Load("libMylib.so");
 
   	_config = new Configuration();
+    _config->blockSignals(true);
     _runDAQ = new RunDAQ(); 
     _dataProcessor = new DataProcessor();
     m_daqConstantsLoaded = false;
@@ -50,6 +51,8 @@ MainWindow::MainWindow(QWidget *parent) :
     tcpThread->start();
 
     //*********************************************************************************************
+    connect(_config, SIGNAL(checkStatus()), this, SLOT(dataPending()));
+    connect(_dataProcessor, SIGNAL(checkDAQCount()), this, SLOT(updateTriggerCount()));
 
     connect(ui->numbersOfFecs, SIGNAL(valueChanged(int)), this , SLOT(SetNumberOfFecs(int)));
     //    SetNumberOfFecs(ui->numbersOfFecs->value());
@@ -455,12 +458,19 @@ void MainWindow::Connect(){
 //_________________________________________________________________________________________________
 void MainWindow::dataPending()
 {
-    while(bnd && socket->hasPendingDatagrams())
-    {
-        buffer.resize(socket->pendingDatagramSize());
-        socket->readDatagram( buffer.data(), buffer.size() );
-        packageHandler(buffer);
+    QByteArray ret = _config->getLinkStatusData();
+    if(ret.size()) {
+        packageHandler(ret);
+    } else {
+        qDebug() << "[MainWindow::dataPending]    Empty datagram returned by link status";
     }
+  //packageHandler(_config->getLinkStatusData());
+  //  while(bnd && socket->hasPendingDatagrams())
+  //  {
+  //      buffer.resize(socket->pendingDatagramSize());
+  //      socket->readDatagram( buffer.data(), buffer.size() );
+  //      packageHandler(buffer);
+  //  }
 }
 //_________________________________________________________________________________________
 int MainWindow::packageHandler(QByteArray package)
@@ -488,7 +498,8 @@ int MainWindow::packageHandler(QByteArray package)
             ui->debugScreen->moveCursor(QTextCursor::End ,QTextCursor::MoveAnchor );
         }
     }
-    customCommandHandler();
+    //_config->blockSignals(true);
+    //customCommandHandler();
 
 		return 0;
 }
@@ -1804,7 +1815,12 @@ void MainWindow::setChannelMaps(int)
     }
 
 }
-
+//_________________________________________________________________________________________
+void MainWindow::updateTriggerCount()
+{
+    QString cnt_;
+    ui->triggerCntLabel->setText(cnt_.number(_dataProcessor->getDAQCount(), 10));
+}
 //_________________________________________________________________________________________
 void MainWindow::customCommandHandler(){//if to be called from datapending - responce = 1
     bool ok;
@@ -2240,8 +2256,13 @@ void MainWindow::customCommandWithoutResponse(){
         ui->setMask->setStyleSheet("background-color: green");
         Sender(datagramAll);
     */
-    }else if(ui->linkPB==QObject::sender()){
+    }else if(ui->linkPB==QObject::sender() && ui->enableDebugPB->isChecked()){
+        _config->blockSignals(false);
         _config->linkPB();
+        void delayMs();
+        delayMs();
+        delayMs();
+        _config->blockSignals(true);
         ui->appRB->setChecked(1);
 
     /*

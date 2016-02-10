@@ -125,6 +125,7 @@ class Configuration : public QObject
 
         void setMask();
         void linkPB();
+        QByteArray getLinkStatusData();
         void resetLinks();
         void setEventHeaders(int bldInfo, int bldMode);
         void checkFEC(bool reset = false);
@@ -234,6 +235,10 @@ class Configuration : public QObject
   private slots:
         void processReply(const QString &_sentip, QUdpSocket* socket);
         void dumpReply(const QString &_sentip);
+        void dataPending();
+
+  signals:
+        void checkStatus();
 };
 
 #endif
