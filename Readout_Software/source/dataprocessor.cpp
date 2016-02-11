@@ -173,12 +173,6 @@ void DataProcessor::parseData(QByteArray array)
     m_buffer.resize(array.size());
     m_buffer.append(array);
 
-    if(m_dbg) qDebug() << "[DataProcessor::parseData]    Clearing data.";
-
-    if(m_buffer.size() == 12) {
-        // we only received the header, there is no data
-        qDebug() << "[DataProcessor::parseData]    Empty event.";
-    }
 
     QString data_FrameCounterStr = m_buffer.mid(0,4).toHex(); // Frame Counter
     if(data_FrameCounterStr != "fafafafa") {
@@ -190,11 +184,18 @@ void DataProcessor::parseData(QByteArray array)
         QString data_TrigCounterStr = m_buffer.mid(8, 2).toHex();
         QString data_TrigTimeStampStr = m_buffer.mid(10, 2).toHex();
 
-        if(true) {
+        if(m_dbg) {
             qDebug() << "[DataProcessor::parseData]    Data from chip # : " << data_ChipNumberStr;
             qDebug() << "[DataProcessor::parseData]        Header       : " << data_HeaderStr;
             qDebug() << "[DataProcessor::parseData]        Data         : " << data_EventDataFullStr;
         }
+
+        if(m_buffer.size() == 12) {
+            // we only received the header, there is no data
+            qDebug() << "[DataProcessor::parseData]    Empty event from chip : " << data_ChipNumberStr.toInt(&ok,16);
+        }
+
+
 
         // data containers for this chip
         vector<int> _pdo;           _pdo.clear();
@@ -322,6 +323,14 @@ void DataProcessor::parseData(QByteArray array)
 
     } // != fafafafa
     else if(data_FrameCounterStr == "fafafafa") {
+
+        if(DataProcessor::getDAQCount()%100==0) {
+            emit DataProcessor::checkDAQCount();
+        }
+
+        m_eventNumberFAFA = static_cast<int>(DataProcessor::getDAQCount() - 1);
+
+        DataProcessor::updateDAQCount();
         // TODO : implement ntuple writing!
         //if(m_writeData) {
         if(true) {
@@ -537,7 +546,7 @@ void DataProcessor::setupOutputTrees()
 
     // --- event data --- //
     m_vmm2 = new TTree("vmm2", "vmm2");
-    br_eventNumberFAFA      = m_vmm2->Branch("eventFAFA", "std::vector<int>", &m_eventNumberFAFA);
+    br_eventNumberFAFA      = m_vmm2->Branch("eventFAFA", &m_eventNumberFAFA);
     br_triggerTimeStamp     = m_vmm2->Branch("triggerTimeStamp", "std::vector<int>", &m_triggerTimeStamp);
     br_triggerCounter       = m_vmm2->Branch("triggerCounter", "std::vector<int>", &m_triggerCounter);
     br_chipId               = m_vmm2->Branch("chip", "std::vector<int>", &m_chipId);
