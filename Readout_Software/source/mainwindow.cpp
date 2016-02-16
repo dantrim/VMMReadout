@@ -3000,7 +3000,6 @@ void MainWindow::dataDAQPending()
     QByteArray bufferNow;
     while(socketDAQ->hasPendingDatagrams())
     {
-       // qDebug() << "MAINWINDOW SENDING DATAGRAM";
         bufferNow.clear();
         bufferNow.resize(socketDAQ->pendingDatagramSize());
         socketDAQ->readDatagram(bufferNow.data(), bufferNow.size());

@@ -166,23 +166,18 @@ void DataProcessor::fillChannelMaps()
 // -------------------------------------------------------------------- //
 void DataProcessor::parseData(QByteArray array)
 {
-    //qDebug() << "[DataProcessor::parseData]    Parsing input data array.";
 
     bool ok;
-    m_buffer.clear();
-    m_buffer.resize(array.size());
-    m_buffer.append(array);
 
-
-    QString data_FrameCounterStr = m_buffer.mid(0,4).toHex(); // Frame Counter
+    QString data_FrameCounterStr = array.mid(0,4).toHex(); // Frame Counter
     if(data_FrameCounterStr != "fafafafa") {
         // we have event data
 
-        QString data_EventDataFullStr = m_buffer.mid(12, m_buffer.size()).toHex(); // all of the channels' data
-        QString data_HeaderStr = m_buffer.mid(4, 4).toHex(); // header bytes
-        QString data_ChipNumberStr = m_buffer.mid(7, 1).toHex(); // chip # (id of chip being read out)
-        QString data_TrigCounterStr = m_buffer.mid(8, 2).toHex();
-        QString data_TrigTimeStampStr = m_buffer.mid(10, 2).toHex();
+        QString data_EventDataFullStr = array.mid(12, array.size()).toHex(); // all of the channels' data
+        QString data_HeaderStr = array.mid(4, 4).toHex(); // header bytes
+        QString data_ChipNumberStr = array.mid(7, 1).toHex(); // chip # (id of chip being read out)
+        QString data_TrigCounterStr = array.mid(8, 2).toHex();
+        QString data_TrigTimeStampStr = array.mid(10, 2).toHex();
 
         if(m_dbg) {
             qDebug() << "[DataProcessor::parseData]    Data from chip # : " << data_ChipNumberStr;
@@ -190,7 +185,7 @@ void DataProcessor::parseData(QByteArray array)
             qDebug() << "[DataProcessor::parseData]        Data         : " << data_EventDataFullStr;
         }
 
-        if(m_buffer.size() == 12) {
+        if(array.size() == 12) {
             // we only received the header, there is no data
             qDebug() << "[DataProcessor::parseData]    Empty event from chip : " << data_ChipNumberStr.toInt(&ok,16);
         }
@@ -208,10 +203,10 @@ void DataProcessor::parseData(QByteArray array)
         vector<int> _neighbor;      _neighbor.clear();
 
         // -------------------- begin loop over this chip's channels -------------------- //
-        for(int i = 12; i < m_buffer.size(); ) {
+        for(int i = 12; i < array.size(); ) {
 
-            quint32 bytes1 = reverse32(m_buffer.mid(i, 4).toHex());
-            quint32 bytes2 = reverse32(m_buffer.mid(i + 4, 4).toHex());
+            quint32 bytes1 = reverse32(array.mid(i, 4).toHex());
+            quint32 bytes2 = reverse32(array.mid(i + 4, 4).toHex());
 
             // --- flag --- //
             uint flag = (bytes2 & 0x1);
@@ -232,7 +227,7 @@ void DataProcessor::parseData(QByteArray array)
             // instead of using bytes1 (for now) use QString methods
             QString bytes1_str = "00000000000000000000000000000000";
             QString tmpStr     = "00000000000000000000000000000000";
-            quint32 bytes1_ex = m_buffer.mid(i,4).toHex().toUInt(&ok,16);
+            quint32 bytes1_ex = array.mid(i,4).toHex().toUInt(&ok,16);
             tmpStr = tmpStr.number(bytes1_ex,2);
             for(int j = 0; j < tmpStr.size(); j++) {
                 QString tmp = tmpStr.at(tmpStr.size()-1-j);
@@ -306,7 +301,7 @@ void DataProcessor::parseData(QByteArray array)
             m_triggerTimeStamp.push_back(data_TrigTimeStampStr.toInt(&ok,16));
             m_triggerCounter.push_back(data_TrigCounterStr.toInt(&ok,16));
             m_chipId.push_back(data_ChipNumberStr.toInt(&ok,16));
-            m_eventSize.push_back(m_buffer.size()-12);
+            m_eventSize.push_back(array.size()-12);
 
             m_tdo.push_back(_tdo);
             m_pdo.push_back(_pdo);

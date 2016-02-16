@@ -87,9 +87,6 @@ class DataProcessor : public QObject
         // possible maps
         QMap<int, std::vector<int> > m_map_mini2;
 
-        // data buffer
-        QByteArray m_buffer;
-
         // ----- trigger daq ---------- //
         // -> run_module //QString m_trigPeriod;
         // -> run_module //QString m_runMode; 
