@@ -249,7 +249,7 @@ void DataProcessor::parseData(QByteArray array)
             q_final.append(q_1);
             uint outCharge_ = 0;
             if(q_final.right(4) == "0000" && m_ignore16) {
-                outCharge_ = q_final.toUInt(&ok,2);
+                outCharge_ = 1025;
             } else {
                 outCharge_ = q_final.toUInt(&ok,2);
             }
