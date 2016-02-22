@@ -14,7 +14,6 @@
 //vmmrun
 #include "configuration_module.h"
 #include "dataprocessor.h"
-//#include "eventbuilder.h"
 
 class RunDAQ : public QObject
 {
@@ -52,9 +51,6 @@ class RunDAQ : public QObject
         void ACQOn();
         void ACQOff();
 
-        // setup the decoding/writing of the event data
-        void InitializeEventBuilder();
-
         // event loop method
         void DataHeader();
         void TimedRun(long time); 
@@ -67,7 +63,6 @@ class RunDAQ : public QObject
         // global configuration parameters (c.f. vmmconfig/configuration_module.h)
         Configuration* m_config;
         DataProcessor* m_dataProcessor;
-        //EventBuilder*  m_builder;
 
         bool m_has_config;
         bool m_is_testmode;
