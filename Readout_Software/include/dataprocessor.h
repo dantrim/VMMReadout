@@ -25,6 +25,9 @@ class DataProcessor : public QObject
         virtual ~DataProcessor(){};
         void setDebug(bool dbg) { m_dbg = dbg; };
         void setWriteData(bool writeOut) { m_writeData = writeOut; };
+        void setCalibration(bool doCalib = true) { m_calibrationRun = doCalib; };
+        bool isCalibrationRun() { return m_calibrationRun; }
+        void updateCalibInfo(int pulser, double gain, int peakTime, int dacThreshold /*neighborVarCheck*/);
         bool writeData() { return m_writeData; }
 
         void setDataType(QString type) { m_dataType = type; }
@@ -38,22 +41,12 @@ class DataProcessor : public QObject
         void setIgnore16(bool ignoreIt) { m_ignore16 = ignoreIt; };
         bool ignore16() { return m_ignore16; }
         void fillChannelMaps();
-        //void setDAQConfig(QString file); // -> run_module
-        //void getDAQConfig(); // -> run_module
-        //void printDAQConfig(); // -> run_module
         void resetDAQCount() { n_daqCnt = 0; };
         void updateDAQCount() { n_daqCnt++; };
         int getDAQCount() { return n_daqCnt; };
         int mappedChannel(int chipNumber, int channelNumber);
 
         void parseData(QByteArray array);
-
-        //QString getTrigPeriod() { return m_trigPeriod; } // -> run_module
-        //QString getRunMode() { return m_runMode; } // -> run_module
-        //int getTPDelay() { return m_tpDelay; } // -> run_module
-        //int getACQSync() { return m_acqSync; } // -> run_module
-        //int getACQWindow() { return m_acqWindow; } // -> run_module
-        //int getRunCount() { return m_runCount; } // -> run_module
 
         // for output if writing data
         QString getOutputFileName(QString outputDirectory);
@@ -62,11 +55,10 @@ class DataProcessor : public QObject
         void fillRunProperties(int runNumber, double gain, int tacSlope, int peakTime, int dacCounts, int pulserCounts, int angle);
         void fillEventData();
         void writeAndCloseDataFile();
-        //fill run_properties / getRunProperties(x, y, z, t) from GUI perhaps
-        //fill event_data(from or in parseData)
 
     private :
         bool m_writeData;
+        bool m_calibrationRun;
         bool m_useChannelMap;
         bool m_ignore16;
         int n_daqCnt;
@@ -123,6 +115,15 @@ class DataProcessor : public QObject
         std::vector< std::vector<int> > m_channelId;
         std::vector< std::vector<int> > m_grayDecoded;
 
+        // calibration data //
+        int m_pulserCounts_calib;
+        double m_gain_calib;
+        int m_peakTime_calib;
+        int m_dacCounts_calib;
+        std::vector< std::vector<int> > m_neighbor_calib;
+        
+        
+
 
         // --------- OUTPUT ------------ //
         
@@ -144,6 +145,12 @@ class DataProcessor : public QObject
         TBranch *br_bcid;
         TBranch *br_grayDecoded;
         TBranch *br_channelId;
+        TBranch *br_pulserCalib;
+        TBranch *br_gainCalib;
+        TBranch *br_peakTimeCalib;
+        TBranch *br_threshCalib;
+        TBranch *br_calibRun;
+        TBranch *br_neighborCalib;
 
         TTree* m_runProperties;
         TBranch *br_runNumber;
@@ -153,12 +160,12 @@ class DataProcessor : public QObject
         TBranch *br_dacCounts;
         TBranch *br_pulserCounts;
         TBranch *br_angle;
+        TBranch *br_calibrationRun;
 
     private slots :
 
     signals :
         void checkDAQCount();
-         
 
 }; // class DataProcessor
 

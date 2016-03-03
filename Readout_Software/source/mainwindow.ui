@@ -5197,12 +5197,373 @@ p, li { white-space: pre-wrap; }
      </property>
     </widget>
    </widget>
+   <widget class="QGroupBox" name="groupBox_13">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>390</y>
+      <width>261</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Resets</string>
+    </property>
+    <widget class="QPushButton" name="fec_reset">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>174</x>
+       <y>18</y>
+       <width>92</width>
+       <height>32</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Reboot FEC</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="asic_reset">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>18</y>
+       <width>94</width>
+       <height>32</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Reset VMM2</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="fec_WarmInit">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>85</x>
+       <y>18</y>
+       <width>99</width>
+       <height>32</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>WarmInit FEC</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QGroupBox" name="groupBox_7">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>500</y>
+      <width>261</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Test Pulse</string>
+    </property>
+    <widget class="QComboBox" name="tpScew">
+     <property name="geometry">
+      <rect>
+       <x>2</x>
+       <y>39</y>
+       <width>68</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <item>
+      <property name="text">
+       <string>0ns</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>3.125ns</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>6.25ns</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>9.375ns</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>12.5ns</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>15.625ns</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>18.75ns</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>21.875ns</string>
+      </property>
+     </item>
+    </widget>
+    <widget class="QLabel" name="tpScewLabel">
+     <property name="geometry">
+      <rect>
+       <x>5</x>
+       <y>22</y>
+       <width>22</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Skew</string>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="tpWidth">
+     <property name="geometry">
+      <rect>
+       <x>74</x>
+       <y>39</y>
+       <width>68</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <item>
+      <property name="text">
+       <string>128x25ns</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>64x25ns</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>32x25ns</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>16x25ns</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>8x25ns</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>4x25ns</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>2x25ns</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>1x25ns</string>
+      </property>
+     </item>
+    </widget>
+    <widget class="QLabel" name="tpWidthLabel">
+     <property name="geometry">
+      <rect>
+       <x>77</x>
+       <y>22</y>
+       <width>23</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Width</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="tpPolarityLabel">
+     <property name="geometry">
+      <rect>
+       <x>149</x>
+       <y>22</y>
+       <width>30</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Polarity</string>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="tpPolarity">
+     <property name="geometry">
+      <rect>
+       <x>146</x>
+       <y>39</y>
+       <width>67</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <item>
+      <property name="text">
+       <string>Positive</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Negative</string>
+      </property>
+     </item>
+    </widget>
+    <widget class="QPushButton" name="setTp_s6">
+     <property name="geometry">
+      <rect>
+       <x>210</x>
+       <y>37</y>
+       <width>51</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Set</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QTabWidget" name="tabWidget">
+    <property name="geometry">
+     <rect>
+      <x>620</x>
+      <y>10</y>
+      <width>761</width>
+      <height>681</height>
+     </rect>
+    </property>
+    <property name="tabPosition">
+     <enum>QTabWidget::North</enum>
+    </property>
+    <property name="currentIndex">
+     <number>1</number>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>16</width>
+      <height>16</height>
+     </size>
+    </property>
+    <property name="elideMode">
+     <enum>Qt::ElideRight</enum>
+    </property>
+    <property name="documentMode">
+     <bool>true</bool>
+    </property>
+    <property name="movable">
+     <bool>false</bool>
+    </property>
+    <widget class="QWidget" name="tab">
+     <attribute name="title">
+      <string>Tab 1</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="tab_2">
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="autoFillBackground">
+      <bool>false</bool>
+     </property>
+     <attribute name="title">
+      <string>Tab 2</string>
+     </attribute>
+    </widget>
+   </widget>
    <widget class="QGroupBox" name="groupBox_6">
     <property name="geometry">
      <rect>
       <x>290</x>
       <y>690</y>
-      <width>321</width>
+      <width>311</width>
       <height>151</height>
      </rect>
     </property>
@@ -6244,320 +6605,18 @@ p, li { white-space: pre-wrap; }
      </layout>
     </widget>
    </widget>
-   <widget class="QGroupBox" name="groupBox_13">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>390</y>
-      <width>261</width>
-      <height>51</height>
-     </rect>
-    </property>
-    <property name="title">
-     <string>Resets</string>
-    </property>
-    <widget class="QPushButton" name="fec_reset">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="geometry">
-      <rect>
-       <x>174</x>
-       <y>18</y>
-       <width>92</width>
-       <height>32</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Arial</family>
-       <pointsize>9</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>Reboot FEC</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="asic_reset">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>18</y>
-       <width>94</width>
-       <height>32</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Arial</family>
-       <pointsize>9</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>Reset VMM2</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="fec_WarmInit">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="geometry">
-      <rect>
-       <x>85</x>
-       <y>18</y>
-       <width>99</width>
-       <height>32</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Arial</family>
-       <pointsize>9</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>WarmInit FEC</string>
-     </property>
-    </widget>
-   </widget>
-   <widget class="QGroupBox" name="groupBox_7">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>500</y>
-      <width>261</width>
-      <height>71</height>
-     </rect>
-    </property>
-    <property name="title">
-     <string>Test Pulse</string>
-    </property>
-    <widget class="QComboBox" name="tpScew">
-     <property name="geometry">
-      <rect>
-       <x>2</x>
-       <y>39</y>
-       <width>68</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Arial</family>
-       <pointsize>9</pointsize>
-      </font>
-     </property>
-     <property name="currentIndex">
-      <number>0</number>
-     </property>
-     <item>
-      <property name="text">
-       <string>0ns</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>3.125ns</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>6.25ns</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>9.375ns</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>12.5ns</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>15.625ns</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>18.75ns</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>21.875ns</string>
-      </property>
-     </item>
-    </widget>
-    <widget class="QLabel" name="tpScewLabel">
-     <property name="geometry">
-      <rect>
-       <x>5</x>
-       <y>22</y>
-       <width>22</width>
-       <height>16</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Arial</family>
-       <pointsize>9</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>Skew</string>
-     </property>
-    </widget>
-    <widget class="QComboBox" name="tpWidth">
-     <property name="geometry">
-      <rect>
-       <x>74</x>
-       <y>39</y>
-       <width>68</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Arial</family>
-       <pointsize>9</pointsize>
-      </font>
-     </property>
-     <property name="currentIndex">
-      <number>0</number>
-     </property>
-     <item>
-      <property name="text">
-       <string>128x25ns</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>64x25ns</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>32x25ns</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>16x25ns</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>8x25ns</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>4x25ns</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>2x25ns</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>1x25ns</string>
-      </property>
-     </item>
-    </widget>
-    <widget class="QLabel" name="tpWidthLabel">
-     <property name="geometry">
-      <rect>
-       <x>77</x>
-       <y>22</y>
-       <width>23</width>
-       <height>16</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Arial</family>
-       <pointsize>9</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>Width</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="tpPolarityLabel">
-     <property name="geometry">
-      <rect>
-       <x>149</x>
-       <y>22</y>
-       <width>30</width>
-       <height>16</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Arial</family>
-       <pointsize>9</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>Polarity</string>
-     </property>
-    </widget>
-    <widget class="QComboBox" name="tpPolarity">
-     <property name="geometry">
-      <rect>
-       <x>146</x>
-       <y>39</y>
-       <width>67</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Arial</family>
-       <pointsize>9</pointsize>
-      </font>
-     </property>
-     <property name="currentIndex">
-      <number>0</number>
-     </property>
-     <item>
-      <property name="text">
-       <string>Positive</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Negative</string>
-      </property>
-     </item>
-    </widget>
-    <widget class="QPushButton" name="setTp_s6">
-     <property name="geometry">
-      <rect>
-       <x>210</x>
-       <y>37</y>
-       <width>51</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>9</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>Set</string>
-     </property>
-    </widget>
-   </widget>
+   <zorder>groupBox</zorder>
+   <zorder>runGroupbox</zorder>
+   <zorder>groupBox_4</zorder>
+   <zorder>groupBox_8</zorder>
+   <zorder>groupBox_18</zorder>
+   <zorder>groupBox_19</zorder>
+   <zorder>groupBox_5</zorder>
+   <zorder>groupBox_13</zorder>
+   <zorder>groupBox_7</zorder>
+   <zorder>tabWidget</zorder>
+   <zorder>groupBox_6</zorder>
+   <zorder>groupBox_6</zorder>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">

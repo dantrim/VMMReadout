@@ -7,6 +7,7 @@
 #include <QDir>
 #include <QFileDialog>
 
+
 //_________________________________________________________________________________________
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -162,6 +163,15 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->loadCalibDataCB, SIGNAL(stateChanged(int)), this , SLOT(loadCalibrationConstants(int)));
     connect(ui->loadThrCB, SIGNAL(stateChanged(int)), this , SLOT(LoadThresholds(int)));
 
+    //tabs
+    ui->tabWidget->removeTab(0);
+    ui->tabWidget->removeTab(0);
+    groupModify = new QGroupBox(tr("VMM2 Channels"),this);
+    grid = new QGridLayout(this);
+    ui->tabWidget->addTab(groupModify, "CHANNELS");
+    ui->tabWidget->addTab(ui->groupBox_6, "CALIBRATION");
+    ui->tabWidget->addTab(ui->groupBox_18, "FEC RESPONSE");
+
     CreateChannelsField();
     initializePlots();
 
@@ -172,7 +182,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->spiRB->setChecked(true);
     ui->writeRB->setChecked(true);
-    this->setFixedSize(1204,725);
+    //this->setFixedSize(1204,725);
+    this->setFixedSize(1400,725);
     ui->hideChannels->setChecked(1);
     commandCounter = 0;
     QString temp;
@@ -617,10 +628,14 @@ void MainWindow::Disconnect(){
 //_________________________________________________________________________________________________
 void MainWindow::CreateChannelsField(){
 
-    QGroupBox *groupModify = new QGroupBox(tr("VMM2 Channels"),this);
+    //tabs
+    //QGroupBox *groupModify = new QGroupBox(tr("VMM2 Channels"),this);
 		//This line creates a runtime message, as "this" already has a layout. Should be corrected. - ARV 30/06/15
     //QGridLayout *grid = new QGridLayout(this);
-    QGridLayout *grid = new QGridLayout(this->centralWidget());
+    //QGridLayout *grid = new QGridLayout(this->centralWidget());
+
+    int margin = 7;
+    grid->setContentsMargins(margin, margin, margin, margin);
     grid->setHorizontalSpacing(2);
     grid->setVerticalSpacing(2);
     QString initialValueRadio = "";
@@ -833,53 +848,53 @@ void MainWindow::CreateChannelsField(){
 
         if(i<32){
             if(i==0){
-                grid->addWidget(SPLabel,i,2, Qt::AlignCenter);
-                grid->addWidget(SCLabel,i,3, Qt::AlignCenter);
-                grid->addWidget(SLLabel,i,4, Qt::AlignCenter);
-                grid->addWidget(STLabel,i,5, Qt::AlignCenter);
-                grid->addWidget(SMLabel,i,6, Qt::AlignCenter);
-                grid->addWidget(SDLabel,i,7, Qt::AlignCenter);
-                grid->addWidget(SMXLabel,i,8, Qt::AlignCenter);
-                grid->addWidget(SZ010bLabel,i,9, Qt::AlignCenter);
-                grid->addWidget(SZ08bLabel,i,10, Qt::AlignCenter);
-                grid->addWidget(SZ06bLabel,i,11, Qt::AlignCenter);
+                grid->addWidget(SPLabel,     i,2, Qt::AlignCenter);
+                grid->addWidget(SCLabel,     i,3, Qt::AlignCenter);
+                grid->addWidget(SLLabel,     i,4, Qt::AlignCenter);
+                grid->addWidget(STLabel,     i,5, Qt::AlignCenter);
+                grid->addWidget(SMLabel,     i,6, Qt::AlignCenter);
+                grid->addWidget(SDLabel,     i,7, Qt::AlignCenter);
+                grid->addWidget(SMXLabel,    i,8, Qt::AlignCenter);
+                grid->addWidget(SZ010bLabel, i,9, Qt::AlignCenter);
+                grid->addWidget(SZ08bLabel,  i,10, Qt::AlignCenter);
+                grid->addWidget(SZ06bLabel,  i,11, Qt::AlignCenter);
 
-                grid->addWidget(SPLabel2,i,14, Qt::AlignCenter);
-                grid->addWidget(SCLabel2,i,15, Qt::AlignCenter);
-                grid->addWidget(SLLabel2,i,16, Qt::AlignCenter);
-                grid->addWidget(STLabel2,i,17, Qt::AlignCenter);
-                grid->addWidget(SMLabel2,i,18, Qt::AlignCenter);
-                grid->addWidget(SDLabel2,i,19, Qt::AlignCenter);
-                grid->addWidget(SMXLabel2,i,20, Qt::AlignCenter);
-                grid->addWidget(SZ010bLabel2,i,21, Qt::AlignCenter);
-                grid->addWidget(SZ08bLabel2,i,22, Qt::AlignCenter);
-                grid->addWidget(SZ06bLabel2,i,23, Qt::AlignCenter);
+                grid->addWidget(SPLabel2,     i,14, Qt::AlignCenter);
+                grid->addWidget(SCLabel2,     i,15, Qt::AlignCenter);
+                grid->addWidget(SLLabel2,     i,16, Qt::AlignCenter);
+                grid->addWidget(STLabel2,     i,17, Qt::AlignCenter);
+                grid->addWidget(SMLabel2,     i,18, Qt::AlignCenter);
+                grid->addWidget(SDLabel2,     i,19, Qt::AlignCenter);
+                grid->addWidget(SMXLabel2,    i,20, Qt::AlignCenter);
+                grid->addWidget(SZ010bLabel2, i,21, Qt::AlignCenter);
+                grid->addWidget(SZ08bLabel2,  i,22, Qt::AlignCenter);
+                grid->addWidget(SZ06bLabel2,  i,23, Qt::AlignCenter);
             }
-            grid->addWidget(VMM1Channel[i],i+1,1, Qt::AlignCenter);
-            grid->addWidget(VMM1NegativeButton[i],i+1,2, Qt::AlignCenter);
-            grid->addWidget(VMM1SC[i],i+1,3, Qt::AlignCenter);
-            grid->addWidget(VMM1SL[i],i+1,4, Qt::AlignCenter);
-            grid->addWidget(VMM1ST[i],i+1,5, Qt::AlignCenter);
-            grid->addWidget(VMM1SM[i],i+1,6, Qt::AlignCenter);
-            grid->addWidget(VMM1SDVoltage[i],i+1,7, Qt::AlignCenter);
-            grid->addWidget(VMM1SMX[i],i+1,8, Qt::AlignCenter);
-            grid->addWidget(VMM1SZ010bCBox[i],i+1,9, Qt::AlignCenter);
-            grid->addWidget(VMM1SZ08bCBox[i],i+1,10, Qt::AlignCenter);
-            grid->addWidget(VMM1SZ06bCBox[i],i+1,11, Qt::AlignCenter);
-            grid->addWidget(spacer,i+1,12, Qt::AlignCenter);
+            grid->addWidget(VMM1Channel[i],         i+1,1, Qt::AlignCenter);
+            grid->addWidget(VMM1NegativeButton[i],  i+1,2, Qt::AlignCenter);
+            grid->addWidget(VMM1SC[i],              i+1,3, Qt::AlignCenter);
+            grid->addWidget(VMM1SL[i],              i+1,4, Qt::AlignCenter);
+            grid->addWidget(VMM1ST[i],              i+1,5, Qt::AlignCenter);
+            grid->addWidget(VMM1SM[i],              i+1,6, Qt::AlignCenter);
+            grid->addWidget(VMM1SDVoltage[i],       i+1,7, Qt::AlignCenter);
+            grid->addWidget(VMM1SMX[i],             i+1,8, Qt::AlignCenter);
+            grid->addWidget(VMM1SZ010bCBox[i],      i+1,9, Qt::AlignCenter);
+            grid->addWidget(VMM1SZ08bCBox[i],       i+1,10, Qt::AlignCenter);
+            grid->addWidget(VMM1SZ06bCBox[i],       i+1,11, Qt::AlignCenter);
+            grid->addWidget(spacer,                 i+1,12, Qt::AlignCenter);
         }
         else{
-            grid->addWidget(VMM1Channel[i],i-32+1,13, Qt::AlignCenter);
-            grid->addWidget(VMM1NegativeButton[i],i-32+1,14, Qt::AlignCenter);
-            grid->addWidget(VMM1SC[i],i-32+1,15, Qt::AlignCenter);
-            grid->addWidget(VMM1SL[i],i-32+1,16, Qt::AlignCenter);
-            grid->addWidget(VMM1ST[i],i-32+1,17, Qt::AlignCenter);
-            grid->addWidget(VMM1SM[i],i-32+1,18, Qt::AlignCenter);
-            grid->addWidget(VMM1SDVoltage[i],i-32+1,19, Qt::AlignCenter);
-            grid->addWidget(VMM1SMX[i],i-32+1,20, Qt::AlignCenter);
-            grid->addWidget(VMM1SZ010bCBox[i],i-32+1,21, Qt::AlignCenter);
-            grid->addWidget(VMM1SZ08bCBox[i],i-32+1,22, Qt::AlignCenter);
-            grid->addWidget(VMM1SZ06bCBox[i],i-32+1,23, Qt::AlignCenter);
+            grid->addWidget(VMM1Channel[i],         i-32+1,13, Qt::AlignCenter);
+            grid->addWidget(VMM1NegativeButton[i],  i-32+1,14, Qt::AlignCenter);
+            grid->addWidget(VMM1SC[i],              i-32+1,15, Qt::AlignCenter);
+            grid->addWidget(VMM1SL[i],              i-32+1,16, Qt::AlignCenter);
+            grid->addWidget(VMM1ST[i],              i-32+1,17, Qt::AlignCenter);
+            grid->addWidget(VMM1SM[i],              i-32+1,18, Qt::AlignCenter);
+            grid->addWidget(VMM1SDVoltage[i],       i-32+1,19, Qt::AlignCenter);
+            grid->addWidget(VMM1SMX[i],             i-32+1,20, Qt::AlignCenter);
+            grid->addWidget(VMM1SZ010bCBox[i],      i-32+1,21, Qt::AlignCenter);
+            grid->addWidget(VMM1SZ08bCBox[i],       i-32+1,22, Qt::AlignCenter);
+            grid->addWidget(VMM1SZ06bCBox[i],       i-32+1,23, Qt::AlignCenter);
         }
     }
     groupModify->setGeometry(QRect(620, 12, 730, 700));
@@ -2622,30 +2637,35 @@ void MainWindow::SenderFPGA(QByteArray blockOfData)
 //_________________________________________________________________________________________
 void MainWindow::hideChannels(int state){
 
-		qDebug()<< "[MainWindow::hideChannels] Unused arg state= " <<state;
-    if(!ui->hideChannels->isChecked()){
-        this->setFixedSize(620,725);
-        ui->enableDebugPB->setChecked(0);
-    }else{
-        this->setFixedSize(1400,725);
-    }
+//tabs
+//		qDebug()<< "[MainWindow::hideChannels] Unused arg state= " <<state;
+//    if(!ui->hideChannels->isChecked()){
+//        this->setFixedSize(620,725);
+//        ui->enableDebugPB->setChecked(0);
+//    }else{
+//        this->setFixedSize(1400,725);
+//    }
 }
 //_________________________________________________________________________________________
 void MainWindow::showDebugScreen(int state){
-		qDebug()<< "[MainWindow::showDebugScreen] Unused arg state= " <<state;
-    if(ui->hideChannels->isChecked() && ui->enableDebugPB->isChecked()){
-        this->setFixedSize(1400,874);
-    }else if(!ui->hideChannels->isChecked() && ui->enableDebugPB->isChecked()){
-        this->setFixedSize(620,874);
-    }else if(!ui->hideChannels->isChecked() && !ui->enableDebugPB->isChecked()){
-        this->setFixedSize(620,725);
-    }else if(ui->hideChannels->isChecked() && !ui->enableDebugPB->isChecked()){
-        this->setFixedSize(1400,725);
-    }
+//tabs
+//		qDebug()<< "[MainWindow::showDebugScreen] Unused arg state= " <<state;
+//
+//    if(ui->hideChannels->isChecked() && ui->enableDebugPB->isChecked()){
+//        this->setFixedSize(1400,874);
+//    }else if(!ui->hideChannels->isChecked() && ui->enableDebugPB->isChecked()){
+//        this->setFixedSize(620,874);
+//    }else if(!ui->hideChannels->isChecked() && !ui->enableDebugPB->isChecked()){
+//        this->setFixedSize(620,725);
+//    }else if(ui->hideChannels->isChecked() && !ui->enableDebugPB->isChecked()){
+//        this->setFixedSize(1400,725);
+//    }
 
     // dantrim -- maybe this isn't the best place for this, but will see if it works
     // when ACQ is on
-    _dataProcessor->setDebug(ui->enableDebugPB->isChecked());
+    // tabs
+    _dataProcessor->setDebug(ui->tabWidget->currentIndex()==2);
+    //_dataProcessor->setDebug(ui->enableDebugPB->isChecked());
 }
 //_________________________________________________________________________________________
 void MainWindow::clearDebugScreen(){
@@ -2711,6 +2731,7 @@ void MainWindow::triggerHandler(){
     _dataProcessor->setWriteData(static_cast<bool>(ui->writeData->isChecked()));
     _dataProcessor->setUseChannelMap(static_cast<bool>(ui->useMapping->isChecked()));
     _dataProcessor->setIgnore16(static_cast<bool>(ui->ignore16->isChecked()));
+    if(ui->calibration->isChecked()) _dataProcessor->setCalibration(true);
 
     if(ui->checkTriggers == QObject::sender()){
         bool ok;
@@ -2765,13 +2786,13 @@ void MainWindow::triggerHandler(){
 
             // TODO : ADD IN CALIBRATION LOOPS (ask George/Andree about this)
 
-            //calibrationStop =0;
-            //if(ui->calibration->isChecked()){
-            // if(ui->autoCalib->isChecked())
-            //    startCalibration();
-            // else if(ui->manCalib->isChecked())
-            //     qDebug()<<"Manual Calibration";
-            //}
+            calibrationStop = false;
+            if(ui->calibration->isChecked()){
+                if(ui->autoCalib->isChecked())
+                    startCalibration();
+                else if(ui->manCalib->isChecked())
+                    qDebug()<<"Manual Calibration";
+            }
 
         } else { // if not writing data, skip setting up the trees
             socketDAQ = new QUdpSocket(this);
@@ -2920,7 +2941,7 @@ void MainWindow::triggerHandler(){
         //ui->triggerCntLabel->setText(tempString.number(daqCnt,10));
     }
     if(ui->stopTriggerCnt == QObject::sender()){
-        calibrationStop = 1;
+        calibrationStop = true;
         socketDAQ->close();
         ui->runStatusField->setText("Run:"+ui->runNumber->text()+" finished");
         ui->runStatusField->setStyleSheet("background-color:lightGray");
@@ -3531,16 +3552,41 @@ void MainWindow::startCalibration(){
     bool ok;
     int eventsMultiplier=0;
     if(ui->calibration->isChecked()){
-        qDebug()<<"Staring Calibration";
+        qDebug() << " ----------------------------- ";
+        qDebug() << "    * Staring Calibration *    ";
+        qDebug() << " ----------------------------- ";
         for (int g=ui->sg_cal_min->currentIndex();g<=ui->sg_cal_max->currentIndex();g++){
             ui->sg->setCurrentIndex(g);
-            qDebug()<<"Gain:"<<ui->sg->currentText();
+            //qDebug()<<"Gain:"<<ui->sg->currentText();
+
             for(int thr = ui->sdt_cal_min->value(); thr<=ui->sdt_cal_max->value(); thr+=ui->sdt_cal_step->value()){
                 ui->sdt->setValue(thr);
-                qDebug()<<"Threshold:"<<ui->sdt->value();
+                //qDebug()<<"Threshold:"<<ui->sdt->value();
+
                 for(int p=ui->sdp_cal_min->value();p<=ui->sdp_cal_max->value();p+=ui->sdp_cal_step->value()){
                     ui->sdp_2->setValue(p);
-                    qDebug()<<"Pulser Value:"<<ui->sdp_2->value();
+                    //qDebug()<<"Pulser Value:"<<ui->sdp_2->value();
+
+                    qDebug() << " ---------------------------- ";
+                    qDebug() << "       Calibration Loop       ";
+                    qDebug() << "  > Gain         : " << ui->sg->currentText();
+                    qDebug() << "  > Threshold    : " << ui->sdt->value();
+                    qDebug() << "  > Pulser Value : " << ui->sdp_2->value();
+                    qDebug() << " ---------------------------- ";
+
+                    ////////////////////////////////////////////
+                    // send dataprocessor the calib info
+                    ////////////////////////////////////////////
+                    int _calib_pulse    = ui->sdp_2->value();
+                    double _calib_gain  = ui->sg->currentText().left(3).toDouble(&ok);
+                    int _calib_peakTime = ui->st->currentText().left(3).toInt(&ok,10); 
+                    int _calib_thresh   = ui->sdt->value();
+                    _dataProcessor->updateCalibInfo(_calib_pulse,
+                                                    _calib_gain,
+                                                    _calib_peakTime,
+                                                    _calib_thresh);
+                    ////////////////////////////////////////////
+
                     for(int ch=ui->chRange_calib_min->currentIndex();ch<=ui->chRange_calib_max->currentIndex();ch++){
                         delay();
 
@@ -3565,37 +3611,37 @@ void MainWindow::startCalibration(){
                                 VMM1SM[ch+1]->click();
                             }
                         }
-                        qDebug()<<"Calibrating Channel:"<<ch;
+                        qDebug()<<"  > Calibrating Channel : " << ch;
                         VMM1ST[ch]->click();
 
-                        qDebug()<<"Set Mask";
+                        qDebug()<<"  > Set Mask";
                         emit ui->setMask->click();
                         delay();
-                        qDebug()<<"Set headers";
+                        qDebug()<<"  > Set headers";
                         emit ui->setEvbld->click();
                         delay();
 
-                        qDebug()<<"Initialize Electronics";
+                        qDebug()<<"  > Initialize Electronics";
                         emit ui->SendConfiguration->click();
                         delay();
                         emit ui->SendConfiguration->click();
                         delay();
 
-                        qDebug()<<"Trigger Constants set";
+                        qDebug()<<"  > Trigger Constants set";
                         emit ui->setTrgAcqConst->click();
                         delay();
-                        qDebug()<<"Setting Pulser DAC";
+                        qDebug()<<"  > Setting Pulser DAC";
                         emit ui->trgPulser->click();
 
                         int initialEvents = ui->triggerCntLabel->text().toUInt(&ok,10);
 
-                        qDebug()<<"Enabling DAC";
+                        qDebug()<<"  > Enabling DAC";
                         emit ui->onACQ->click();
 
                         eventsMultiplier++;
                         unsigned int eventsForCalibration = ui->evCalib->text().toUInt(&ok,10);
 
-                        qDebug()<<"Starting Pulser with number of Events:"<<eventsForCalibration;
+                        qDebug()<<"  > Starting Pulser with number of Events: "<<eventsForCalibration;
                         delay();
 
 
@@ -3603,7 +3649,7 @@ void MainWindow::startCalibration(){
                             break;
 
                         while(ui->triggerCntLabel->text().toUInt(&ok,10)-initialEvents<=eventsForCalibration){
-                            qDebug()<<"Waiting for Event Collecting";
+                            qDebug()<<" * Waiting for Event Collecting * ";
                             delay();
                             delay();
                             delay();
@@ -3621,13 +3667,16 @@ void MainWindow::startCalibration(){
                         if(ui->stopTriggerCnt == QObject::sender())
                             break;
 
+                        qDebug() << " ---------------------------- ";
 
                     }//loop over channels
                 }// pulser
             }// thresholds
         }//loop over gains
     }// calib check
-    qDebug()<<"Calibration Finished";
+    qDebug() << " ---------------------------- ";
+    qDebug() << "   * Calibration Finished *   ";
+    qDebug() << " ---------------------------- ";
     emit ui->stopTriggerCnt->click();
 }
 

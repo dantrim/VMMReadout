@@ -18,6 +18,7 @@ using namespace std;
 DataProcessor::DataProcessor(QObject *parent) :
     QObject(parent),
     m_writeData(true),
+    m_calibrationRun(false),
     m_useChannelMap(false),
     m_ignore16(false),
     n_daqCnt(0),
@@ -166,6 +167,7 @@ void DataProcessor::fillChannelMaps()
 // -------------------------------------------------------------------- //
 void DataProcessor::parseData(QByteArray array)
 {
+    m_dbg = false;
 
     bool ok;
 
@@ -324,6 +326,13 @@ void DataProcessor::parseData(QByteArray array)
         }
 
         m_eventNumberFAFA = static_cast<int>(DataProcessor::getDAQCount() - 1);
+
+        if(isCalibrationRun()) {
+            // as the calibration data members are updated within
+            // calls to updateCalibInfo, this setting may not be
+            // totally necessary --> WILL NEED TO TEST 
+
+        }
 
         DataProcessor::updateDAQCount();
         // TODO : implement ntuple writing!
@@ -538,6 +547,7 @@ void DataProcessor::setupOutputTrees()
     br_dacCounts    = m_runProperties->Branch("dacCounts", &m_dacCounts);
     br_pulserCounts = m_runProperties->Branch("pulserCounts", &m_pulserCounts);
     br_angle        = m_runProperties->Branch("angle", &m_angle);
+    br_calibrationRun = m_runProperties->Branch("calibrationRun", &m_calibrationRun); // this will get filled automatically
 
     // --- event data --- //
     m_vmm2 = new TTree("vmm2", "vmm2");
@@ -553,6 +563,15 @@ void DataProcessor::setupOutputTrees()
     br_bcid                 = m_vmm2->Branch("bcid", "std::vector< <vector<int> >", &m_bcid);
     br_grayDecoded          = m_vmm2->Branch("grayDecoded", "std::vector< vector<int> >", &m_grayDecoded);
     br_channelId            = m_vmm2->Branch("channel", "std::vector< vector<int> >", &m_channelId);
+
+    if(isCalibrationRun()) {
+        br_pulserCalib      = m_vmm2->Branch("pulser", &m_pulserCounts_calib);
+        br_gainCalib        = m_vmm2->Branch("gain", &m_gain_calib);
+        br_peakTimeCalib    = m_vmm2->Branch("intTime", &m_peakTime_calib);
+        br_threshCalib      = m_vmm2->Branch("thresholdSet", &m_dacCounts_calib);
+        br_calibRun         = m_vmm2->Branch("calibrationRun", &m_calibrationRun); // in vmm2dcs for some reason this variable is diff than that in run_properties?
+        br_neighborCalib    = m_vmm2->Branch("neighbor", "std::vector< vector<int> >", &m_neighbor_calib);
+    } // calibration branches
 
     m_treesSetup = true;
 
@@ -587,8 +606,19 @@ void DataProcessor::fillRunProperties(int runNumber, double gain, int tacSlope, 
     m_runPropertiesFilled = true;
 }
 
+void DataProcessor::updateCalibInfo(int pulser, double gain, int peakTime, int dacThreshold)
+{
+    m_pulserCounts_calib = pulser;
+    m_gain_calib = gain;
+    m_peakTime_calib = peakTime;
+    m_dacCounts_calib = dacThreshold;
+    qDebug() << "[DataProcessor::updateCalibInfo]    m_dacCounts_calib = " << m_dacCounts_calib << " (expect : " << dacThreshold << ")";
+    qDebug() << "[DataProcessor::updateCalibInfo]    m_gain_calib      = " << m_gain_calib <<      " (expect : " << gain<< ")";
+}
+
 void DataProcessor::fillEventData()
 {
+    m_dbg = false;
     if(!m_writeData) {
         if(m_dbg) qDebug() << "[DataProcessor::fillEventData]    This function should be called only if you are writing an output ntuple. Skipping this.";
         return;
@@ -668,7 +698,6 @@ void DataProcessor::clearData()
 
     // clear the event data
     m_eventNumberFAFA   = 0;
- //   m_daqCnt            = 0;
     m_triggerTimeStamp.clear();
     m_triggerCounter.clear();
     m_chipId.clear();
@@ -681,4 +710,10 @@ void DataProcessor::clearData()
     m_channelId.clear();
     m_grayDecoded.clear();
 
+    // clear the calib info
+//    m_pulserCounts_calib = -999;
+//    m_gain_calib         = -999.0;
+//    m_peakTime_calib     = -999;
+//    m_dacCounts_calib    = -999;
+    m_neighbor_calib.clear();
 }

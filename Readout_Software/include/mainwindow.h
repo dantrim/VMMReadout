@@ -5,6 +5,12 @@
 #include <constants.h>
 #include "mythread.h"
 #include "tcphandler.h"
+//tabs
+#include <QStackedWidget>
+#include <QTabWidget>
+#include <QGridLayout>
+
+
 #include <vector>
 #include "configuration_module.h"
 #include "run_module.h"
@@ -40,6 +46,11 @@ public:
     QFile fileDaq_fpga;
 
     TFile *fileDaqRoot;
+
+    //tabs
+    //QTabWidget *stackedWidget;
+    QGroupBox *groupModify;
+    QGridLayout *grid;
 
     TBranch *eventNumberBranch;
     TBranch *eventNumberFAFABranch;
