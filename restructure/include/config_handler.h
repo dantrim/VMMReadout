@@ -1,3 +1,4 @@
+
 #ifndef CONFIG_HANDLER_H
 #define CONFIG_HANDLER_H
 
@@ -14,24 +15,29 @@
 
 
 // ---------------------------------------------------------------------- //
-//  Main Configuration Handler tool
-// ---------------------------------------------------------------------- //
-class ConfigHandler : public QObject
-{
-    Q_OBJECT
-
-    public :
-        explicit ConfigHandler(QObject *parent = 0);
-        virtual ~ConfigHandler(){};
-
-        void LoadConfig(const QString &filename);
-
-
-}; // class ConfigHandler
-
-// ---------------------------------------------------------------------- //
 //  Structures for holding config items
 // ---------------------------------------------------------------------- //
+
+////////////////////////////////////////////////////////
+// structure for communication
+////////////////////////////////////////////////////////
+struct CommInfo {
+    // UDP info
+    int fec_port;
+    int daq_port;
+    int vmmasic_port;
+    int vmmapp_port;
+    int s6_port;
+
+    // general info
+    QString config_version;
+    QString vmm_id_list;
+    QString ip_list;
+    QString comment;
+    bool debug;
+
+    void Print();
+};
 
 ////////////////////////////////////////////////////////
 // structure for DAQ configuration
@@ -43,8 +49,10 @@ struct TriggerDAQ {
     int acq_window;
     QString run_mode;
     int run_count;
-    QString storage_dir;
+    QString output_path;
     QString output_filename;
+
+    void Print();
 }; 
 
 ////////////////////////////////////////////////////////
@@ -55,7 +63,7 @@ struct GlobalSetting {
     bool leakage_current;
     bool analog_tristates;
     bool double_leakage;
-    int gain;
+    QString gain;
     int peak_time;
     bool neighbor_trigger;
     int tac_slope;
@@ -67,13 +75,13 @@ struct GlobalSetting {
     bool out_buffer_pdo;
     bool out_buffer_tdo;
     int channel_monitor;
-    bool monitoring;
+    bool monitoring_control;
     bool monitor_pdo_out;
     bool adcs;
     bool sub_hysteresis;
     bool direct_time;
     QString direct_time_mode;
-    bool conversion_mode_8bit;
+    bool conv_mode_8bit;
     bool enable_6bit;
     QString adc_10bit;
     QString adc_8bit;
@@ -82,6 +90,8 @@ struct GlobalSetting {
     bool dual_clock_6bit;
     int threshold_dac;
     int test_pulse_dac;
+
+    void Print();
 };
 
 
@@ -93,6 +103,8 @@ struct ChannelMap {
     bool on;
     bool first;
     bool second;
+
+    void Print();
 };
 
 
@@ -112,6 +124,47 @@ struct Channel {
     int s10bitADC;
     int s8bitADC;
     int s6bitADC;
+
+    void Print();
 };
+
+// ---------------------------------------------------------------------- //
+//  Main Configuration Handler tool
+// ---------------------------------------------------------------------- //
+class ConfigHandler : public QObject
+{
+    Q_OBJECT
+
+    public :
+        explicit ConfigHandler(QObject *parent = 0);
+        virtual ~ConfigHandler(){};
+
+        void LoadConfig(const QString &filename);
+        void LoadCommInfo(const boost::property_tree::ptree& p);
+        void LoadGlobalSettings(const boost::property_tree::ptree& p);
+        void LoadDAQConfig(const boost::property_tree::ptree& p);
+        void LoadHDMIChannels(const boost::property_tree::ptree& p);
+        void LoadVMMChannelConfig(const boost::property_tree::ptree& p);
+
+        bool isOn(std::string onOrOff = "");
+
+        QString getIPList() { return m_commSettings.ip_list; }
+
+        // retrieve the objects
+        CommInfo& commSettings() { return m_commSettings; }
+        TriggerDAQ& daqSettings() { return m_daqSettings; }
+        GlobalSetting& globalSettings() { return m_globalSettings; }
+        Channel& vmmChannel(int i) { return m_channels[i]; }
+
+    private :
+        CommInfo m_commSettings;
+        TriggerDAQ m_daqSettings;
+        GlobalSetting m_globalSettings;
+        std::vector<ChannelMap> m_channelmap;
+        std::vector<Channel> m_channels;
+
+
+}; // class ConfigHandler
+
 
 #endif

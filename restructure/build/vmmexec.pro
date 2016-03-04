@@ -10,6 +10,9 @@
 sourcepath  = "../src"
 includepath = "../include"
 configpath  = "../include"
+#boostinclude = "/usr/local/include/"
+boostinclude = "/Users/dantrim/boost_1_60_0/"
+#boostlib     = "/usr/local/lib"
 
 
 QT += core
@@ -17,17 +20,19 @@ QT += network
 CONFIG += console
 CONFIG += declarative_debug
 
-TARGET = vmmexec
+TARGET   = vmmexec
 TEMPLATE = app
 
 INCLUDEPATH += $$includepath
-INCLUDEPATH += /usr/local/include/
+INCLUDEPATH += $$boostinclude
 DEPENDPATH  += $$includepath
-DEPENDPATH += /usr/local/include/
+DEPENDPATH  += $$boostinclude
 
-CXXFLAGS += -std=c++0x
+QMAKE_CXXFLAGS += -stdlib=libc++
+QMAKE_CXXFLAGS += -std=c++11
+QMAKE_LFLAGS   += -stdlib=libc++
 
-#LIBS += -L/usr/local/lib -lboost_system -lboost_filesystem
+#LIBS += -L$$boostlib -lboost_system -lboost_filesystem
 
 OBJECTS_DIR += ./objects/
 MOC_DIR     += ./moc/
@@ -35,6 +40,12 @@ RCC_DIR     += ./rcc/
 UI_DIR      += ./ui/
 
 SOURCES     += $$sourcepath/vmmexec.cpp\
-               $$sourcepath/config_handler.cpp
+               $$sourcepath/run_module.cpp\
+               $$sourcepath/config_handler.cpp\
+               $$sourcepath/configuration_module.cpp\
+               $$sourcepath/socket_handler.cpp
 
-HEADERS     += $$includepath/config_handler.h
+HEADERS     += $$includepath/config_handler.h\
+               $$includepath/configuration_module.h\
+               $$includepath/run_module.h\
+               $$includepath/socket_handler.h
