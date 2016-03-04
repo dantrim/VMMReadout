@@ -20,6 +20,19 @@ ConfigHandler::ConfigHandler(QObject *parent)
     m_channelmap.clear();
     m_channels.clear();
 
+    ////////////////////////////////////////
+    // allowd values for global settings
+    ////////////////////////////////////////
+    all_gains<<"0.5"<<"1.0"<<"3.0"<<"4.5"<<"6.0"<<"9.0"<<"12.0"<<"16.0";
+    all_peakTimes<<200<<100<<50<<25;
+    all_TACslopes<<125<<250<<500<<1000;
+    all_polarities<<"wires"<<"strips";
+    all_ARTmodes<<"threshold"<<"peak";
+    all_directTimeModes<<"TtP"<<"ToT"<<"PtP"<<"PtT";
+    all_ADC10bits<<"200ns"<<"+60ns";
+    all_ADC8bits<<"100ns"<<"+60ns";
+    all_ADC6bits<<"low"<<"middle"<<"up";
+
 
 }
 //// ------------------------------------------------------------------------ //
@@ -111,92 +124,208 @@ void ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptree& pt)
 
             GlobalSetting g;
 
+            // ------------------------------------------------------------- //
             // global channel polarity
             string pol = conf.second.get<string>("ch_polarity"); 
-            g.polarity = QString::fromStdString(pol);
+            if(all_polarities.indexOf(QString::fromStdString(pol))>=0)
+                g.polarity = all_polarities.indexOf(QString::fromStdString(pol));
+            else {
+                cout << "ERROR ch_polarity value must be one of: [";
+                for(auto& i : all_polarities) cout << " " << i.toStdString() << " ";
+                cout << "], you have provided: " << pol << endl;
+                exit(1);
+            }
+
+            // ------------------------------------------------------------- //
             // global channel leakage current ena/dis
             string leak = conf.second.get<string>("ch_leakage_current");
-            g.leakage_current = isOn(leak);            
+            g.leakage_current = isOn(leak);
+       
+            // ------------------------------------------------------------- //
             // analog tristates
             string tristates = conf.second.get<string>("analog_tristates");
             g.analog_tristates = isOn(tristates);
+
+            // ------------------------------------------------------------- //
             // double leakage
             string dleak = conf.second.get<string>("double_leakage");
             g.double_leakage = isOn(dleak);
+
+            // ------------------------------------------------------------- //
             // gain
             string gain = conf.second.get<string>("gain");
             g.gain = QString::fromStdString(gain);
+            if(all_gains.indexOf(QString::fromStdString(gain))>=0)
+                g.gain = all_gains.indexOf(QString::fromStdString(gain));
+            else {
+                cout << "ERROR gain value must be one of: [";
+                for(auto& i : all_gains)  cout << " " << i.toStdString() << " ";
+                cout << "] mV/fC, you have provided: " << gain << endl;
+                exit(1);
+            }
+            
+            // ------------------------------------------------------------- //
             // peak_time
             g.peak_time = conf.second.get<int>("peak_time");
+            if( !(all_peakTimes.indexOf(g.peak_time)>=0) ) {
+                cout << "ERROR peak_time value must be one of: [";
+                for(auto& i : all_peakTimes) cout << " " << i << " ";
+                cout << "] ns, you have provided: " << g.peak_time << endl;
+                exit(1);
+            }
+
+            // ------------------------------------------------------------- //
             // neighbor trigger
             string neighbor = conf.second.get<string>("neighbor_trigger");
             g.neighbor_trigger = isOn(neighbor);
+
+            // ------------------------------------------------------------- //
             // TAC slope
             g.tac_slope = conf.second.get<int>("TAC_slop_adj");
+            if( !(all_TACslopes.indexOf(g.tac_slope)>=0) ) {
+                cout << "ERROR TAC_slop_adj value must be one of: [";
+                for(auto& i : all_TACslopes) cout << " " << i << " ";
+                cout << "] ns, you have provided: " << g.tac_slope << endl;
+                exit(1);
+            }
+
+            // ------------------------------------------------------------- //
             // disable at peak
             string disable = conf.second.get<string>("disable_at_peak");
             g.disable_at_peak = isOn(disable);
+
+            // ------------------------------------------------------------- //
             // ART
             string art = conf.second.get<string>("ART");
             g.art = isOn(art);
+
+            // ------------------------------------------------------------- //
             // ART mode
             string artmode = conf.second.get<string>("ART_mode");
-            g.art_mode = QString::fromStdString(artmode);
+            if( all_ARTmodes.indexOf(QString::fromStdString(artmode))>=0)
+                g.art_mode = QString::fromStdString(artmode);
+            else {
+                cout << "ERROR ART_mode value must be one of: [";
+                for(auto& i : all_ARTmodes) cout << " " << i.toStdString() << " ";
+                cout << "], you have provided: " << artmode << endl;
+                exit(1);
+            }
+
+            // ------------------------------------------------------------- //
             // dual clock ART
             string dcart = conf.second.get<string>("dual_clock_ART");
             g.dual_clock_art = isOn(dcart);
+
+            // ------------------------------------------------------------- //
             // out buffer mo
             string obmo = conf.second.get<string>("out_buffer_mo");
             g.out_buffer_mo = isOn(obmo);
+
+            // ------------------------------------------------------------- //
             // out buffer pdo
             string obpdo = conf.second.get<string>("out_buffer_pdo");
             g.out_buffer_pdo = isOn(obpdo);
+
+            // ------------------------------------------------------------- //
             // out buffer tdo
             string obtdo = conf.second.get<string>("out_buffer_tdo");
             g.out_buffer_tdo = isOn(obtdo);
+
+            // ------------------------------------------------------------- //
             // channel for monitoring
             g.channel_monitor = conf.second.get<int>("channel_monitoring");
+
+            // ------------------------------------------------------------- //
             // monitoring control
             string mcontrol = conf.second.get<string>("monitoring_control");
             g.monitoring_control = isOn(mcontrol);
+
+            // ------------------------------------------------------------- //
             // monitor pdo out
             string mpdo = conf.second.get<string>("monitor_pdo_out");
             g.monitor_pdo_out = isOn(mpdo);
+
+            // ------------------------------------------------------------- //
             // ADCs
             string adcs = conf.second.get<string>("ADCs");
             g.adcs = isOn(adcs);
+
+            // ------------------------------------------------------------- //
             // sub hysteresis
             string subhyst = conf.second.get<string>("sub_hyst_discr");
             g.sub_hysteresis = isOn(subhyst);
+
+            // ------------------------------------------------------------- //
             // direct time
             string direct = conf.second.get<string>("direct_time");
             g.direct_time = isOn(direct);
+
+            // ------------------------------------------------------------- //
             // direct time mode
             string dtmode = conf.second.get<string>("direct_time_mode");
             g.direct_time_mode = QString::fromStdString(dtmode);
+
+            // ------------------------------------------------------------- //
             // conv mode 8bit
             string cmode8bit = conf.second.get<string>("conv_mode_8bit");
             g.conv_mode_8bit = isOn(cmode8bit);
+
+            // ------------------------------------------------------------- //
             // enable 6bit
             string ena6 = conf.second.get<string>("enable_6bit");
             g.enable_6bit = isOn(ena6);
+
+            // ------------------------------------------------------------- //
             // ADC 10bit
             string adc10 = conf.second.get<string>("ADC_10bit");
-            g.adc_10bit = QString::fromStdString(adc10);
+            if(all_ADC10bits.indexOf(QString::fromStdString(adc10))>=0)
+                g.adc_10bit = all_ADC10bits.indexOf(QString::fromStdString(adc10));
+            else {
+                cout << "ERROR ADC_10bit value must be one of: [";
+                for(auto& i : all_ADC10bits) cout << " " << i.toStdString() << " ";
+                cout << "], you have provided: " << adc10 << endl;
+                exit(1);
+            }
+
+            // ------------------------------------------------------------- //
             // ADC 8bit
             string adc8 = conf.second.get<string>("ADC_8bit");
-            g.adc_8bit = QString::fromStdString(adc8);
+            if(all_ADC8bits.indexOf(QString::fromStdString(adc8))>=0)
+                g.adc_8bit = all_ADC8bits.indexOf(QString::fromStdString(adc8));
+            else {
+                cout << "ERROR ADC_8bit value must be one of: [";
+                for(auto& i : all_ADC8bits) cout << " " << i.toStdString() << " ";
+                cout << "], you have provided: " << adc8 << endl;
+                exit(1);
+            }
+
+            // ------------------------------------------------------------- //
             // ADC 6bit
             string adc6 = conf.second.get<string>("ADC_6bit");
-            g.adc_6bit = QString::fromStdString(adc6);
+            if(all_ADC6bits.indexOf(QString::fromStdString(adc6))>=0)
+                g.adc_6bit = all_ADC6bits.indexOf(QString::fromStdString(adc6));
+            else {
+                cout << "ERROR ADC_6bit value must be one of: [";
+                for(auto& i : all_ADC6bits) cout << " " << i.toStdString() << " ";
+                cout << "], you have provided: " << adc6 << endl;
+                exit(1);
+            }
+
+            // ------------------------------------------------------------- //
             // dual clock data
             string dcdata = conf.second.get<string>("dual_clock_data");
             g.dual_clock_data = isOn(dcdata);
+
+            // ------------------------------------------------------------- //
             // dual clock 6bit
             string dc6 = conf.second.get<string>("dual_clock_6bit");
             g.dual_clock_6bit = isOn(dc6);
+
+            // ------------------------------------------------------------- //
             // threshold DAC
             g.threshold_dac = conf.second.get<int>("threshold_DAC");
+            
+            // ------------------------------------------------------------- //
             // test pulse DAC
             g.test_pulse_dac = conf.second.get<int>("test_pulse_DAC");
 
@@ -389,6 +518,36 @@ bool ConfigHandler::isOn(std::string onOrOff)
         << std::endl;
         return false;
     } 
+}
+//// ------------------------------------------------------------------------ //
+std::string ConfigHandler::isOnOrOff(int onOrOff)
+{
+    using namespace std;
+
+    if(onOrOff==1)
+        return "on";
+    else if(onOrOff==0)
+        return "off";
+    else {
+        cout << "ERROR isOnOrOff expects only '0' or '1' as input." << endl;
+        cout << "ERROR You have provided: " << onOrOff << endl;
+        exit(1);
+    }
+}
+//// ------------------------------------------------------------------------ //
+std::string ConfigHandler::isEnaOrDis(int enaOrDis)
+{
+    using namespace std;
+
+    if(enaOrDis==1)
+        return "enabled";
+    else if(enaOrDis==0)
+        return "disabled";
+    else {
+        cout << "ERROR isEnaOrDis expects only '0' or '1' as input." << endl;
+        cout << "ERROR You have provided: " << enaOrDis << endl;
+        exit(1);
+    }
 }
 //////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------ //

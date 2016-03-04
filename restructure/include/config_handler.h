@@ -4,6 +4,8 @@
 
 // qt
 #include <QObject>
+#include <QList>
+#include <QStringList>
 
 // boost
 #include <boost/property_tree/ptree.hpp>
@@ -91,6 +93,7 @@ struct GlobalSetting {
     int threshold_dac;
     int test_pulse_dac;
 
+    void Validate();
     void Print();
 };
 
@@ -147,6 +150,8 @@ class ConfigHandler : public QObject
         void LoadVMMChannelConfig(const boost::property_tree::ptree& p);
 
         bool isOn(std::string onOrOff = "");
+        std::string isOnOrOff(int onOrOf);
+        std::string isEnaOrDis(int enaOrDis);
 
         QString getIPList() { return m_commSettings.ip_list; }
 
@@ -155,6 +160,19 @@ class ConfigHandler : public QObject
         TriggerDAQ& daqSettings() { return m_daqSettings; }
         GlobalSetting& globalSettings() { return m_globalSettings; }
         Channel& vmmChannel(int i) { return m_channels[i]; }
+
+        ////////////////////////////
+        // expected settings
+        ////////////////////////////
+        QStringList all_gains;
+        QList<int>  all_peakTimes;
+        QList<int>  all_TACslopes;
+        QStringList all_polarities;
+        QStringList all_ARTmodes;
+        QStringList all_directTimeModes;
+        QStringList all_ADC10bits;
+        QStringList all_ADC8bits;
+        QStringList all_ADC6bits;
 
     private :
         CommInfo m_commSettings;

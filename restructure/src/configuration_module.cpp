@@ -17,6 +17,7 @@ Configuration::Configuration(QObject *parent)
     : QObject(parent)
 {
 
+
 }
 // ------------------------------------------------------------------------ //
 Configuration& Configuration::LoadConfig(ConfigHandler& config)
@@ -58,11 +59,6 @@ void Configuration::SendConfig()
     ///////////////////////////////////////////////////
     gr[0]="00000000000000000000000000000000"; 
     gs = 0;
-
-    cout << " config handler fec_port = "
-        << config().commSettings().fec_port << endl;
-    cout << " config handler vmm chan 10 test_pulse = "
-        << config().vmmChannel(10).test_pulse << endl;
 
     //10bit
 
