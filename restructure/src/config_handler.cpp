@@ -139,22 +139,22 @@ void ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptree& pt)
             // ------------------------------------------------------------- //
             // global channel leakage current ena/dis
             string leak = conf.second.get<string>("ch_leakage_current");
-            g.leakage_current = isOn(leak);
+            g.leakage_current = isOn(leak, "ch_leakage_current");
        
             // ------------------------------------------------------------- //
             // analog tristates
             string tristates = conf.second.get<string>("analog_tristates");
-            g.analog_tristates = isOn(tristates);
+            g.analog_tristates = isOn(tristates, "analog_tristates");
 
             // ------------------------------------------------------------- //
             // double leakage
             string dleak = conf.second.get<string>("double_leakage");
-            g.double_leakage = isOn(dleak);
+            g.double_leakage = isOn(dleak, "double_leakage");
 
             // ------------------------------------------------------------- //
             // gain
             string gain = conf.second.get<string>("gain");
-            g.gain = QString::fromStdString(gain);
+        //    g.gain = QString::fromStdString(gain);
             if(all_gains.indexOf(QString::fromStdString(gain))>=0)
                 g.gain = all_gains.indexOf(QString::fromStdString(gain));
             else {
@@ -166,38 +166,42 @@ void ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptree& pt)
             
             // ------------------------------------------------------------- //
             // peak_time
-            g.peak_time = conf.second.get<int>("peak_time");
-            if( !(all_peakTimes.indexOf(g.peak_time)>=0) ) {
+            int ptime = conf.second.get<int>("peak_time");
+            if(all_peakTimes.indexOf(ptime)>=0)
+                g.peak_time = all_peakTimes.indexOf(ptime);
+            else {
                 cout << "ERROR peak_time value must be one of: [";
                 for(auto& i : all_peakTimes) cout << " " << i << " ";
-                cout << "] ns, you have provided: " << g.peak_time << endl;
+                cout << "] ns, you have provided: " << ptime << endl;
                 exit(1);
             }
 
             // ------------------------------------------------------------- //
             // neighbor trigger
             string neighbor = conf.second.get<string>("neighbor_trigger");
-            g.neighbor_trigger = isOn(neighbor);
+            g.neighbor_trigger = isOn(neighbor, "neighbor_trigger");
 
             // ------------------------------------------------------------- //
             // TAC slope
-            g.tac_slope = conf.second.get<int>("TAC_slop_adj");
-            if( !(all_TACslopes.indexOf(g.tac_slope)>=0) ) {
-                cout << "ERROR TAC_slop_adj value must be one of: [";
+            int tacslope = conf.second.get<int>("TAC_slop_adj");
+            if(all_TACslopes.indexOf(tacslope)>=0)
+                g.tac_slope = tacslope;
+            else {
+                cout << "ERROR TAC_slope_adj value must be one of: [";
                 for(auto& i : all_TACslopes) cout << " " << i << " ";
-                cout << "] ns, you have provided: " << g.tac_slope << endl;
+                cout << "] ns, you have provided: " << tacslope << endl;
                 exit(1);
             }
 
             // ------------------------------------------------------------- //
             // disable at peak
             string disable = conf.second.get<string>("disable_at_peak");
-            g.disable_at_peak = isOn(disable);
+            g.disable_at_peak = isOn(disable, "disable_at_peak");
 
             // ------------------------------------------------------------- //
             // ART
             string art = conf.second.get<string>("ART");
-            g.art = isOn(art);
+            g.art = isOn(art, "ART");
 
             // ------------------------------------------------------------- //
             // ART mode
@@ -214,22 +218,22 @@ void ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptree& pt)
             // ------------------------------------------------------------- //
             // dual clock ART
             string dcart = conf.second.get<string>("dual_clock_ART");
-            g.dual_clock_art = isOn(dcart);
+            g.dual_clock_art = isOn(dcart, "dual_clock_ART");
 
             // ------------------------------------------------------------- //
             // out buffer mo
             string obmo = conf.second.get<string>("out_buffer_mo");
-            g.out_buffer_mo = isOn(obmo);
+            g.out_buffer_mo = isOn(obmo, "out_buffer_mo");
 
             // ------------------------------------------------------------- //
             // out buffer pdo
             string obpdo = conf.second.get<string>("out_buffer_pdo");
-            g.out_buffer_pdo = isOn(obpdo);
+            g.out_buffer_pdo = isOn(obpdo, "out_buffer_pdo");
 
             // ------------------------------------------------------------- //
             // out buffer tdo
             string obtdo = conf.second.get<string>("out_buffer_tdo");
-            g.out_buffer_tdo = isOn(obtdo);
+            g.out_buffer_tdo = isOn(obtdo, "out_buffer_tdo");
 
             // ------------------------------------------------------------- //
             // channel for monitoring
@@ -238,42 +242,54 @@ void ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptree& pt)
             // ------------------------------------------------------------- //
             // monitoring control
             string mcontrol = conf.second.get<string>("monitoring_control");
-            g.monitoring_control = isOn(mcontrol);
+            g.monitoring_control = isOn(mcontrol, "monitoring_control");
 
             // ------------------------------------------------------------- //
             // monitor pdo out
             string mpdo = conf.second.get<string>("monitor_pdo_out");
-            g.monitor_pdo_out = isOn(mpdo);
+            g.monitor_pdo_out = isOn(mpdo, "monitor_pdo_out");
 
             // ------------------------------------------------------------- //
             // ADCs
             string adcs = conf.second.get<string>("ADCs");
-            g.adcs = isOn(adcs);
+            g.adcs = isOn(adcs, "ADCs");
 
             // ------------------------------------------------------------- //
             // sub hysteresis
             string subhyst = conf.second.get<string>("sub_hyst_discr");
-            g.sub_hysteresis = isOn(subhyst);
+            g.sub_hysteresis = isOn(subhyst, "sub_hyst_discr");
 
             // ------------------------------------------------------------- //
             // direct time
             string direct = conf.second.get<string>("direct_time");
-            g.direct_time = isOn(direct);
+            g.direct_time = isOn(direct, "direct_time");
 
             // ------------------------------------------------------------- //
             // direct time mode
             string dtmode = conf.second.get<string>("direct_time_mode");
-            g.direct_time_mode = QString::fromStdString(dtmode);
+            if(all_directTimeModes.indexOf(QString::fromStdString(dtmode))>=0)
+            {
+                QString tmp = QString::fromStdString(dtmode);
+                QString tmp2 = QString("%1").arg(tmp, 2, 2, QChar('0'));
+                g.direct_time_mode[0] = tmp2.at(0).digitValue();
+                g.direct_time_mode[1] = tmp2.at(1).digitValue();
+            }
+            else {
+                cout << "ERROR direct_time_mode value must be one of: [";
+                for(auto& i : all_directTimeModes)cout<<" "<< i.toStdString()<<" ";
+                cout << "], you have provided: " << dtmode << endl;
+                exit(1);
+            } 
 
             // ------------------------------------------------------------- //
             // conv mode 8bit
             string cmode8bit = conf.second.get<string>("conv_mode_8bit");
-            g.conv_mode_8bit = isOn(cmode8bit);
+            g.conv_mode_8bit = isOn(cmode8bit, "conv_mode_8bit");
 
             // ------------------------------------------------------------- //
             // enable 6bit
             string ena6 = conf.second.get<string>("enable_6bit");
-            g.enable_6bit = isOn(ena6);
+            g.enable_6bit = isOn(ena6, "enable_6bit");
 
             // ------------------------------------------------------------- //
             // ADC 10bit
@@ -314,12 +330,12 @@ void ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptree& pt)
             // ------------------------------------------------------------- //
             // dual clock data
             string dcdata = conf.second.get<string>("dual_clock_data");
-            g.dual_clock_data = isOn(dcdata);
+            g.dual_clock_data = isOn(dcdata, "dual_clock_data");
 
             // ------------------------------------------------------------- //
             // dual clock 6bit
             string dc6 = conf.second.get<string>("dual_clock_6bit");
-            g.dual_clock_6bit = isOn(dc6);
+            g.dual_clock_6bit = isOn(dc6, "dual_clock_6bit");
 
             // ------------------------------------------------------------- //
             // threshold DAC
@@ -448,6 +464,7 @@ void ConfigHandler::LoadVMMChannelConfig(const boost::property_tree::ptree& pt)
     using boost::format;
 
     stringstream ss;
+    stringstream where;
 
     try {
         for(int iChan = 0; iChan < 64; iChan++) {
@@ -456,6 +473,10 @@ void ConfigHandler::LoadVMMChannelConfig(const boost::property_tree::ptree& pt)
             for(const auto& conf : pt.get_child("configuration")) {
                 size_t find = conf.first.find(ss.str());
                 if(find==string::npos) continue;
+                where.str("");
+                where << "(ch. " << iChan << ")";
+                string value = "";
+
 
                 // fill a Channel struct
                 Channel chan;
@@ -463,25 +484,40 @@ void ConfigHandler::LoadVMMChannelConfig(const boost::property_tree::ptree& pt)
                 chan.number = iChan;
                 // channel polarity type
                 string polarity = conf.second.get<string>("polarity");
-                chan.polarity = QString::fromStdString(polarity);
+                if(all_polarities.indexOf(QString::fromStdString(polarity))>=0)
+                    chan.polarity = QString::fromStdString(polarity);
+                else {
+                    cout << "ERROR polarity value for channel " << iChan << " "
+                         << " must be one of: [";
+                    for(auto& i : all_polarities) cout<<" "<<i.toStdString()<<" ";
+                    cout << "], you have provided: " << polarity << endl;
+                    exit(1);
+                }
                 // capacitance
                 string cap = conf.second.get<string>("capacitance");
-                chan.capacitance = isOn(cap);
+                value = "capacitance " + where.str();
+                chan.capacitance = isOn(cap, value);
                 // leakage_current
                 string leakage = conf.second.get<string>("leakage_current");
-                chan.leakage_current = isOn(leakage);
+                value = "leakage_current " + where.str();
+                chan.leakage_current = isOn(leakage, value);
                 // test pulse
                 string testpulse = conf.second.get<string>("test_pulse");
-                chan.test_pulse = isOn(testpulse);
+                value = "test_pulse " + where.str();
+                chan.test_pulse = isOn(testpulse, value);
                 // hidden mode
                 string hidden = conf.second.get<string>("hidden_mode");
-                chan.hidden_mode = isOn(hidden);
+                value = "hidden_mode " + where.str();
+                chan.hidden_mode = isOn(hidden, value);
                 // trim
                 chan.trim = conf.second.get<int>("trim");
+                #warning what values can channel trim take?
                 // monitor mode
                 string mon = conf.second.get<string>("monitor_mode");
-                chan.monitor = isOn(mon);
+                value = "monitor_mode " + where.str();
+                chan.monitor = isOn(mon, value);
                 // 10bADC time set
+                #warning what values can the ADC time sets take?
                 chan.s10bitADC = conf.second.get<int>("s10bADC_time_set");
                 // 8bADC time set
                 chan.s8bitADC = conf.second.get<int>("s08bADC_time_set");
@@ -506,17 +542,20 @@ void ConfigHandler::LoadVMMChannelConfig(const boost::property_tree::ptree& pt)
 
 }
 //// ------------------------------------------------------------------------ //
-bool ConfigHandler::isOn(std::string onOrOff)
+int ConfigHandler::isOn(std::string onOrOff, std::string where)
 {
     if(onOrOff=="on" || onOrOff=="enabled")
-        return true;
+        return 1;
     else if(onOrOff=="off" || onOrOff=="disabled")
-        return false;
+        return 0;
     else {
+        std::string from = "";
+        if(where!="") from = " [for " + where + "]";
         std::cout << "Expecting either 'on'/'enabled'"
-                  << " or 'off'/'disabled'. Returning 'off'/'disabled'." 
-        << std::endl;
-        return false;
+                  << " or 'off'/'disabled'" << from << "."
+                  << " Returning 'off'/'disabled'."
+        << std::endl; 
+        return 0;
     } 
 }
 //// ------------------------------------------------------------------------ //

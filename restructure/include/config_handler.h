@@ -63,33 +63,33 @@ struct TriggerDAQ {
 struct GlobalSetting {
     QString polarity;
     bool leakage_current;
-    bool analog_tristates;
-    bool double_leakage;
-    QString gain;
+    int analog_tristates;
+    int double_leakage;
+    int gain;
     int peak_time;
-    bool neighbor_trigger;
+    int neighbor_trigger;
     int tac_slope;
     bool disable_at_peak;
     bool art;
     QString art_mode;
-    bool dual_clock_art;
+    int dual_clock_art;
     bool out_buffer_mo;
     bool out_buffer_pdo;
     bool out_buffer_tdo;
     int channel_monitor;
     bool monitoring_control;
     bool monitor_pdo_out;
-    bool adcs;
-    bool sub_hysteresis;
-    bool direct_time;
-    QString direct_time_mode;
-    bool conv_mode_8bit;
-    bool enable_6bit;
-    QString adc_10bit;
-    QString adc_8bit;
-    QString adc_6bit;
-    bool dual_clock_data;
-    bool dual_clock_6bit;
+    int adcs;
+    int sub_hysteresis;
+    int direct_time;
+    int direct_time_mode[2];
+    int conv_mode_8bit;
+    int enable_6bit;
+    int adc_10bit;
+    int adc_8bit;
+    int adc_6bit;
+    int dual_clock_data;
+    int dual_clock_6bit;
     int threshold_dac;
     int test_pulse_dac;
 
@@ -149,7 +149,7 @@ class ConfigHandler : public QObject
         void LoadHDMIChannels(const boost::property_tree::ptree& p);
         void LoadVMMChannelConfig(const boost::property_tree::ptree& p);
 
-        bool isOn(std::string onOrOff = "");
+        int isOn(std::string onOrOff = "", std::string where ="");
         std::string isOnOrOff(int onOrOf);
         std::string isEnaOrDis(int enaOrDis);
 

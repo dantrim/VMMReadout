@@ -6,6 +6,9 @@
 #include "config_handler.h"
 #include "socket_handler.h"
 
+// Qt
+#include <QString>
+
 
 //////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------ //
@@ -25,9 +28,12 @@ class Configuration : public QObject
         Configuration& LoadSocket(SocketHandler& socket);
 
         void SendConfig();
+        void GlobalRegister(std::vector<QString> globalRegisters);
         ConfigHandler& config() { return *m_configHandler; }
 
     private :
+        bool m_dbg;
+
         SocketHandler *m_socketHandler;
         ConfigHandler *m_configHandler;
 
