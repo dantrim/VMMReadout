@@ -23,12 +23,16 @@ class Configuration : public QObject
     public :
         explicit Configuration(QObject *parent = 0);
         virtual ~Configuration(){};
+        Configuration& setDebug(bool dbg) { m_dbg = dbg; return *this; }
+        bool dbg() { return m_dbg; }
 
         Configuration& LoadConfig(ConfigHandler& config);
         Configuration& LoadSocket(SocketHandler& socket);
 
         void SendConfig();
-        void GlobalRegister(std::vector<QString> globalRegisters);
+        void fillGlobalRegisters(std::vector<QString>& globalRegisters);
+        void fillChannelRegisters(std::vector<QString>& channelRegisters);
+        SocketHandler& socket() { return *m_socketHandler; }
         ConfigHandler& config() { return *m_configHandler; }
 
     private :

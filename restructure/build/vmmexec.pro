@@ -43,9 +43,11 @@ SOURCES     += $$sourcepath/vmmexec.cpp\
                $$sourcepath/run_module.cpp\
                $$sourcepath/config_handler.cpp\
                $$sourcepath/configuration_module.cpp\
-               $$sourcepath/socket_handler.cpp
+               $$sourcepath/socket_handler.cpp\
+               $$sourcepath/vmmsocket.cpp
 
 HEADERS     += $$includepath/config_handler.h\
                $$includepath/configuration_module.h\
                $$includepath/run_module.h\
-               $$includepath/socket_handler.h
+               $$includepath/socket_handler.h\
+               $$includepath/vmmsocket.h

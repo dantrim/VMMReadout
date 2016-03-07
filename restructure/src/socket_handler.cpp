@@ -20,13 +20,16 @@ SocketHandler::SocketHandler(QObject* parent) :
     QObject(parent),
     m_dbg(false),
     m_pinged(false),
-    name("")
+    n_globalCommandCounter(0),
+    m_fecSocket(0),
+    m_vmmappSocket(0),
+    m_daqSocket(0)
 {
 
-    socket = new QUdpSocket();
-    // use SocketHandler readyRead
-    //socket->bind(QHostAddress::LocalHost, 1234);
-    connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
+    //Socket = new QUdpSocket();
+    //// use SocketHandler readyRead
+    ////socket->bind(QHostAddress::LocalHost, 1234);
+    //Connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
 
 }
 
@@ -67,36 +70,127 @@ SocketHandler& SocketHandler::ping()
     return *this;
 }
 // ---------------------------------------------------------------------- //
-void SocketHandler::BindSocket(const QHostAddress & address, quint16 port,
-        QAbstractSocket::BindMode mode)
+void SocketHandler::addSocket(std::string name, quint16 bindingPort,
+                                    QAbstractSocket::BindMode mode)
 {
-    // TODO : add function for checking if alreayd bound!
-    // TODO : ADD STATUS ENUM
-    socket->bind(address, port);
+    using namespace std;
+
+    QString lname = QString::fromStdString(name).toLower();
+    if(lname=="fec") {
+        m_fecSocket = new VMMSocket();
+        m_fecSocket->setDebug(dbg());
+        m_fecSocket->setName(name);
+        m_fecSocket->setBindingPort(bindingPort);
+        m_fecSocket->bindSocket(bindingPort, mode);
+
+        std::cout << "----------------------------------------------------" << std::endl;
+        std::cout << "FEC VMMSocket [" << m_fecSocket->getName() << "] added" << std::endl;
+        m_fecSocket->Print();
+        std::cout << "----------------------------------------------------" << std::endl;
+
+    } // fec
+    else if(lname=="daq") {
+        m_daqSocket = new VMMSocket();
+        m_daqSocket->setDebug(dbg());
+        m_daqSocket->setName(name);
+        m_daqSocket->setBindingPort(bindingPort);
+        m_daqSocket->bindSocket(bindingPort, mode);
+        
+        std::cout << "----------------------------------------------------" << std::endl;
+        std::cout << "DAQ VMMSocket [" << m_daqSocket->getName() << "] added" << std::endl;
+        m_daqSocket->Print();
+        std::cout << "----------------------------------------------------" << std::endl;
+    } //daq
+    else if(lname=="vmmapp") {
+        m_vmmappSocket = new VMMSocket();
+        m_vmmappSocket->setDebug(dbg());
+        m_vmmappSocket->setName(name);
+        m_vmmappSocket->setBindingPort(bindingPort);
+        m_vmmappSocket->bindSocket(bindingPort, mode);
+
+        std::cout << "----------------------------------------------------" << std::endl;
+        std::cout << "VMMAPP VMMSocket [" << m_vmmappSocket->getName() << "] added" << std::endl;
+        m_vmmappSocket->Print();
+        std::cout << "----------------------------------------------------" << std::endl;
+    } //vmmapp
+    else {
+        cout << "ERROR addSocket    Currently can only add the fec, daq, or vmmapp "
+             << "sockets named 'fec', 'daq', and 'vmmapp', respectively. You have "
+             << "attempted to add a socket named: " << name << endl;
+        exit(1);
+    }
 }
-
-
 // ---------------------------------------------------------------------- //
-void SocketHandler::TestUDP()
+void SocketHandler::SendDatagram(const QByteArray& datagram, const QString& ip,
+            const quint16& destPort, const QString& whichSocket, const QString& callingFn)
 {
-    QByteArray data;
-    data.append("hello from udp");
-    data.append("  from socket named: ");
-    data.append(QString::fromStdString(getName()));
-    socket->writeDatagram(data, QHostAddress::LocalHost, 1234);
+    std::string fn = "";
+    if(callingFn!="") fn = "(" + callingFn.toStdString() + ") ";
+
+    VMMSocket& socket = getSocket(whichSocket.toStdString());
+
+    //CHECK STATUS ENUM
+    #warning TODO add STATUS ENUM AND CHECK (FSM)
+    if(!pinged()) {
+        cout << "SocketHandler::SendDatagram    " << fn
+             << "ERROR Boards are not in pinged OK state" << endl;
+        exit(1);
+    }
+    if(!socket.checkAndReconnect(callingFn.toStdString())) exit(1);
+
+    if(dbg()) cout << "SocketHandler::SendDatagram    " << fn
+                   << "  IP  : " << ip.toStdString()
+                   << "  Data: " << datagram.toHex().toStdString() << endl;
+    socket.writeDatagram(datagram, QHostAddress(ip), destPort);
+
+    socket.closeAndDisconnect();
+    
 
 }
-
 // ---------------------------------------------------------------------- //
-void SocketHandler::readyRead()
+VMMSocket& SocketHandler::getSocket(std::string whichSocket)
 {
-    QByteArray buffer;
-    buffer.resize(socket->pendingDatagramSize());
-    QHostAddress sender;
-    quint16 senderPort;
-    socket->readDatagram(buffer.data(), buffer.size(), &sender, &senderPort);
-    cout << "Socket named: " << name << " is receiving a data packet" << endl;
-    cout << "Message from : " << sender.toString().toStdString() << endl;
-    cout << "Message port : " << senderPort << endl;
-    cout << "Message      : " << buffer.toStdString() << endl;
+    if(whichSocket=="") {
+        cout << "SocketHandler::getSocket    ERROR This method must be passed "
+             << "a string containing the name of the desired socket" << endl;
+        exit(1);
+    }
+    QString lname = QString::fromStdString(whichSocket).toLower();
+    if(lname=="fec") {
+        if(m_fecSocket) return *m_fecSocket;
+        else {
+            cout << "SocketHandler::getSocket    Requested socket (fec) is null" << endl;
+            exit(1);
+        }
+    }
+    else if(lname=="daq") {
+        if(m_daqSocket) return *m_daqSocket;
+        else {
+            cout << "SocketHandler::getSocket    Requested socket (daq) is null" << endl;
+            exit(1);
+        }
+    }
+    else if(lname=="vmmapp") {
+        if(m_vmmappSocket) return *m_vmmappSocket;
+        else {
+            cout << "SocketHandler::getSocket    Requested socket (vmmapp) is null" << endl;
+            exit(1);
+        }
+    }
+    else {
+        cout << "SocketHandler::getSocket    ERROR Currently can only retrieve the"
+             << " fec, daq, or vmmapp sockets. You have attempted to retrieve"
+             << " a socket named: " << whichSocket << endl;
+        exit(1);
+    }
+}
+// ---------------------------------------------------------------------- //
+void SocketHandler::Print()
+{
+    if(m_fecSocket)
+        fecSocket().Print();
+    if(m_daqSocket)
+        daqSocket().Print();
+    if(m_vmmappSocket)
+        vmmappSocket().Print();
 }

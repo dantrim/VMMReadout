@@ -8,9 +8,9 @@
 using namespace std;
 
 // vmm
-//#include "string_utils.h"
 #include "config_handler.h"
 #include "configuration_module.h"
+#include "run_module.h"
 #include "socket_handler.h"
 
 
@@ -28,6 +28,9 @@ void help()
     cout <<"                              (configuration sending   "<<endl;
     cout <<"                               required!) "<< endl;
     cout <<"                              [default: false]" <<endl;
+    cout <<"    --no-write              : do not write ROOT ntuple"<<endl;
+    cout <<"                              if running DAQ." << endl;
+    cout <<"                              [by default the ntuple is written]" << endl;
     cout <<"    -d (--dbg)              : set verbose mode on"<<endl;
     cout<<" ------------------------------------------------------ "<<endl;
 }
@@ -44,6 +47,7 @@ int main(int argc, char *argv[])
     QString inputConfigFile("");
     bool sendConfigOnly = false;
     bool runDAQOnly = false; 
+    bool writeNtuple = true;
     bool dbg = false;
     bool config_ = false;
 
@@ -61,6 +65,8 @@ int main(int argc, char *argv[])
                     sendConfigOnly = true;
         else if (cmd == "-r" || cmd == "--run-DAQ")
                     runDAQOnly = true;
+        else if (cmd == "--no-write")
+                    writeNtuple = false;
         else {
             cout << "Incorrect command line options." << endl;
             help();
@@ -95,28 +101,45 @@ int main(int argc, char *argv[])
     // ---------------------------------------- //
 
     ConfigHandler conf_handler;
+    conf_handler.setDebug(dbg);
     conf_handler.LoadConfig(inputConfigFile);
 
     cout << "______________" << endl;
     cout << "Testing Socket" << endl;
 
-    SocketHandler server;
-    server.loadIPList(conf_handler.getIPList()).ping();
-    server.setName("FEC");
-    SocketHandler client;
-    client.loadIPList(conf_handler.getIPList()).ping();
-    client.setName("DAQ");
-    server.BindSocket(QHostAddress::LocalHost, 1235);
-    client.BindSocket(QHostAddress::LocalHost, 1234);
-    server.TestUDP();
+    SocketHandler socketHandler;
+    socketHandler.setDebug(dbg);
+    socketHandler.loadIPList(conf_handler.getIPList()).ping();
+    socketHandler.addSocket("FEC", 1235);
+    socketHandler.addSocket("DAQ", 1234);
+    //socketHandler.addSocket("VMMAPP", 1236); // we only ever send to this, never binding
+    socketHandler.fecSocket().TestUDP();
 
-    Configuration *configModule = new Configuration();
-    // pass the configuration
-    configModule->LoadConfig(conf_handler).LoadSocket(server);
-    configModule->SendConfig();
+    Configuration configModule;
+    configModule.setDebug(dbg);
+
+    RunModule runModule;
+    runModule.setDebug(dbg).setDoWrite(writeNtuple);
+
+    if(!runDAQOnly) {
+        // pass the configuration
+        configModule.LoadConfig(conf_handler).LoadSocket(socketHandler);
+        configModule.SendConfig();
+    }
+
+    if(!sendConfigOnly) {
+        // pass the configuration
+        runModule.LoadConfig(conf_handler).LoadSocket(socketHandler);
+
+        // pass the DAQ configuration
+        runModule.prepareRun();
+    
+    }
+
+    
     
 
-  //  delete testSocket;
-
+    //delete configModule;
+    //delete runModule;
     return app.exec(); 
 }
