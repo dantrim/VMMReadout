@@ -12,6 +12,7 @@ using namespace std;
 #include "configuration_module.h"
 #include "run_module.h"
 #include "socket_handler.h"
+#include "data_handler.h"
 
 
 void help()
@@ -31,6 +32,9 @@ void help()
     cout <<"    --no-write              : do not write ROOT ntuple"<<endl;
     cout <<"                              if running DAQ." << endl;
     cout <<"                              [by default the ntuple is written]" << endl;
+    cout <<"    --dry-run               : do not send anything through" << endl;
+    cout <<"                              the network " << endl;
+    cout <<"                              [default: false]" << endl;
     cout <<"    -d (--dbg)              : set verbose mode on"<<endl;
     cout<<" ------------------------------------------------------ "<<endl;
 }
@@ -48,7 +52,8 @@ int main(int argc, char *argv[])
     bool sendConfigOnly = false;
     bool runDAQOnly = false; 
     bool writeNtuple = true;
-    bool dbg = false;
+    int dbg = false;
+    bool dryrun = false;
     bool config_ = false;
 
     int optin = 1;
@@ -60,13 +65,15 @@ int main(int argc, char *argv[])
                     config_ = true;
         }
         else if (cmd == "-d" || cmd == "--dbg")
-                    dbg = argv[++optin];
+                    dbg = atoi(argv[++optin]);
         else if (cmd == "-c" || cmd == "--send-config")
                     sendConfigOnly = true;
         else if (cmd == "-r" || cmd == "--run-DAQ")
                     runDAQOnly = true;
         else if (cmd == "--no-write")
                     writeNtuple = false;
+        else if (cmd == "--dry-run")
+                    dryrun = true;
         else {
             cout << "Incorrect command line options." << endl;
             help();
@@ -106,15 +113,20 @@ int main(int argc, char *argv[])
 
     cout << "______________" << endl;
     cout << "Testing Socket" << endl;
+    DataHandler data_handler;
+    data_handler.setDebug(dbg);
 
     SocketHandler socketHandler;
     socketHandler.setDebug(dbg);
     socketHandler.loadIPList(conf_handler.getIPList()).ping();
+    if(dryrun)
+        socketHandler.setDryRun();
     socketHandler.addSocket("FEC", 1235);
     socketHandler.addSocket("DAQ", 1234);
     //socketHandler.addSocket("VMMAPP", 1236); // we only ever send to this, never binding
-    socketHandler.fecSocket().TestUDP();
 
+
+    
     Configuration configModule;
     configModule.setDebug(dbg);
 
@@ -125,21 +137,35 @@ int main(int argc, char *argv[])
         // pass the configuration
         configModule.LoadConfig(conf_handler).LoadSocket(socketHandler);
         configModule.SendConfig();
+
     }
 
     if(!sendConfigOnly) {
         // pass the configuration
         runModule.LoadConfig(conf_handler).LoadSocket(socketHandler);
+        runModule.initializeDataHandler();
+       // socketHandler.fecSocket().TestUDP();
 
         // pass the DAQ configuration
         runModule.prepareRun();
-    
+        runModule.ACQon();
     }
 
-    
-    
+    if(sendConfigOnly) {
+        app.quit();
+        return 0;
+    }
+    else {
 
-    //delete configModule;
-    //delete runModule;
-    return app.exec(); 
+        // exit the event loop when DAQ is finished
+        QObject::connect(&runModule, SIGNAL(EndRun()), &app, SLOT(quit()));
+
+        // set "Run" method to execute as soon as this application
+        // enters into the main event loop
+        QMetaObject::invokeMethod(&runModule, "Run", Qt::QueuedConnection);
+
+        // begin the event loop
+        return app.exec();
+    }
+
 }
