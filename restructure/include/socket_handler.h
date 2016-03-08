@@ -29,6 +29,8 @@ class SocketHandler : public QObject
         virtual ~SocketHandler(){};
         SocketHandler& setDebug(bool dbg) { m_dbg = dbg; return *this; }
         bool dbg() { return m_dbg; }
+        void setDryRun();
+        bool dryrun() { return m_dryrun; }
 
         // Load in the list of IP's
         SocketHandler& loadIPList(const QString& iplist);
@@ -52,10 +54,16 @@ class SocketHandler : public QObject
                             const QString& whichSocket = "",
                             const QString& callingFn = "");
 
+        virtual bool waitForReadyRead(std::string socketName="", int msec=1000);
+        void processReply(std::string name="", const QString& ip_sent_to="",
+                        quint32 cmd_delay=0);
+        void closeAndDisconnect(std::string name="", std::string callingFn="");
+
         // retrieve sockets
         VMMSocket& fecSocket()    { return *m_fecSocket; }
         VMMSocket& vmmappSocket() { return *m_vmmappSocket; }
         VMMSocket& daqSocket()    { return *m_daqSocket; }
+        QByteArray buffer(std::string name="");
 
         // Print
         void Print();
@@ -63,6 +71,7 @@ class SocketHandler : public QObject
     private :
         bool m_dbg;
         bool m_pinged;
+        bool m_dryrun;
         quint32 n_globalCommandCounter;
         VMMSocket *m_fecSocket;
         VMMSocket *m_vmmappSocket;
