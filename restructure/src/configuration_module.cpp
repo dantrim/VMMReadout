@@ -25,13 +25,19 @@ Configuration::Configuration(QObject *parent) :
     m_socketHandler(0),
     m_configHandler(0)
 {
-
-
 }
 // ------------------------------------------------------------------------ //
 Configuration& Configuration::LoadConfig(ConfigHandler& config)
 {
-    m_configHandler = &config;
+    if(!m_configHandler)
+        m_configHandler = &config;
+    else {
+        cout << "Configuration::LoadConfig    WARNING ConfigHandler instance "
+             << "is already active (non-null)!" << endl;
+        cout << "Configuration::LoadConfig    WARNING Will keep first "
+             << "instance." << endl;
+        return *this;
+    }
     if(!m_configHandler) {
         cout << "Configuration::LoadConfig    ERROR ConfigHandler instance null" << endl;
         exit(1);
@@ -41,7 +47,15 @@ Configuration& Configuration::LoadConfig(ConfigHandler& config)
 // ------------------------------------------------------------------------ //
 Configuration& Configuration::LoadSocket(SocketHandler& socket)
 {
-    m_socketHandler = &socket;
+    if(!m_socketHandler)
+        m_socketHandler = &socket;
+    else {
+        cout << "Configuration::LoadSocket    WARNING SocketHandler instance "
+             << "is already active (non-null)!" << endl;
+        cout << "Configuration::LoadSocket    WARNING Will keep first "
+             << "instance." << endl;
+        return *this;
+    }
     if(m_socketHandler) {
         cout << "----------------------------------------------------------" << endl; 
         cout << "Configuration::LoadSocket    SocketHandler instance loaded" << endl;
@@ -62,6 +76,8 @@ void Configuration::SendConfig()
     // NEED TO ADD SOCKET STATE CHECK
 
     bool ok;
+
+    int send_to_port = config().commSettings().vmmasic_port;
 
     ///////////////////////////////////////////////////
     // build the configuration word(s) to be sent
@@ -92,8 +108,7 @@ void Configuration::SendConfig()
     ///////////////////////////////////////////////////
     // Now begin to send out the word
     ///////////////////////////////////////////////////
-    bool read;
-    QByteArray datagramSPI;
+    QByteArray datagram;
     QString cmd, msbCounter;
     cmd = "AAAAFFFF";
     msbCounter = "0x80000000"; 
@@ -106,35 +121,48 @@ void Configuration::SendConfig()
         // update global command counter
         socket().updateCommandCounter();
 
-        datagramSPI.clear();
-        QDataStream out (&datagramSPI, QIODevice::WriteOnly);
+        datagram.clear();
+        QDataStream out (&datagram, QIODevice::WriteOnly);
         out.device()->seek(0); //rewind
-        out << (quint32)(socket().commandCounter()+msbCounter.toUInt(&ok,16))
-            << (quint32)config().getHDMIChannelMap()
-            << (quint32)cmd.toUInt(&ok,16) << (quint32) 0;
+        out << (quint32)(socket().commandCounter() + msbCounter.toUInt(&ok,16)) //[0,3]
+            << (quint32)config().getHDMIChannelMap() //[4,7]
+            << (quint32)cmd.toUInt(&ok,16) << (quint32) 0; //[8,11]
 
         //channel SPI
         for(unsigned int i = firstChRegSPI; i <= lastChRegSPI; ++i) {
             out << (quint32)(i)
                 << (quint32)channelRegisters[i].toUInt(&ok,2);
         } // i
+        //[12,523]
 
         // global SPI
         for(unsigned int i = firstGlobalRegSPI; i <= lastGlobalRegSPI; ++i) {
             out << (quint32)(i)
                 << (quint32)globalRegisters[i-firstGlobalRegSPI].toUInt(&ok,2);
         } // i
+        //[524,547]
 
-        out << (quint32)128 << (quint32) 1;
-        if(m_dbg) {
-            std::cout << "SendConfig IP[" << ip.toStdString() << "] : "
-                 << datagramSPI.toHex().toStdString() << std::endl;
-        } //dbg
+        out << (quint32)128 //[548,551]
+            << (quint32) 1; //[552,555]
 
-        // NOW ACTUALLY DO THE SENDING
-
+        bool readOK = true;
+        socket().SendDatagram(datagram, ip, send_to_port, "fec",
+                                        "Configuration::SendConfig"); 
+        readOK = socket().waitForReadyRead("fec");
+        if(readOK) {
+            if(dbg()) cout << "Configuration::SendConfig    "
+                           << "Processing replies..." << endl;
+            socket().processReply("fec", ip);
+        }
+        else {
+            cout << "Configuration::SendConfig    Timeout while waiting for replies "
+                 << "from VMM" << endl;
+            socket().closeAndDisconnect("fec","Configuration::SendConfig");
+            exit(1);
+        }
     } // ip
-            
+
+    socket().closeAndDisconnect("fec","Configuration::SendConfig");
 }
 // ------------------------------------------------------------------------ //
 void Configuration::fillGlobalRegisters(std::vector<QString>& global)
