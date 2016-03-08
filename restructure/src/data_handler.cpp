@@ -63,42 +63,43 @@ void DataHandler::readEvent()
     datamap.clear();
 
     while(daqSocket().socket().hasPendingDatagrams()){
+ //       datagram.resize(daqSocket().socket().pendingDatagramSize());
+ //       daqSocket().socket().readDatagram(datagram.data(), datagram.size(), &vmmip);
+
+        ////////////////////////
+        // dummy testing
         datagram.resize(daqSocket().socket().pendingDatagramSize());
         daqSocket().socket().readDatagram(datagram.data(), datagram.size(), &vmmip);
+        cout << "DAQ socket receiving data" << endl;
+        cout << "MESSAGE from IP : " << vmmip.toString().toStdString() << endl;
+        cout << "MESSAGE         : " << datagram.toStdString() << endl;
+    } // while
 
-     //   ////////////////////////
-     //   // dummy testing
-     //   datagram.resize(daqSocket().socket().pendingDatagramSize());
-     //   daqSocket().socket().readDatagram(datagram.data(), datagram.size(), &vmmip);
-     //   cout << "DAQ socket receiving data" << endl;
-     //   cout << "MESSAGE from IP : " << vmmip.toString().toStdString() << endl;
-     //   cout << "MESSAGE         : " << datagram.toStdString() << endl;
-
-     //   //////////////////////
-        if(dbg()) cout << "DataHandler::readEvent    DAQ datagram read: "
-                       << datagram.toHex()
-                       << " from VMM with IP: " << vmmip.toString().toStdString()
-                       << endl;
-
-        QString ip = vmmip.toString();
-        QList<QByteArray> arr = datamap.value(ip); // datamap[ip] = arr 
-        arr.append(datagram);
-    } // while loop
-
-    QMap<QString, QList<QByteArray> >::iterator it;
-    for(it = datamap.begin(); it!=datamap.end(); it++) {
-        if(dbg()) cout << "DataHandler::readEvent    "
-                       << "Reading data from address: " << it.key().toStdString()
-                       << endl;
-        QList<QByteArray> arr = datamap.value(it.key());
-        QList<QByteArray>::iterator bit;
-        for(bit = arr.begin(); bit != arr.end(); bit++) {
-            if(dbg()) cout << "DataHandler::readEvent    "
-                           << " > " << (*ba).toHex().toStdString()
-                           << endl;
-        } // bit
-
-    } // it
+        //////////////////////
+//        if(dbg()) cout << "DataHandler::readEvent    DAQ datagram read: "
+//                       << datagram.toHex()
+//                       << " from VMM with IP: " << vmmip.toString().toStdString()
+//                       << endl;
+//
+//        QString ip = vmmip.toString();
+//        QList<QByteArray> arr = datamap.value(ip); // datamap[ip] = arr 
+//        arr.append(datagram);
+//    } // while loop
+//
+//    QMap<QString, QList<QByteArray> >::iterator it;
+//    for(it = datamap.begin(); it!=datamap.end(); it++) {
+//        if(dbg()) cout << "DataHandler::readEvent    "
+//                       << "Reading data from address: " << it.key().toStdString()
+//                       << endl;
+//        QList<QByteArray> arr = datamap.value(it.key());
+//        QList<QByteArray>::iterator bit;
+//        for(bit = arr.begin(); bit != arr.end(); bit++) {
+//            if(dbg()) cout << "DataHandler::readEvent    "
+//                           << " > " << (*ba).toHex().toStdString()
+//                           << endl;
+//        } // bit
+//
+//    } // it
 
     return;
 }
