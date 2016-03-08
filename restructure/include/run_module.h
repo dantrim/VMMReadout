@@ -5,6 +5,7 @@
 // vmm
 #include "socket_handler.h"
 #include "config_handler.h"
+#include "data_handler.h"
 
 // qt
 #include <QObject>
