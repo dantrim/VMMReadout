@@ -21,9 +21,15 @@ class RunModule : public QObject
         RunModule& setDoWrite(bool doit) { m_writeNtuple = doit; return *this; }
         bool dbg() { return m_dbg; }
         bool writeOut() { return m_writeNtuple; }
+        void setExternalTrig(bool doit) { m_externalTrigger = doit; }
+        bool externalTrig() { return m_externalTrigger; }
+        void updatePulseCount() { m_pulseCount++; }
+        long int pulseCount() { return m_pulseCount; }
 
         RunModule& LoadConfig(ConfigHandler& config);
         RunModule& LoadSocket(SocketHandler& socket);
+
+        void initializeDataHandler();
 
         SocketHandler& socket() { return *m_socketHandler; }
         ConfigHandler& config() { return *m_configHandler; }
@@ -31,14 +37,33 @@ class RunModule : public QObject
         // meaty methods
         void prepareRun();
         void setTriggerAcqConstants();
+        void setTriggerMode();
+        void ACQon();
+        void ACQoff();
+
+        void beginTimedRun();
+        void beginPulserRun();
 
     private :
         bool m_dbg;
         bool m_writeNtuple;
+        bool m_externalTrigger;
+        long int m_pulseCount; 
+        bool m_initSocketHandler;
+        bool m_initConfigHandler;
 
         SocketHandler *m_socketHandler;
         ConfigHandler *m_configHandler;
+        DataHandler *m_dataHandler;
 
+    signals :
+        void EndRun();
+
+    public slots :
+        void Run();
+        void readEvent();
+        void sendPulse();
+        void finishRun();
 
 
 
