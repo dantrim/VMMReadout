@@ -24,7 +24,7 @@ VMMSocket::VMMSocket(QObject* parent) :
     m_socket(0)
 {
     m_socket = new QUdpSocket(this);
-    connect(m_socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
+    //connect(m_socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
 
 }
 // ----------------------------------------------------------------------- //
@@ -51,29 +51,39 @@ void VMMSocket::bindSocket(quint16 port, QAbstractSocket::BindMode mode)
 // ----------------------------------------------------------------------- //
 void VMMSocket::TestUDP()
 {
+    cout << "TESTUDP" << endl;
     checkAndReconnect("VMMSocket::TestUDP");
 
     QByteArray data;
     data.append("hello from udp");
     data.append("  from socket named: ");
     data.append(QString::fromStdString(getName()));
-    m_socket->writeDatagram(data, QHostAddress::LocalHost, 1234);
+    writeDatagram(data, QHostAddress::LocalHost, 1234);
 
     closeAndDisconnect();
 }
 // ----------------------------------------------------------------------- //
-void VMMSocket::readyRead()
-{
-    QByteArray buffer;
-    buffer.resize(m_socket->pendingDatagramSize());
-    QHostAddress sender;
-    quint16 senderPort;
-    m_socket->readDatagram(buffer.data(), buffer.size(), &sender, &senderPort);
-    cout << "Socket named: " << getName() << " receiving data" << endl;
-    cout << "Message from  : " << sender.toString().toStdString() << endl;
-    cout << "Message port  : " << senderPort << endl;
-    cout << "Message       : " << buffer.toStdString() << endl;
-}
+//void VMMSocket::readyRead()
+//{
+//    QHostAddress vmmip;
+//
+//    m_buffer.clear();
+//    
+//
+//    m_buffer.resize(m_socket->pendingDatagramSize());
+//    m_socket->readDatagram(m_buffer.data(), m_buffer.size(), &vmmip); 
+//    if(dbg()) cout << "VMMSocket::readyRead    Socket [" << getName()
+//                   << "] data received: " << m_buffer.toStdString()
+//                   << " from VMM with IP: " << vmmip.toString().toStdString()
+//                   << endl;
+//    cout << "Socket named " << getName() << " receiving data" << endl;
+//    cout << "Message from IP : " << vmmip.toString().toStdString() << endl;
+//    cout << "Message         : " << m_buffer.toStdString() << endl;
+//
+//    // emit a signal to show that this socket's
+//    // buffer is filled
+//    emit dataReady();
+//}
 // ----------------------------------------------------------------------- //
 quint64 VMMSocket::writeDatagram(const QByteArray& datagram,
             const QHostAddress& host, quint16 port)
@@ -122,10 +132,82 @@ void VMMSocket::closeAndDisconnect(std::string callingFn)
     m_socket->disconnectFromHost();
 }
 // ----------------------------------------------------------------------- //
+void VMMSocket::processReply(const QString &ip_to_check, quint32 cmd_delay,
+                                    quint32 globalCount)
+{
+    if(dbg()) cout << "VMMSocket::processReply    "
+                   << "Processing datagram replies for IP: "
+                   << ip_to_check.toStdString() << endl; 
+
+    bool ok;
+    QString datagram_hex;
+    unsigned int cmd_cnt_to_check = globalCount - cmd_delay; 
+    QHostAddress vmmIP;
+
+    QStringList replies; 
+    replies.clear();
+
+    while(socket().hasPendingDatagrams()) {
+        buffer().resize(socket().pendingDatagramSize());
+        socket().readDatagram(buffer().data(), buffer().size(), &vmmIP);
+
+        if(dbg()) cout << "VMMSocket::processReply    "
+                       << "Received datagram (hex): "
+                       << buffer().toHex().toStdString()
+                       << " from VMM with IP: " << vmmIP.toString().toStdString()
+                       << " and message size is " << buffer().size() << endl;
+
+        datagram_hex.clear();
+        datagram_hex = buffer().mid(0,4).toHex();
+        quint32 received = datagram_hex.toUInt(&ok,16);
+        if(received != cmd_cnt_to_check) {
+            cout << "VMMSocket::processReply    Command number received, "
+                 << received << ", does not match internal command counter" << endl;
+            cout << "VMMSocket::processReply    expected, " << cmd_cnt_to_check
+                 << endl;
+            exit(1);
+        }
+
+        // fill our list of VMM replies
+        replies.append(vmmIP.toString());
+    }//while
+
+    if(dbg()) {
+        for(const auto& ip : replies) {
+            cout << "VMMSocket::processReply    VMM with IP ["
+                 << ip.toStdString() << "] sent a reply to command "
+                 << cmd_cnt_to_check << endl;
+        } // ip
+    }
+
+    if(replies.size()>0) {
+        for(const auto& ip : replies) {
+            // unexpected ip has replied
+            if(ip != ip_to_check) {
+                cout << "VMMSocket::processReply    "
+                     << "VMM with IP [" << ip.toStdString()
+                     << "] has sent a reply at command " << cmd_cnt_to_check
+                     << " to a command not sent to it! Out of sync." << endl;
+                exit(1);
+            } // unexpected ip
+        } // ip
+    } // replies > 0
+
+    if(!replies.contains(ip_to_check)) {
+        cout << "VMMSocket::processReply    VMM with IP: "
+             << ip_to_check.toStdString() << " did not acknowledge command # "
+             << cmd_cnt_to_check << endl;
+        exit(1);
+    }
+
+}
+// ----------------------------------------------------------------------- //
 void VMMSocket::Print()
 {
     stringstream ss;
     ss << "   VMMSocket    Name          : " << getName() << endl;
-    ss << "   VMMSocket    Bound to port : " << m_socket->localPort() << endl;
+    ss << "   VMMSocket    Bound to port : " << getBindingPort() << endl;
+    ss << "   VMMSocket    Status        :  Socket status not yet implemented"
+        << endl;
     cout << ss.str() << endl;
 }

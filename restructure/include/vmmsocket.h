@@ -33,18 +33,24 @@ class VMMSocket : public QObject
         bool checkAndReconnect(std::string fromWhere="");
         void closeAndDisconnect(std::string fromWhere="");
 
+        QUdpSocket& socket() { return *m_socket; }
+        QByteArray buffer() { return m_buffer; }
+        void processReply(const QString &ip_sent_to, quint32 cmd_delay = 0,
+                                quint32 count = 0);
+
         void Print();
 
     signals :
+        void dataReady();
 
     public slots :
-        void readyRead();
 
     private :
         bool m_dbg;
         std::string m_name;
         quint16 m_bindingPort;
         QUdpSocket *m_socket;
+        QByteArray m_buffer;
 
 
 }; // class VMMSocket
