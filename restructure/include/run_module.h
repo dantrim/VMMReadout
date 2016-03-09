@@ -29,7 +29,9 @@ class RunModule : public QObject
         RunModule& LoadConfig(ConfigHandler& config);
         RunModule& LoadSocket(SocketHandler& socket);
 
-        void initializeDataHandler();
+        RunModule& initializeDataHandler();
+        void setupOutputFiles(TriggerDAQ& daq, QString outdir="",
+                                                    QString filename="");
 
         SocketHandler& socket() { return *m_socketHandler; }
         ConfigHandler& config() { return *m_configHandler; }

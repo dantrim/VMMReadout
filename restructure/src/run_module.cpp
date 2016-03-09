@@ -26,7 +26,6 @@ RunModule::RunModule(QObject *parent) :
     m_configHandler(0),
     m_dataHandler(0)
 {
-    m_dataHandler = new DataHandler();
 }
 // ------------------------------------------------------------------------ //
 RunModule& RunModule::LoadConfig(ConfigHandler& inconfig)
@@ -56,6 +55,8 @@ RunModule& RunModule::LoadConfig(ConfigHandler& inconfig)
         config().daqSettings().run_count *= 1000;
     }
     setExternalTrig(setExternal);
+
+    m_initConfigHandler = true;
 
     return *this;
 }
@@ -88,8 +89,9 @@ RunModule& RunModule::LoadSocket(SocketHandler& socket)
 
     return *this;
 }
+
 // ------------------------------------------------------------------------ //
-void RunModule::initializeDataHandler()
+RunModule& RunModule::initializeDataHandler()
 {
     if(!m_initSocketHandler) {
         cout << "RunModule::initializeDataHandler    "
@@ -106,9 +108,28 @@ void RunModule::initializeDataHandler()
     }
       
     cout << "RunModule::initializeDataHandler    Setting up DataHandler..." << endl;  
+    m_dataHandler = new DataHandler();
+    connect(this, SIGNAL(EndRun()), m_dataHandler, SLOT(EndRun()));
     m_dataHandler->LoadDAQSocket(m_socketHandler->daqSocket());
     m_dataHandler->setDebug(dbg());
+    m_dataHandler->setWriteNtuple(writeOut());
 
+    return *this;
+}
+// ------------------------------------------------------------------------ //
+void RunModule::setupOutputFiles(TriggerDAQ& daq, QString outdir,
+                                                    QString filename)
+{
+    if(!m_dataHandler) {
+        cout << "RunModule::setupOutputFiles    "
+             << "ERROR You must call 'initializeDataHandler' before calling "
+             << "this method! Exiting." << endl;
+        exit(1);
+    }
+    m_dataHandler->setupOutputFiles(daq, outdir, filename);
+    m_dataHandler->dataFileHeader(config().commSettings(),
+                                    config().globalSettings(),
+                                    config().daqSettings());
 }
 // ------------------------------------------------------------------------ //
 void RunModule::prepareRun()
@@ -123,11 +144,7 @@ void RunModule::prepareRun()
 void RunModule::Run()
 {
 
-    //connect DAQ socket
-    connect(&socket().daqSocket().socket(), SIGNAL(readyRead()),
-                        this, SLOT(readEvent()));
-
-    cout << "RunModule::Run    Starting run...";
+    cout << "RunModule::Run    Starting run..." << endl;
     if(externalTrig())
         beginTimedRun();
     else
@@ -464,7 +481,7 @@ void RunModule::ACQon()
 // ------------------------------------------------------------------------ //
 void RunModule::ACQoff()
 {
-    if(dbg()) cout << "RunModule::ACQonf" << endl;
+    if(dbg()) cout << "RunModule::ACQoff" << endl;
 
     bool ok;
     QByteArray datagram;
