@@ -32,6 +32,7 @@ struct CommInfo {
     int s6_port;
 
     // general info
+    QString config_filename;
     QString config_version;
     QString vmm_id_list;
     QString ip_list;

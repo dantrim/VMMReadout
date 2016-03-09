@@ -50,6 +50,10 @@ ConfigHandler::ConfigHandler(QObject *parent) :
 //// ------------------------------------------------------------------------ //
 void ConfigHandler::LoadConfig(const QString &filename)
 {
+
+    using namespace std;
+    m_commSettings.config_filename = filename.split("/").last();
+
     using boost::property_tree::ptree;
     using namespace boost::property_tree::xml_parser;
     ptree pt;
