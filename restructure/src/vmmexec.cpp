@@ -113,8 +113,6 @@ int main(int argc, char *argv[])
 
     cout << "______________" << endl;
     cout << "Testing Socket" << endl;
-    DataHandler data_handler;
-    data_handler.setDebug(dbg);
 
     SocketHandler socketHandler;
     socketHandler.setDebug(dbg);
@@ -125,18 +123,24 @@ int main(int argc, char *argv[])
     socketHandler.addSocket("DAQ", 1234);
     //socketHandler.addSocket("VMMAPP", 1236); // we only ever send to this, never binding
 
-
     
     Configuration configModule;
     configModule.setDebug(dbg);
+    
 
     RunModule runModule;
     runModule.setDebug(dbg).setDoWrite(writeNtuple);
+ //   runModule.LoadConfig(conf_handler).LoadSocket(socketHandler);
+ //   runModule.initializeDataHandler();
+
+ //   socketHandler.fecSocket().TestUDP();
+ //   return app.exec();
+
 
     if(!runDAQOnly) {
         // pass the configuration
         configModule.LoadConfig(conf_handler).LoadSocket(socketHandler);
-        configModule.SendConfig();
+        //configModule.SendConfig();
 
     }
 
@@ -144,11 +148,14 @@ int main(int argc, char *argv[])
         // pass the configuration
         runModule.LoadConfig(conf_handler).LoadSocket(socketHandler);
         runModule.initializeDataHandler();
-       // socketHandler.fecSocket().TestUDP();
+        runModule.setupOutputFiles(conf_handler.daqSettings(),
+            "/Users/dantrim/workarea/NSW/VMMReadout/restructure/build",
+            "testing.txt");
+        socketHandler.fecSocket().TestUDP();
 
         // pass the DAQ configuration
-        runModule.prepareRun();
-        runModule.ACQon();
+   //     runModule.prepareRun();
+   //     runModule.ACQon();
     }
 
     if(sendConfigOnly) {
