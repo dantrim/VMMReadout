@@ -24,7 +24,7 @@ VMMSocket::VMMSocket(QObject* parent) :
     m_socket(0)
 {
     m_socket = new QUdpSocket(this);
-    //connect(m_socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
+    connect(m_socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
 
 }
 // ----------------------------------------------------------------------- //
@@ -49,41 +49,44 @@ void VMMSocket::bindSocket(quint16 port, QAbstractSocket::BindMode mode)
     }
 }
 // ----------------------------------------------------------------------- //
+bool VMMSocket::hasPendingDatagrams()
+{
+    return m_socket->hasPendingDatagrams();
+}
+// ----------------------------------------------------------------------- //
+quint64 VMMSocket::pendingDatagramSize()
+{
+    return m_socket->pendingDatagramSize();
+}
+// ----------------------------------------------------------------------- //
+quint64 VMMSocket::readDatagram(char* data, quint64 maxSize,
+                    QHostAddress* address, quint16* port)
+{
+    return m_socket->readDatagram(data, maxSize, address, port);
+}
+// ----------------------------------------------------------------------- //
 void VMMSocket::TestUDP()
 {
-    cout << "TESTUDP" << endl;
     checkAndReconnect("VMMSocket::TestUDP");
 
     QByteArray data;
     data.append("hello from udp");
     data.append("  from socket named: ");
     data.append(QString::fromStdString(getName()));
-    writeDatagram(data, QHostAddress::LocalHost, 1234);
+    m_socket->writeDatagram(data, QHostAddress::LocalHost, 1234);
 
     closeAndDisconnect();
 }
 // ----------------------------------------------------------------------- //
-//void VMMSocket::readyRead()
-//{
-//    QHostAddress vmmip;
-//
-//    m_buffer.clear();
-//    
-//
-//    m_buffer.resize(m_socket->pendingDatagramSize());
-//    m_socket->readDatagram(m_buffer.data(), m_buffer.size(), &vmmip); 
-//    if(dbg()) cout << "VMMSocket::readyRead    Socket [" << getName()
-//                   << "] data received: " << m_buffer.toStdString()
-//                   << " from VMM with IP: " << vmmip.toString().toStdString()
-//                   << endl;
-//    cout << "Socket named " << getName() << " receiving data" << endl;
-//    cout << "Message from IP : " << vmmip.toString().toStdString() << endl;
-//    cout << "Message         : " << m_buffer.toStdString() << endl;
-//
-//    // emit a signal to show that this socket's
-//    // buffer is filled
-//    emit dataReady();
-//}
+void VMMSocket::readyRead()
+{
+    if(dbg()) cout << getName() << " socket receiving data..." << endl;
+
+    if     (getName()=="fec" || getName()=="FEC")
+        return; // not yet implemented
+    else if(getName()=="DAQ" || getName()=="daq")
+        emit dataReady();
+}
 // ----------------------------------------------------------------------- //
 quint64 VMMSocket::writeDatagram(const QByteArray& datagram,
             const QHostAddress& host, quint16 port)
@@ -207,7 +210,6 @@ void VMMSocket::Print()
     stringstream ss;
     ss << "   VMMSocket    Name          : " << getName() << endl;
     ss << "   VMMSocket    Bound to port : " << getBindingPort() << endl;
-    ss << "   VMMSocket    Status        :  Socket status not yet implemented"
-        << endl;
+    ss << "   VMMSocket    Status        : " << m_socket->state() << endl;
     cout << ss.str() << endl;
 }

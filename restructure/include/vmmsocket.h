@@ -18,6 +18,16 @@ class VMMSocket : public QObject
 
         VMMSocket& setDebug(bool dbg) { m_dbg = dbg; return *this; }
         bool dbg() { return m_dbg; }
+        void setName(std::string n = "") { m_name = n; }
+        std::string getName() { return m_name; }
+        void setBindingPort(quint16 port) { m_bindingPort = port; }
+        quint16 getBindingPort() { return m_bindingPort; }
+
+        // QUdpMethods
+        virtual bool hasPendingDatagrams();
+        virtual quint64 pendingDatagramSize();
+        virtual quint64 readDatagram(char* databuffer, quint64 maxSize,
+                QHostAddress* address = 0, quint16* port = 0);
 
         void bindSocket(quint16 port = 0,
             QAbstractSocket::BindMode mode = QAbstractSocket::DefaultForPlatform);
@@ -25,13 +35,10 @@ class VMMSocket : public QObject
                     quint16 port);
 
         void TestUDP();
-        void setName(std::string n = "") { m_name = n; }
-        std::string getName() { return m_name; }
-        void setBindingPort(quint16 port) { m_bindingPort = port; }
-        quint16 getBindingPort() { return m_bindingPort; }
 
         bool checkAndReconnect(std::string fromWhere="");
         void closeAndDisconnect(std::string fromWhere="");
+
 
         QUdpSocket& socket() { return *m_socket; }
         QByteArray buffer() { return m_buffer; }
@@ -44,6 +51,7 @@ class VMMSocket : public QObject
         void dataReady();
 
     public slots :
+        void readyRead();
 
     private :
         bool m_dbg;
