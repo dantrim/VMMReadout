@@ -116,7 +116,11 @@ int main(int argc, char *argv[])
 
     SocketHandler socketHandler;
     socketHandler.setDebug(dbg);
-    socketHandler.loadIPList(conf_handler.getIPList()).ping();
+    socketHandler.loadIPList(conf_handler.getIPList());
+    int pingOK = socketHandler.ping();
+    if(!pingOK)
+        return 1;
+
     if(dryrun)
         socketHandler.setDryRun();
     socketHandler.addSocket("FEC", 1235);

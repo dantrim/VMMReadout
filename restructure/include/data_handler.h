@@ -72,6 +72,8 @@ class DataHandler : public QObject
         VMMSocket& daqSocket() { return *m_daqSocket; }
         void decodeAndWriteData(const QByteArray& datagram);
         void resetDAQCount() { n_daqCnt = 0; }
+        void setIgnore16(bool doit) { m_ignore16 = doit; }
+        bool ignore16() { return m_ignore16; }
         int getDAQCount() { return n_daqCnt; } 
         void updateDAQCount() { n_daqCnt++; }
         void fillEventData();
@@ -84,6 +86,7 @@ class DataHandler : public QObject
         bool m_calibRun;
         bool m_writeNtuple;
         int n_daqCnt;
+        bool m_ignore16;
         VMMSocket *m_daqSocket;
 
         QFile m_daqFile;

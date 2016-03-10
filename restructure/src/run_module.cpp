@@ -113,6 +113,7 @@ RunModule& RunModule::initializeDataHandler()
     m_dataHandler->LoadDAQSocket(m_socketHandler->daqSocket());
     m_dataHandler->setDebug(dbg());
     m_dataHandler->setWriteNtuple(writeOut());
+    m_dataHandler->setIgnore16((bool)config().daqSettings().ignore16);
 
     return *this;
 }

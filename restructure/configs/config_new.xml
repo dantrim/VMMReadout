@@ -20,9 +20,10 @@
 		<trigger_period>3FFFE</trigger_period>
 		<acq_sync>100</acq_sync>
 		<acq_window>4096</acq_window>
-		<run_mode>pulser</run_mode>
+		<run_mode>external</run_mode>
 		<run_count>20</run_count>
-		<output_path>/Users/dantrim/Desktop/</output_path>
+        <ignore16>off</ignore16>
+        <output_path>/Users/dantrim/workarea/NSW/VMMReadout/restructure/</output_path>
 		<output_filename>tmp.txt</output_filename>
 	</trigger_daq>
 	<channel_map>

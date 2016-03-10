@@ -36,11 +36,11 @@ class SocketHandler : public QObject
         SocketHandler& loadIPList(const QString& iplist);
         QStringList& idList() { return m_idlist; }
         QStringList& ipList() { return m_iplist; }
-        SocketHandler& ping();
+        bool ping();
         bool pinged() { return m_pinged; }
 
         // update global command counter
-        void updateCommandCounter() { n_globalCommandCounter++; }
+        void updateCommandCounter();
         quint32 commandCounter() { return n_globalCommandCounter; }
 
         // add sockets
@@ -82,6 +82,11 @@ class SocketHandler : public QObject
 
         // retrieve socket by name
         VMMSocket& getSocket(std::string whichSocket="");
+
+    signals :
+        void commandCounterUpdated();
+
+    public slots :
 
 }; // class SocketHandler
 

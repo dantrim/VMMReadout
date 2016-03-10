@@ -25,6 +25,7 @@ DataHandler::DataHandler(QObject *parent) :
     m_calibRun(false),
     m_writeNtuple(false),
     n_daqCnt(0),
+    m_ignore16(false),
     m_daqSocket(0),
     m_fileOK(false),
     m_outDir(""),
@@ -502,12 +503,11 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
             q_final.append(q_2);
             q_final.append(q_1);
             uint outCharge_ = 0;
-            #warning IMPLEMENT INGORE16
-         //   if(q_final.right(4)=="0000" && m_ignore16) {
-         //       outCharge_ = 1025;
-         //   } else {
+            if(q_final.right(4)=="0000" && ignore16()) {
+                outCharge_ = 1025;
+            } else {
                 outCharge_ = q_final.toUInt(&ok,2);
-         //   }
+            }
             _pdo.push_back(outCharge_);
 
             // --- TAC / tdo --- //

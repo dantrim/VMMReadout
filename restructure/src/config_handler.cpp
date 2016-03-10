@@ -5,6 +5,7 @@
 // std/stl
 #include <exception>
 #include <sstream>
+using namespace std;
 
 // boost
 #include <boost/format.hpp>
@@ -51,7 +52,6 @@ ConfigHandler::ConfigHandler(QObject *parent) :
 void ConfigHandler::LoadConfig(const QString &filename)
 {
 
-    using namespace std;
     m_commSettings.config_filename = filename.split("/").last();
 
     using boost::property_tree::ptree;
@@ -76,7 +76,6 @@ void ConfigHandler::LoadConfig(const QString &filename)
 void ConfigHandler::LoadCommInfo(const boost::property_tree::ptree& pt)
 {
     using boost::property_tree::ptree;
-    using namespace std;
     try
     {
         CommInfo comm;
@@ -132,10 +131,16 @@ void ConfigHandler::LoadCommInfo(const boost::property_tree::ptree& pt)
 
 }
 //// ------------------------------------------------------------------------ //
+void ConfigHandler::LoadCommInfo(const CommInfo& info)
+{
+    m_commSettings = info;
+    m_commSettings.Print();
+    
+}
+//// ------------------------------------------------------------------------ //
 void ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptree& pt)
 {
     using boost::property_tree::ptree;
-    using namespace std;
     try
     {
         for(const auto& conf : pt.get_child("configuration")) {
@@ -388,7 +393,6 @@ void ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptree& pt)
 void ConfigHandler::LoadDAQConfig(const boost::property_tree::ptree& pt)
 {
     using boost::property_tree::ptree;
-    using namespace std;
 
     try
     {
@@ -411,6 +415,8 @@ void ConfigHandler::LoadDAQConfig(const boost::property_tree::ptree& pt)
             daq.run_mode = QString::fromStdString(rmode);
             // run count
             daq.run_count = conf.second.get<int>("run_count");
+            // ignore16 flag
+            daq.ignore16 = isOn(conf.second.get<string>("ignore16"));
             // output path
             string opath = conf.second.get<string>("output_path");
             daq.output_path = QString::fromStdString(opath);
@@ -434,7 +440,6 @@ void ConfigHandler::LoadDAQConfig(const boost::property_tree::ptree& pt)
 void ConfigHandler::LoadHDMIChannels(const boost::property_tree::ptree& pt)
 {
     using boost::property_tree::ptree;
-    using namespace std;
     using boost::format;
 
     stringstream ss;
@@ -510,7 +515,6 @@ void ConfigHandler::setHDMIChannelMap()
 void ConfigHandler::LoadVMMChannelConfig(const boost::property_tree::ptree& pt)
 {
     using boost::property_tree::ptree;
-    using namespace std;
     using boost::format;
 
     stringstream ss;
@@ -593,6 +597,26 @@ void ConfigHandler::LoadVMMChannelConfig(const boost::property_tree::ptree& pt)
 
 }
 //// ------------------------------------------------------------------------ //
+void ConfigHandler::LoadBoardConfiguration(GlobalSetting& global,
+                std::vector<ChannelMap>& chMap, std::vector<Channel>& channels)
+{
+    m_globalSettings = global;
+ //   bool ok;
+ //   QString tmp = "";
+ //   tmp.append(QString::number(global.direct_time_mode0));
+ //   tmp.append(QString::number(global.direct_time_mode1));
+ //   m_globalSettings.direct_time_mode = tmp.toUInt(&ok,2);
+    
+
+    for(int i = 0; i < (int)chMap.size(); i++) {
+        m_channelmap.push_back(chMap[i]);
+    }
+    for(int i = 0; i < (int)channels.size(); i++) {
+        m_channels.push_back(channels[i]);
+    }
+    m_globalSettings.Print();
+}
+//// ------------------------------------------------------------------------ //
 int ConfigHandler::isOn(std::string onOrOff, std::string where)
 {
     #warning SEE WHY LOGIC IS REVERSED FOR ENA/DIS
@@ -615,7 +639,6 @@ int ConfigHandler::isOn(std::string onOrOff, std::string where)
 //// ------------------------------------------------------------------------ //
 std::string ConfigHandler::isOnOrOff(int onOrOff)
 {
-    using namespace std;
 
     if(onOrOff==1)
         return "on";
@@ -630,7 +653,6 @@ std::string ConfigHandler::isOnOrOff(int onOrOff)
 //// ------------------------------------------------------------------------ //
 std::string ConfigHandler::isEnaOrDis(int enaOrDis)
 {
-    using namespace std;
 
     #warning SEE WHY LOGIC IS REVERSED FOR ENA/DIS
     if(enaOrDis==0)
@@ -655,7 +677,6 @@ std::string ConfigHandler::isEnaOrDis(int enaOrDis)
 //////////////////////////////////////////////////////////////////////////////
 void CommInfo::Print()
 {
-    using namespace std;
     stringstream ss;
 
     ss << "------------------------------------------------------" << endl;
@@ -693,7 +714,6 @@ void CommInfo::Print()
 //////////////////////////////////////////////////////////////////////////////
 void TriggerDAQ::Print()
 {
-    using namespace std;
     stringstream ss;
 
     ss << "------------------------------------------------------" << endl;
@@ -710,6 +730,8 @@ void TriggerDAQ::Print()
         << run_mode.toStdString() << endl;
     ss << "     > run count             : "
         << run_count << endl;
+    ss << "     > ignore16              : "
+        << ignore16 << endl;
     ss << "     > output path           : "
         << output_path.toStdString() << endl;
     ss << "     > output name           : "
@@ -725,7 +747,6 @@ void TriggerDAQ::Print()
 //////////////////////////////////////////////////////////////////////////////
 void GlobalSetting::Print()
 {
-    using namespace std;
     stringstream ss;
     ss << "------------------------------------------------------" << endl;
     ss << " Global Settings " << endl;
@@ -846,7 +867,6 @@ void GlobalSetting::Print()
 //////////////////////////////////////////////////////////////////////////////
 void Channel::Print()
 {
-    using namespace std; 
     stringstream ss;
     ss << "Channel " << number << endl;
     ss << "    > polarity         : " << polarity << endl;
@@ -869,7 +889,6 @@ void Channel::Print()
 //////////////////////////////////////////////////////////////////////////////
 void ChannelMap::Print()
 {
-    using namespace std;
     stringstream ss;
     ss << "HDMI " << hdmi_no << endl;
     ss << "    > switch          : " << ( on ? "on" : "off") << endl;

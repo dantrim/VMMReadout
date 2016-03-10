@@ -46,12 +46,13 @@ void SocketHandler::setDryRun()
 // ---------------------------------------------------------------------- //
 SocketHandler& SocketHandler::loadIPList(const QString& ipstring)
 {
+    m_iplist.clear();
     m_iplist << ipstring.split(",");
     cout << "Loaded " << m_iplist.size() << " IP addresses." << endl;
     return *this;
 }
 // ---------------------------------------------------------------------- //
-SocketHandler& SocketHandler::ping()
+bool SocketHandler::ping()
 {
     if(m_dbg) {
         cout << "INFO Pinging IP addresses" << endl;
@@ -59,7 +60,6 @@ SocketHandler& SocketHandler::ping()
     if(m_iplist.size()==0) {
         cout << "ERROR There are no IP addresses loaded. Please use" << endl;
         cout << "ERROR SocketHandler::loadIPList." << endl;
-        exit(1);
     }
     for(const auto& ip : m_iplist) {
         #ifdef __linux__
@@ -76,8 +76,6 @@ SocketHandler& SocketHandler::ping()
                 m_pinged = false;
                 cout << "ERROR Unable to successfully ping the IP "
                         << ip.toStdString() << endl;
-                cout << "ERROR >>> Exiting." << endl;
-                exit(1);
             } 
         }
         else {
@@ -85,7 +83,13 @@ SocketHandler& SocketHandler::ping()
         }
         //////////////////////////////////
     }
-    return *this;
+    return m_pinged;
+}
+// ---------------------------------------------------------------------- //
+void SocketHandler::updateCommandCounter()
+{
+    n_globalCommandCounter++;
+    emit commandCounterUpdated();
 }
 // ---------------------------------------------------------------------- //
 void SocketHandler::addSocket(std::string name, quint16 bindingPort,
@@ -257,6 +261,11 @@ VMMSocket& SocketHandler::getSocket(std::string whichSocket)
 // ---------------------------------------------------------------------- //
 void SocketHandler::Print()
 {
+    if(!m_fecSocket && !m_daqSocket && !m_vmmappSocket) {
+        cout << "-----------------------------------------" << endl;
+        cout << "SocketHandler currently holds no sockets" << endl;
+        cout << "-----------------------------------------" << endl;
+    }
     if(m_fecSocket)
         fecSocket().Print();
     if(m_daqSocket)

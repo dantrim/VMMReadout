@@ -52,6 +52,7 @@ struct TriggerDAQ {
     int acq_window;
     QString run_mode;
     int run_count;
+    int ignore16;
     QString output_path;
     QString output_filename;
 
@@ -150,12 +151,17 @@ class ConfigHandler : public QObject
 
         void LoadConfig(const QString &filename);
         void LoadCommInfo(const boost::property_tree::ptree& p);
+        void LoadCommInfo(const CommInfo& info);
         void LoadGlobalSettings(const boost::property_tree::ptree& p);
         void LoadDAQConfig(const boost::property_tree::ptree& p);
         void LoadHDMIChannels(const boost::property_tree::ptree& p);
         void setHDMIChannelMap();
         quint16 getHDMIChannelMap() { return m_channelMap; }
         void LoadVMMChannelConfig(const boost::property_tree::ptree& p);
+
+        // methods for GUI interaction
+        void LoadBoardConfiguration(GlobalSetting& global,
+             std::vector<ChannelMap>& chMap, std::vector<Channel>& channels);
 
         int isOn(std::string onOrOff = "", std::string where ="");
         std::string isOnOrOff(int onOrOf);
