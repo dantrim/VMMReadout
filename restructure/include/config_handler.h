@@ -24,6 +24,13 @@
 // structure for communication
 ////////////////////////////////////////////////////////
 struct CommInfo {
+
+    // IF YOU ADD ANY DATA MEMBERS
+    // YOU MUST ADD THEM TO THE
+    // CONSTRUCTOR!!!
+
+    CommInfo();
+
     // UDP info
     int fec_port;
     int daq_port;
@@ -46,6 +53,14 @@ struct CommInfo {
 // structure for DAQ configuration
 ////////////////////////////////////////////////////////
 struct TriggerDAQ {
+
+    // IF YOU ADD ANY DATA MEMBERS
+    // YOU MUST ADD THEM TO THE
+    // CONSTRUCTOR!!!
+
+    // default values
+    TriggerDAQ();
+
     int tp_delay;
     QString trigger_period;
     int acq_sync;
@@ -63,6 +78,14 @@ struct TriggerDAQ {
 // stucture for the global configuration settings
 ////////////////////////////////////////////////////////
 struct GlobalSetting {
+
+    // IF YOU ADD ANY DATA MEMBERS
+    // YOU MUST ADD THEM TO THE
+    // CONSTRUCTOR!!!
+
+    // initial values
+    GlobalSetting();
+
     int polarity;               //SP
     int leakage_current;
     int analog_tristates;
@@ -106,6 +129,13 @@ struct GlobalSetting {
 // HDMI containers
 ////////////////////////////////////////////////////////
 struct ChannelMap {
+
+    // IF YOU ADD ANY DATA MEMBERS
+    // YOU MUST ADD THEM TO THE
+    // CONSTRUCTOR!!!
+
+    ChannelMap();
+
     unsigned int hdmi_no;
     bool on;
     bool first;
@@ -120,6 +150,13 @@ struct ChannelMap {
 // vmm channels
 ////////////////////////////////////////////////////////
 struct Channel {
+
+    // IF YOU ADD ANY DATA MEMBERS
+    // YOU MUST ADD THEM TO THE
+    // CONSTRUCTOR!!!
+
+    Channel();
+
     unsigned int number;
     bool polarity;          //SP
     bool capacitance;       //SC
@@ -162,6 +199,7 @@ class ConfigHandler : public QObject
         // methods for GUI interaction
         void LoadBoardConfiguration(GlobalSetting& global,
              std::vector<ChannelMap>& chMap, std::vector<Channel>& channels);
+        void LoadTDAQConfiguration(TriggerDAQ& daq);
 
         int isOn(std::string onOrOff = "", std::string where ="");
         std::string isOnOrOff(int onOrOf);

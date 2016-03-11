@@ -29,15 +29,7 @@ Configuration::Configuration(QObject *parent) :
 // ------------------------------------------------------------------------ //
 Configuration& Configuration::LoadConfig(ConfigHandler& config)
 {
-    if(!m_configHandler)
-        m_configHandler = &config;
-    else {
-        cout << "Configuration::LoadConfig    WARNING ConfigHandler instance "
-             << "is already active (non-null)!" << endl;
-        cout << "Configuration::LoadConfig    WARNING Will keep first "
-             << "instance." << endl;
-        return *this;
-    }
+    m_configHandler = &config;
     if(!m_configHandler) {
         cout << "Configuration::LoadConfig    ERROR ConfigHandler instance null" << endl;
         exit(1);
@@ -248,53 +240,63 @@ void Configuration::fillGlobalRegisters(std::vector<QString>& global)
     sequence = 0;
 
     //peak_time
+    // [0,1]
     tmp = QString("%1").arg(config().globalSettings().peak_time,2,2,QChar('0'));
     spi1.replace(sequence, tmp.size(),tmp);
     sequence += tmp.size();
 
     //double leakage (doubles the leakage current)
+    // [2]
     spi1.replace(sequence,1,
         QString::number(config().globalSettings().double_leakage));
     sequence++;
 
     //gain
+    // [3,5]
     tmp = QString("%1").arg(config().globalSettings().gain,3,2,QChar('0'));
     spi1.replace(sequence,tmp.size(),tmp);
     sequence += tmp.size();
 
     //neighbor trigger
+    // [6]
     spi1.replace(sequence,1,
         QString::number(config().globalSettings().neighbor_trigger));
     sequence++;
 
     //direct outputs settings
+    // [7]
     spi1.replace(sequence,1,
         QString::number(config().globalSettings().direct_time_mode1));
     sequence++;
 
     //direct timing
+    // [8]
     spi1.replace(sequence,1,
         QString::number(config().globalSettings().direct_time));
     sequence++;
 
     //sub-hysteresis
+    // [9]
     spi1.replace(sequence,1,
         QString::number(config().globalSettings().sub_hysteresis));
     sequence++;
 
     //TAC slope adjustment
+    // [10,11]
     tmp = QString("%1").arg(config().globalSettings().tac_slope,
                                                             2,2,QChar('0'));
     spi1.replace(sequence,tmp.size(),tmp);
     sequence += tmp.size();
 
     //threshold DAC
+    // [12,21]
     tmp = QString("%1").arg(config().globalSettings().threshold_dac,
                                                             10,2,QChar('0'));
     spi1.replace(sequence,tmp.size(),tmp);
     sequence += tmp.size();
 
     //pulse DAC
+    // [22,31]
     tmp = QString("%1").arg(config().globalSettings().test_pulse_dac,
                                                             10,2,QChar('0'));
     spi1.replace(sequence,tmp.size(),tmp);
@@ -316,57 +318,68 @@ void Configuration::fillGlobalRegisters(std::vector<QString>& global)
     sequence = 16;
 
     //polarity
+    //[16]
     spi2.replace(sequence,1,
         QString::number(config().globalSettings().polarity));
     sequence++;
 
     //disable at peak
+    //[17]
     spi2.replace(sequence,1,
         QString::number(config().globalSettings().disable_at_peak));
     sequence++;
 
     //analog monitor to pdo
+    //[18]
     spi2.replace(sequence,1,
         QString::number(config().globalSettings().monitor_pdo_out));
     sequence++;
 
     //tdo buffer
+    //[19]
     spi2.replace(sequence,1,
         QString::number(config().globalSettings().out_buffer_tdo));
     sequence++;
 
     //pdo buffer
+    //[20]
     spi2.replace(sequence,1,
         QString::number(config().globalSettings().out_buffer_pdo));
     sequence++;
 
     //mo buffer
+    //[21]
     spi2.replace(sequence,1,
         QString::number(config().globalSettings().out_buffer_mo));
     sequence++;
 
     //leakage current
+    //[22]
     spi2.replace(sequence,1,
         QString::number(config().globalSettings().leakage_current));
     sequence++;
 
     //channel to monitor
+    //[23,28]
     tmp = QString("%1").arg(config().globalSettings().channel_monitor,
                                                     6,2,QChar('0'));
     spi2.replace(sequence,tmp.size(),tmp);
     sequence += tmp.size();
 
     //multiplexer
+    //[29]
     spi2.replace(sequence,1,
         QString::number(config().globalSettings().monitoring_control));
     sequence++;
 
     //ART enable
+    //[30]
     spi2.replace(sequence,1,
         QString::number(config().globalSettings().art));
     sequence++;
 
     //ART mode
+    //[31]
     spi2.replace(sequence,1,
         QString::number(config().globalSettings().art_mode));
     sequence++;

@@ -21,7 +21,9 @@ MainWindow::MainWindow(QWidget *parent) :
     vmmConfigModule(0),
     vmmRunModule(0),
     m_commOK(false),
-    m_configOK(false)
+    m_configOK(false),
+    m_tdaqOK(false),
+    m_runModeOK(false)
 {
 
     ui->setupUi(this);
@@ -45,6 +47,12 @@ MainWindow::MainWindow(QWidget *parent) :
     vmmSocketHandler = new SocketHandler();
     vmmSocketHandler->setDebug(true);
 
+    // set dry run for testing
+    cout << endl;
+    cout << " !! SOCKETHANDLER SET FOR DRY RUN !! " << endl;
+    cout << endl;
+    vmmSocketHandler->setDryRun();
+
     connect(vmmSocketHandler, SIGNAL(commandCounterUpdated()),
                                             this, SLOT(updateCounter()));
 
@@ -52,9 +60,31 @@ MainWindow::MainWindow(QWidget *parent) :
     vmmConfigModule->setDebug(true);
     vmmRunModule     = new RunModule();
     vmmRunModule->setDebug(true);
+    vmmRunModule->setDoWrite(ui->writeData->isChecked());
+
+    // load the things
+    vmmConfigModule->LoadConfig(*vmmConfigHandler);
+    vmmConfigModule->LoadSocket(*vmmSocketHandler);
+
+    vmmRunModule->LoadConfig(*vmmConfigHandler);
+    vmmRunModule->LoadSocket(*vmmSocketHandler);
 
     channelGridLayout = new QGridLayout(this);
     CreateChannelsFields();
+
+    /////////////////////////////////////////////////////////////////////
+    //-----------------------------------------------------------------//
+    // configure some of the widgets' styles and attributes
+    //-----------------------------------------------------------------//
+    /////////////////////////////////////////////////////////////////////
+
+    //trigger mode buttons
+    ui->trgPulser->setCheckable(true);
+    ui->trgExternal->setCheckable(true);
+
+    ////acquisition mode buttons
+    //ui->onACQ->setCheckable(true);
+    //ui->offACQ->setCheckable(true);
 
     /////////////////////////////////////////////////////////////////////
     //-----------------------------------------------------------------//
@@ -65,17 +95,48 @@ MainWindow::MainWindow(QWidget *parent) :
     // ~FSM preliminary
     connect(this, SIGNAL(checkFSM()), this, SLOT(updateFSM()));
 
-    // ping the boards
-    connect(ui->openConnection, SIGNAL(pressed()),
-                                            this, SLOT(Connect()));
-
-    // prepare the configuration to be sent
-    connect(ui->SendConfiguration, SIGNAL(pressed()),
-                                    this, SLOT(prepareAndSendBoardConfig()));
+    // ------------------------------------------------------ //
+    // ------- ~roughly in order of typical operation ------- //
+    // ------------------------------------------------------ //
 
     // set number of FECs
     connect(ui->numberOfFecs, SIGNAL(valueChanged(int)),
                                             this, SLOT(setNumberOfFecs(int)));
+
+    // ping the boards and connect sockets
+    connect(ui->openConnection, SIGNAL(pressed()),
+                                            this, SLOT(Connect()));
+
+    // prepare the board configuration and send
+    connect(ui->SendConfiguration, SIGNAL(pressed()),
+                                    this, SLOT(prepareAndSendBoardConfig()));
+
+    // prepare the T/DAQ configuration and send
+    connect(ui->setTrgAcqConst, SIGNAL(pressed()),
+                                    this, SLOT(prepareAndSendTDAQConfig()));
+
+    // set the run mode and send
+    connect(ui->trgPulser, SIGNAL(pressed()),
+                                    this, SLOT(setRunMode()));
+
+    connect(ui->trgExternal, SIGNAL(pressed()),
+                                    this, SLOT(setRunMode()));
+
+    // set data acquisition on/off
+    connect(ui->onACQ, SIGNAL(pressed()),
+                                    this, SLOT(setACQMode()));
+    connect(ui->offACQ, SIGNAL(pressed()),
+                                    this, SLOT(setACQMode()));
+
+
+    // ------------------------------------------------------ //
+    // ------------- remaining buttons/widgets -------------- //
+    // ------------------------------------------------------ //
+
+    // set write data or not and pass to runModule
+    connect(ui->writeData, SIGNAL(stateChanged(int)),
+                                    this, SLOT(setWriteData(int)));
+
 
 
     /////////////////////////////////////////////////////////////////////
@@ -86,6 +147,17 @@ MainWindow::MainWindow(QWidget *parent) :
     SetInitialState();
 }
 
+// ------------------------------------------------------------------------- //
+void MainWindow::keepButtonState(bool)
+{
+    if(QObject::sender() == ui->trgPulser) {
+
+        if(ui->trgPulser->isChecked()) {
+            ui->trgPulser->setDown(true);
+        }
+    }
+
+}
 // ------------------------------------------------------------------------- //
 MainWindow::~MainWindow()
 {
@@ -98,20 +170,82 @@ MainWindow::~MainWindow()
 // ------------------------------------------------------------------------- //
 void MainWindow::updateFSM()
 {
-    if(m_commOK && !m_configOK) {
+    if(m_commOK && !m_configOK && !m_tdaqOK && !m_runModeOK) {
         ui->SendConfiguration->setEnabled(true);
         ui->cmdlabel->setText("No\nConfig.");
     }
-    else if(m_commOK & m_configOK) {
-        ui->SendConfiguration->setEnabled(true);
-        ui->cmdlabel->setText(
-                QString::number(socketHandle().commandCounter()));
+    else if(m_commOK && m_configOK && !m_tdaqOK && !m_runModeOK) {
+        ui->setTrgAcqConst->setEnabled(true);
+    }
+    else if(m_commOK && m_configOK && m_tdaqOK && !m_runModeOK) {
+        ui->trgPulser->setEnabled(true);
+        ui->trgExternal->setEnabled(true);
+    }
+    else if(m_commOK && m_configOK && m_tdaqOK && m_runModeOK) {
+        ui->onACQ->setEnabled(true);
     }
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::updateCounter()
 {
     ui->cmdlabel->setText(QString::number(socketHandle().commandCounter()));
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::Connect()
+{
+    if(ui->numberOfFecs->value() == 0) {
+        ui->connectionLabel->setText("Select number of FECs");
+        ui->connectionLabel->setStyleSheet("background-color: light");
+        return;
+    }
+
+    // ------------------------------------------------- //
+    //  "comm info"
+    // ------------------------------------------------- //
+    CommInfo commInfo;
+
+    commInfo.fec_port       = FECPORT;
+    commInfo.daq_port       = DAQPORT;
+    commInfo.vmmasic_port   = VMMASICPORT;
+    commInfo.vmmapp_port    = VMMAPPPORT;
+    commInfo.s6_port        = S6PORT;
+
+    QString iplist = "";
+    QString separator = "";
+    for(int i = 0; i < ui->numberOfFecs->value(); i++) {
+        if(i==(ui->numberOfFecs->value()-1)) {
+            separator = "";
+        } else {
+            separator = ",";
+        }
+        iplist += ips[i] + separator;
+    }
+    commInfo.ip_list = iplist;
+
+    configHandle().LoadCommInfo(commInfo);
+    bool pingOK = socketHandle().loadIPList(iplist).ping();
+
+    if(pingOK) {
+        ui->connectionLabel->setText("all alive");
+        ui->connectionLabel->setStyleSheet("background-color: green");
+
+        ///////////////////////////////////////////////////////
+        // now that we know we are connected OK, add and bind
+        // the sockets
+        ///////////////////////////////////////////////////////
+        socketHandle().addSocket("FEC", FECPORT);
+        socketHandle().addSocket("DAQ", DAQPORT); 
+        
+
+    } else {
+        ui->connectionLabel->setText("ping failed"); 
+        ui->connectionLabel->setStyleSheet("background-color: lightGray");
+    }
+
+    m_commOK = pingOK;
+
+    emit checkFSM();
+
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::prepareAndSendBoardConfig()
@@ -148,6 +282,7 @@ void MainWindow::prepareAndSendBoardConfig()
     global.direct_time_mode0   = ui->stpp->currentIndex();
     global.direct_time_mode1   = ui->stot->currentIndex();
 
+    // build up the 2-bit word from the mode0 and mode1
     bool ok;
     QString tmp;
     tmp.append(QString::number(global.direct_time_mode0));
@@ -173,7 +308,7 @@ void MainWindow::prepareAndSendBoardConfig()
     // do this by hand
     for(int i = 0; i < 8; i++) {
         chm.hdmi_no = i;
-        if(i==0) {
+        if       (i==0) {
             chm.on     = (ui->hdmi1->isChecked() ? true : false);
             chm.first  = (ui->hdmi1_1->isChecked() ? true : false);
             chm.second = (ui->hdmi1_2->isChecked() ? true : false);
@@ -216,6 +351,7 @@ void MainWindow::prepareAndSendBoardConfig()
     vector<Channel> channels;
     for(int i = 0; i < 64; i++) {
         Channel ch;
+        ch.number           = i;
         ch.polarity         = VMMSPBool[i];
         ch.capacitance      = VMMSCBool[i];
         ch.leakage_current  = VMMSLBool[i];
@@ -231,11 +367,105 @@ void MainWindow::prepareAndSendBoardConfig()
 
     // global, chMap, channels
     configHandle().LoadBoardConfiguration(global, chMap, channels);
-    configModule().LoadConfig(configHandle()).LoadSocket(socketHandle()); 
+  //  configModule().LoadConfig(configHandle()).LoadSocket(socketHandle()); 
 
+    // send the configuration to the FEC/boards
+    cout << endl;
+    cout << " !! NOT SENDING CONFIG !! " << endl;
+    cout << endl;
+    socketHandle().updateCommandCounter();
+    configModule().SendConfig();
+
+    // toggle/status update
     m_configOK = true;
-
     emit checkFSM();
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::prepareAndSendTDAQConfig()
+{
+
+    TriggerDAQ daq;
+
+    daq.tp_delay        = ui->pulserDelay->value();
+    daq.trigger_period  = ui->trgPeriod->text();
+    daq.acq_sync        = ui->acqSync->value();
+    daq.acq_window      = ui->acqWindow->value();
+    daq.run_mode        = "pulser"; // dummy here
+    daq.run_count       = 20; // dummy here
+    daq.ignore16        = ui->ignore16->isChecked();
+    daq.output_path     = ui->runDirectoryField->text();
+
+    configHandle().LoadTDAQConfiguration(daq);
+    // configModule().LoadConfig(configHandle());
+
+    // send the word
+    runModule().setTriggerAcqConstants(); 
+
+    // toggle/status update
+    m_tdaqOK = true;
+    emit checkFSM();
+    
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::setRunMode()
+{
+    QString rmode = "";
+
+    // run mode = pulser
+    if(QObject::sender() == ui->trgPulser) {
+
+            ui->trgPulser->setDown(true);
+            ui->trgExternal->setChecked(false);
+            //ui->trgPulser->blockSignals(true);
+            //ui->trgExternal->blockSignals(false);
+        rmode = "pulser";
+    }
+    // run mode = external
+    else if(QObject::sender() == ui->trgExternal) {
+            ui->trgPulser->setChecked(false);
+            ui->trgExternal->setDown(true);
+        rmode = "external";
+    }
+
+    TriggerDAQ daq;
+    daq.tp_delay        = ui->pulserDelay->value();
+    daq.trigger_period  = ui->trgPeriod->text();
+    daq.acq_sync        = ui->acqSync->value();
+    daq.acq_window      = ui->acqWindow->value();
+    daq.run_mode        = rmode;
+    daq.run_count       = 20; // dummy here
+    daq.ignore16        = ui->ignore16->isChecked();
+    daq.output_path     = ui->runDirectoryField->text();
+
+    // update the config handle with the new DAQ object
+    configHandle().LoadTDAQConfiguration(daq);
+
+    // send the words
+    runModule().setTriggerMode();
+
+    // update status
+    m_runModeOK = true;
+    emit checkFSM();
+
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::setACQMode()
+{
+
+    // acquisition ON
+    if(QObject::sender() == ui->onACQ) {
+        ui->offACQ->setChecked(false);
+        ui->onACQ->setStyleSheet("color: white");
+        ui->offACQ->setStyleSheet("color: black");
+        runModule().ACQon();
+    }
+    // acquisition OFF
+    else if(QObject::sender() == ui->offACQ) {
+        ui->onACQ->setChecked(false);
+        ui->onACQ->setStyleSheet("color: black");
+        ui->offACQ->setStyleSheet("color: white");
+        runModule().ACQoff();
+    }
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::setNumberOfFecs(int)
@@ -251,6 +481,11 @@ void MainWindow::setNumberOfFecs(int)
     ui->setVMMs->addItem("All");
     ui->setVMMs->setCurrentIndex(ui->setVMMs->currentIndex()+1);
 
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::setWriteData(int)
+{
+    runModule().setDoWrite(ui->writeData->isChecked());
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::SetInitialState()
@@ -425,86 +660,95 @@ void MainWindow::CreateChannelsFields()
             VMMSDVoltage[i]->addItem(counter.setNum(j)+" mV");
         }
 
-    VMMSZ010bCBox[i] = new QComboBox(ui->tab_3);
-    VMMSZ010bCBox[i]->setFixedSize(50,20);
-    VMMSZ010bCBox[i]->setFont(Font);
+        VMMSZ010bCBox[i] = new QComboBox(ui->tab_3);
+        VMMSZ010bCBox[i]->setFixedSize(50,20);
+        VMMSZ010bCBox[i]->setFont(Font);
 
-    VMMSZ08bCBox[i] = new QComboBox(ui->tab_3);
-    VMMSZ08bCBox[i]->setFixedSize(50,20);
-    VMMSZ08bCBox[i]->setFont(Font);
+        VMMSZ08bCBox[i] = new QComboBox(ui->tab_3);
+        VMMSZ08bCBox[i]->setFixedSize(50,20);
+        VMMSZ08bCBox[i]->setFont(Font);
 
-    VMMSZ06bCBox[i] = new QComboBox(ui->tab_3);
-    VMMSZ06bCBox[i]->setFixedSize(50,20);
-    VMMSZ06bCBox[i]->setFont(Font);
+        VMMSZ06bCBox[i] = new QComboBox(ui->tab_3);
+        VMMSZ06bCBox[i]->setFixedSize(50,20);
+        VMMSZ06bCBox[i]->setFont(Font);
 
-    for(int j=0;j<32;j++){
-        VMMSZ010bCBox[i]->addItem(counter.setNum(j)+" ns");
-    }
-    for(int j=0;j<16;j++){
-        VMMSZ08bCBox[i]->addItem(counter.setNum(j)+" ns");
-    }
-    for(int j=0;j<8;j++){
-        VMMSZ06bCBox[i]->addItem(counter.setNum(j)+" ns");
-    }
-
-    VMMNegativeButton[i] = new QPushButton(ui->tab_3);
-    VMMNegativeButton[i]->setText("negative");
-
-    VMMChannel[i]->setFixedSize(20,18);
-    VMMNegativeButton[i]->setFixedSize(40,18);
-    VMMNegativeButton[i]->setFont(Font);
-    QLabel *spacer = new QLabel(" ");
-
-    if(i<32){
-        if(i==0){
-            channelGridLayout->addWidget(SPLabel,     i,2, Qt::AlignCenter);
-            channelGridLayout->addWidget(SCLabel,     i,3, Qt::AlignCenter);
-            channelGridLayout->addWidget(SLLabel,     i,4, Qt::AlignCenter);
-            channelGridLayout->addWidget(STLabel,     i,5, Qt::AlignCenter);
-            channelGridLayout->addWidget(SMLabel,     i,6, Qt::AlignCenter);
-            channelGridLayout->addWidget(SDLabel,     i,7, Qt::AlignCenter);
-            channelGridLayout->addWidget(SMXLabel,    i,8, Qt::AlignCenter);
-            channelGridLayout->addWidget(SZ010bLabel, i,9, Qt::AlignCenter);
-            channelGridLayout->addWidget(SZ08bLabel,  i,10, Qt::AlignCenter);
-            channelGridLayout->addWidget(SZ06bLabel,  i,11, Qt::AlignCenter);
-
-            channelGridLayout->addWidget(SPLabel2,     i,14, Qt::AlignCenter);
-            channelGridLayout->addWidget(SCLabel2,     i,15, Qt::AlignCenter);
-            channelGridLayout->addWidget(SLLabel2,     i,16, Qt::AlignCenter);
-            channelGridLayout->addWidget(STLabel2,     i,17, Qt::AlignCenter);
-            channelGridLayout->addWidget(SMLabel2,     i,18, Qt::AlignCenter);
-            channelGridLayout->addWidget(SDLabel2,     i,19, Qt::AlignCenter);
-            channelGridLayout->addWidget(SMXLabel2,    i,20, Qt::AlignCenter);
-            channelGridLayout->addWidget(SZ010bLabel2, i,21, Qt::AlignCenter);
-            channelGridLayout->addWidget(SZ08bLabel2,  i,22, Qt::AlignCenter);
-            channelGridLayout->addWidget(SZ06bLabel2,  i,23, Qt::AlignCenter);
+     
+        for(int j=0;j<32;j++){
+            VMMSZ010bCBox[i]->addItem(counter.setNum(j)+" ns");
         }
-        channelGridLayout->addWidget(VMMChannel[i],         i+1,1, Qt::AlignCenter);
-        channelGridLayout->addWidget(VMMNegativeButton[i],  i+1,2, Qt::AlignCenter);
-        channelGridLayout->addWidget(VMMSC[i],              i+1,3, Qt::AlignCenter);
-        channelGridLayout->addWidget(VMMSL[i],              i+1,4, Qt::AlignCenter);
-        channelGridLayout->addWidget(VMMST[i],              i+1,5, Qt::AlignCenter);
-        channelGridLayout->addWidget(VMMSM[i],              i+1,6, Qt::AlignCenter);
-        channelGridLayout->addWidget(VMMSDVoltage[i],       i+1,7, Qt::AlignCenter);
-        channelGridLayout->addWidget(VMMSMX[i],             i+1,8, Qt::AlignCenter);
-        channelGridLayout->addWidget(VMMSZ010bCBox[i],      i+1,9, Qt::AlignCenter);
-        channelGridLayout->addWidget(VMMSZ08bCBox[i],       i+1,10, Qt::AlignCenter);
-        channelGridLayout->addWidget(VMMSZ06bCBox[i],       i+1,11, Qt::AlignCenter);
-        channelGridLayout->addWidget(spacer,                 i+1,12, Qt::AlignCenter);
-    }
-    else{
-        channelGridLayout->addWidget(VMMChannel[i],         i-32+1,13, Qt::AlignCenter);
-        channelGridLayout->addWidget(VMMNegativeButton[i],  i-32+1,14, Qt::AlignCenter);
-        channelGridLayout->addWidget(VMMSC[i],              i-32+1,15, Qt::AlignCenter);
-        channelGridLayout->addWidget(VMMSL[i],              i-32+1,16, Qt::AlignCenter);
-        channelGridLayout->addWidget(VMMST[i],              i-32+1,17, Qt::AlignCenter);
-        channelGridLayout->addWidget(VMMSM[i],              i-32+1,18, Qt::AlignCenter);
-        channelGridLayout->addWidget(VMMSDVoltage[i],       i-32+1,19, Qt::AlignCenter);
-        channelGridLayout->addWidget(VMMSMX[i],             i-32+1,20, Qt::AlignCenter);
-        channelGridLayout->addWidget(VMMSZ010bCBox[i],      i-32+1,21, Qt::AlignCenter);
-        channelGridLayout->addWidget(VMMSZ08bCBox[i],       i-32+1,22, Qt::AlignCenter);
-        channelGridLayout->addWidget(VMMSZ06bCBox[i],       i-32+1,23, Qt::AlignCenter);
-    }
+        for(int j=0;j<16;j++){
+            VMMSZ08bCBox[i]->addItem(counter.setNum(j)+" ns");
+        }
+        for(int j=0;j<8;j++){
+            VMMSZ06bCBox[i]->addItem(counter.setNum(j)+" ns");
+        }
+
+       // set initial ADC values
+        VMMSZ010bCBox[i]->setCurrentIndex(0);
+        VMMSZ010bValue[i]=0;
+        VMMSZ08bCBox[i]->setCurrentIndex(0);
+        VMMSZ08bValue[i]=0;
+        VMMSZ06bCBox[i]->setCurrentIndex(0);
+        VMMSZ06bValue[i]=0;
+
+        VMMNegativeButton[i] = new QPushButton(ui->tab_3);
+        VMMNegativeButton[i]->setText("negative");
+
+        VMMChannel[i]->setFixedSize(20,18);
+        VMMNegativeButton[i]->setFixedSize(40,18);
+        VMMNegativeButton[i]->setFont(Font);
+        QLabel *spacer = new QLabel(" ");
+
+        if(i<32){
+            if(i==0){
+                channelGridLayout->addWidget(SPLabel,     i,2, Qt::AlignCenter);
+                channelGridLayout->addWidget(SCLabel,     i,3, Qt::AlignCenter);
+                channelGridLayout->addWidget(SLLabel,     i,4, Qt::AlignCenter);
+                channelGridLayout->addWidget(STLabel,     i,5, Qt::AlignCenter);
+                channelGridLayout->addWidget(SMLabel,     i,6, Qt::AlignCenter);
+                channelGridLayout->addWidget(SDLabel,     i,7, Qt::AlignCenter);
+                channelGridLayout->addWidget(SMXLabel,    i,8, Qt::AlignCenter);
+                channelGridLayout->addWidget(SZ010bLabel, i,9, Qt::AlignCenter);
+                channelGridLayout->addWidget(SZ08bLabel,  i,10, Qt::AlignCenter);
+                channelGridLayout->addWidget(SZ06bLabel,  i,11, Qt::AlignCenter);
+
+                channelGridLayout->addWidget(SPLabel2,     i,14, Qt::AlignCenter);
+                channelGridLayout->addWidget(SCLabel2,     i,15, Qt::AlignCenter);
+                channelGridLayout->addWidget(SLLabel2,     i,16, Qt::AlignCenter);
+                channelGridLayout->addWidget(STLabel2,     i,17, Qt::AlignCenter);
+                channelGridLayout->addWidget(SMLabel2,     i,18, Qt::AlignCenter);
+                channelGridLayout->addWidget(SDLabel2,     i,19, Qt::AlignCenter);
+                channelGridLayout->addWidget(SMXLabel2,    i,20, Qt::AlignCenter);
+                channelGridLayout->addWidget(SZ010bLabel2, i,21, Qt::AlignCenter);
+                channelGridLayout->addWidget(SZ08bLabel2,  i,22, Qt::AlignCenter);
+                channelGridLayout->addWidget(SZ06bLabel2,  i,23, Qt::AlignCenter);
+            }
+            channelGridLayout->addWidget(VMMChannel[i],         i+1,1, Qt::AlignCenter);
+            channelGridLayout->addWidget(VMMNegativeButton[i],  i+1,2, Qt::AlignCenter);
+            channelGridLayout->addWidget(VMMSC[i],              i+1,3, Qt::AlignCenter);
+            channelGridLayout->addWidget(VMMSL[i],              i+1,4, Qt::AlignCenter);
+            channelGridLayout->addWidget(VMMST[i],              i+1,5, Qt::AlignCenter);
+            channelGridLayout->addWidget(VMMSM[i],              i+1,6, Qt::AlignCenter);
+            channelGridLayout->addWidget(VMMSDVoltage[i],       i+1,7, Qt::AlignCenter);
+            channelGridLayout->addWidget(VMMSMX[i],             i+1,8, Qt::AlignCenter);
+            channelGridLayout->addWidget(VMMSZ010bCBox[i],      i+1,9, Qt::AlignCenter);
+            channelGridLayout->addWidget(VMMSZ08bCBox[i],       i+1,10, Qt::AlignCenter);
+            channelGridLayout->addWidget(VMMSZ06bCBox[i],       i+1,11, Qt::AlignCenter);
+            channelGridLayout->addWidget(spacer,                 i+1,12, Qt::AlignCenter);
+        }
+        else{
+            channelGridLayout->addWidget(VMMChannel[i],         i-32+1,13, Qt::AlignCenter);
+            channelGridLayout->addWidget(VMMNegativeButton[i],  i-32+1,14, Qt::AlignCenter);
+            channelGridLayout->addWidget(VMMSC[i],              i-32+1,15, Qt::AlignCenter);
+            channelGridLayout->addWidget(VMMSL[i],              i-32+1,16, Qt::AlignCenter);
+            channelGridLayout->addWidget(VMMST[i],              i-32+1,17, Qt::AlignCenter);
+            channelGridLayout->addWidget(VMMSM[i],              i-32+1,18, Qt::AlignCenter);
+            channelGridLayout->addWidget(VMMSDVoltage[i],       i-32+1,19, Qt::AlignCenter);
+            channelGridLayout->addWidget(VMMSMX[i],             i-32+1,20, Qt::AlignCenter);
+            channelGridLayout->addWidget(VMMSZ010bCBox[i],      i-32+1,21, Qt::AlignCenter);
+            channelGridLayout->addWidget(VMMSZ08bCBox[i],       i-32+1,22, Qt::AlignCenter);
+            channelGridLayout->addWidget(VMMSZ06bCBox[i],       i-32+1,23, Qt::AlignCenter);
+        }
     } // i
 
     ui->tab_3->setGeometry(QRect(620,12,730,700));
@@ -890,53 +1134,5 @@ void MainWindow::updateChannelADCs(int index)
             VMMSZ06bValue[i]=index;
         }
     }
-}
-// ------------------------------------------------------------------------- //
-void MainWindow::Connect()
-{
-    if(ui->numberOfFecs->value() == 0) {
-        ui->connectionLabel->setText("Select number of FECs");
-        ui->connectionLabel->setStyleSheet("background-color: light");
-        return;
-    }
-
-    // ------------------------------------------------- //
-    //  "comm info"
-    // ------------------------------------------------- //
-    CommInfo commInfo;
-
-    commInfo.fec_port       = FECPORT;
-    commInfo.daq_port       = DAQPORT;
-    commInfo.vmmasic_port   = VMMASICPORT;
-    commInfo.vmmapp_port    = VMMAPPPORT;
-    commInfo.s6_port        = S6PORT;
-
-    QString iplist = "";
-    QString separator = "";
-    for(int i = 0; i < ui->numberOfFecs->value(); i++) {
-        if(i==(ui->numberOfFecs->value()-1)) {
-            separator = "";
-        } else {
-            separator = ",";
-        }
-        iplist += ips[i] + separator;
-    }
-    commInfo.ip_list = iplist;
-
-    configHandle().LoadCommInfo(commInfo);
-    bool pingOK = socketHandle().loadIPList(iplist).ping();
-
-    if(pingOK) {
-        ui->connectionLabel->setText("all alive");
-        ui->connectionLabel->setStyleSheet("background-color: green");
-    } else {
-        ui->connectionLabel->setText("ping failed"); 
-        ui->connectionLabel->setStyleSheet("background-color: lightGray");
-    }
-
-    m_commOK = pingOK;
-
-    emit checkFSM();
-
 }
 

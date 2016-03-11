@@ -363,7 +363,7 @@ void RunModule::setTriggerMode()
         ///////////////////////////
         out << (quint32) 0 //[12,15]
             << (quint32) 0; //[16,19]
-        if(externalTrig()) {
+        if(config().daqSettings().run_mode == "external"){
             out << (quint32) 4; //[20,23]
             if(dbg()) cout << "RunModule::setTriggerMode    "
                            << "External trigger enabled" << endl;

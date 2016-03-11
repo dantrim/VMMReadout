@@ -3029,78 +3029,127 @@ p, li { white-space: pre-wrap; }
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QPushButton" name="trgExternal">
       <property name="geometry">
        <rect>
         <x>60</x>
-        <y>20</y>
+        <y>80</y>
         <width>79</width>
-        <height>131</height>
+        <height>26</height>
        </rect>
       </property>
-      <layout class="QGridLayout" name="gridLayout_10">
-       <item row="0" column="0">
-        <widget class="QPushButton" name="setTrgAcqConst">
-         <property name="font">
-          <font>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Set</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QPushButton" name="trgPulser">
-         <property name="font">
-          <font>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Pulser</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QPushButton" name="trgExternal">
-         <property name="font">
-          <font>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>External</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QPushButton" name="onACQ">
-         <property name="font">
-          <font>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>ACQ On</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0">
-        <widget class="QPushButton" name="offACQ">
-         <property name="font">
-          <font>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>ACQ Off</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <property name="font">
+       <font>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="focusPolicy">
+       <enum>Qt::NoFocus</enum>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="text">
+       <string>External</string>
+      </property>
+      <property name="autoDefault">
+       <bool>false</bool>
+      </property>
      </widget>
+     <widget class="QPushButton" name="onACQ">
+      <property name="geometry">
+       <rect>
+        <x>60</x>
+        <y>110</y>
+        <width>79</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="focusPolicy">
+       <enum>Qt::NoFocus</enum>
+      </property>
+      <property name="text">
+       <string>ACQ On</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="offACQ">
+      <property name="geometry">
+       <rect>
+        <x>60</x>
+        <y>130</y>
+        <width>79</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="focusPolicy">
+       <enum>Qt::NoFocus</enum>
+      </property>
+      <property name="text">
+       <string>ACQ Off</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="setTrgAcqConst">
+      <property name="geometry">
+       <rect>
+        <x>60</x>
+        <y>30</y>
+        <width>79</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Set</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="trgPulser">
+      <property name="geometry">
+       <rect>
+        <x>60</x>
+        <y>60</y>
+        <width>79</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="focusPolicy">
+       <enum>Qt::NoFocus</enum>
+      </property>
+      <property name="text">
+       <string>Pulser</string>
+      </property>
+     </widget>
+     <zorder>acqWindow</zorder>
+     <zorder>acqSync</zorder>
+     <zorder>pulserDelay</zorder>
+     <zorder>label_5</zorder>
+     <zorder>label_14</zorder>
+     <zorder>label_15</zorder>
+     <zorder>trgPeriod</zorder>
+     <zorder>label_18</zorder>
+     <zorder>layoutWidget</zorder>
+     <zorder>trgExternal</zorder>
+     <zorder>loadDAQXMLFile</zorder>
+     <zorder>onACQ</zorder>
+     <zorder>offACQ</zorder>
     </widget>
     <widget class="QGroupBox" name="groupBox_3">
      <property name="geometry">
@@ -3255,7 +3304,7 @@ p, li { white-space: pre-wrap; }
        <string>2  </string>
       </property>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -3582,37 +3631,14 @@ p, li { white-space: pre-wrap; }
        </item>
       </layout>
      </widget>
+     <zorder>layoutWidget</zorder>
      <zorder>setMask</zorder>
      <zorder>linkPB</zorder>
      <zorder>resetLinks</zorder>
      <zorder>label_17</zorder>
-     <zorder>hdmi7</zorder>
-     <zorder>hdmi7_1</zorder>
-     <zorder>hdmi7_2</zorder>
-     <zorder>hdmi8</zorder>
-     <zorder>hdmi8_1</zorder>
-     <zorder>hdmi8_2</zorder>
      <zorder>label_11</zorder>
      <zorder>label_12</zorder>
      <zorder>label_13</zorder>
-     <zorder>hdmi1</zorder>
-     <zorder>hdmi1_1</zorder>
-     <zorder>hdmi1_2</zorder>
-     <zorder>hdmi2</zorder>
-     <zorder>hdmi2_1</zorder>
-     <zorder>hdmi2_2</zorder>
-     <zorder>hdmi3</zorder>
-     <zorder>hdmi3_1</zorder>
-     <zorder>hdmi4</zorder>
-     <zorder>hdmi4_1</zorder>
-     <zorder>hdmi4_2</zorder>
-     <zorder>hdmi6</zorder>
-     <zorder>hdmi6_1</zorder>
-     <zorder>hdmi6_2</zorder>
-     <zorder>hdmi5</zorder>
-     <zorder>hdmi5_1</zorder>
-     <zorder>hdmi5_2</zorder>
-     <zorder>hdmi4_2</zorder>
     </widget>
     <widget class="QComboBox" name="evbld_mode">
      <property name="geometry">
@@ -5241,8 +5267,6 @@ p, li { white-space: pre-wrap; }
        </item>
       </layout>
      </widget>
-     <zorder>groupBox_9</zorder>
-     <zorder></zorder>
     </widget>
     <widget class="QWidget" name="tab_2">
      <property name="layoutDirection">

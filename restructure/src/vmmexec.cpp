@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
     if(!runDAQOnly) {
         // pass the configuration
         configModule.LoadConfig(conf_handler).LoadSocket(socketHandler);
-        //configModule.SendConfig();
+        configModule.SendConfig();
 
     }
 
@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
         socketHandler.fecSocket().TestUDP();
 
         // pass the DAQ configuration
-   //     runModule.prepareRun();
+        runModule.prepareRun();
    //     runModule.ACQon();
     }
 

@@ -139,6 +139,8 @@ class MainWindow : public QMainWindow
 
         bool m_commOK;
         bool m_configOK;
+        bool m_tdaqOK;
+        bool m_runModeOK;
 
     signals :
         void checkFSM();
@@ -153,8 +155,22 @@ class MainWindow : public QMainWindow
         // send the board configuration
         void prepareAndSendBoardConfig();
 
+        // send the t/daq configuration
+        void prepareAndSendTDAQConfig();
+
+        // set the run mode and send
+        void setRunMode();
+
+        void keepButtonState(bool);
+
+        // set the acquisition mode
+        void setACQMode();
+
         // number of FECs
         void setNumberOfFecs(int);
+
+        // writeData check box
+        void setWriteData(int);
 
         // channel fields
         void updateChannelState();

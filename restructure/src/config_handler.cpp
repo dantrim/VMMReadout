@@ -579,7 +579,7 @@ void ConfigHandler::LoadVMMChannelConfig(const boost::property_tree::ptree& pt)
                 // 6bADC time set
                 chan.s6bitADC = conf.second.get<int>("s06bADC_time_set");
 
-                //chan.Print();
+                chan.Print();
                 m_channels.push_back(chan);
 
             }
@@ -608,13 +608,25 @@ void ConfigHandler::LoadBoardConfiguration(GlobalSetting& global,
  //   m_globalSettings.direct_time_mode = tmp.toUInt(&ok,2);
     
 
+    m_channelmap.clear();
     for(int i = 0; i < (int)chMap.size(); i++) {
         m_channelmap.push_back(chMap[i]);
     }
+    // build the HDMI channel map bit word
+    setHDMIChannelMap();
+
+    m_channels.clear();
     for(int i = 0; i < (int)channels.size(); i++) {
         m_channels.push_back(channels[i]);
+        m_channels[i].Print();
     }
     m_globalSettings.Print();
+}
+//// ------------------------------------------------------------------------ //
+void ConfigHandler::LoadTDAQConfiguration(TriggerDAQ& daq)
+{
+    m_daqSettings = daq; 
+   // m_daqSettings.Print();
 }
 //// ------------------------------------------------------------------------ //
 int ConfigHandler::isOn(std::string onOrOff, std::string where)
@@ -675,6 +687,21 @@ std::string ConfigHandler::isEnaOrDis(int enaOrDis)
 //  CommInfo
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
+CommInfo::CommInfo()
+{
+    fec_port = 6007;
+    daq_port = 6006;
+    vmmasic_port = 6603;
+    vmmapp_port = 6600;
+    s6_port = 6602;
+
+    config_filename = "";
+    config_version = "";
+    vmm_id_list = "";
+    ip_list = "";
+    comment = "None";
+    debug = false;
+}
 void CommInfo::Print()
 {
     stringstream ss;
@@ -712,6 +739,19 @@ void CommInfo::Print()
 //  TriggerDAQ
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
+TriggerDAQ::TriggerDAQ()
+{
+    tp_delay = 81;
+    trigger_period = "3FFFE";
+    acq_sync = 100;
+    acq_window = 4096;
+    run_mode = "pulser";
+    run_count = 20;
+    ignore16 = false;
+    output_path = "";
+    output_filename = "binary_dump.txt";
+
+}
 void TriggerDAQ::Print()
 {
     stringstream ss;
@@ -745,6 +785,43 @@ void TriggerDAQ::Print()
 //  GlobalSetting
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
+GlobalSetting::GlobalSetting()
+{
+    polarity            = 0;
+    leakage_current     = 1;
+    analog_tristates    = 0;
+    double_leakage      = 1;
+    gain                = 2;
+    peak_time           = 0;
+    neighbor_trigger    = 0;
+    tac_slope           = 0;
+    disable_at_peak     = 0;
+    art                 = 1;
+    art_mode            = 0; 
+    dual_clock_art      = 0;
+    out_buffer_mo       = 0;
+    out_buffer_pdo      = 0;
+    out_buffer_tdo      = 0;
+    channel_monitor     = 0;
+    monitoring_control  = 1;
+    monitor_pdo_out     = 0;
+    adcs                = 1;
+    sub_hysteresis      = 0;
+    direct_time         = 0;
+    direct_time_mode    = 1;
+    direct_time_mode0   = 0;
+    direct_time_mode1   = 1;
+    conv_mode_8bit      = 1;
+    enable_6bit         = 0;
+    adc_10bit           = 0; 
+    adc_8bit            = 0;
+    adc_6bit            = 0;
+    dual_clock_data     = 0;
+    dual_clock_6bit     = 0;
+    threshold_dac       = 200;
+    test_pulse_dac      = 300;
+
+}
 void GlobalSetting::Print()
 {
     stringstream ss;
@@ -865,6 +942,20 @@ void GlobalSetting::Print()
 //  Channel
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
+Channel::Channel()
+{
+    number              = 0;
+    polarity            = 0;
+    capacitance         = 0;
+    leakage_current     = 0;
+    test_pulse          = 0;
+    hidden_mode         = 0;
+    trim                = 0;
+    monitor             = 0;
+    s10bitADC           = 0;
+    s8bitADC            = 0;
+    s6bitADC            = 0;
+}
 void Channel::Print()
 {
     stringstream ss;
@@ -887,6 +978,13 @@ void Channel::Print()
 //  ChannelMap
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
+ChannelMap::ChannelMap()
+{
+    hdmi_no = 0;
+    on = false;
+    first = false;
+    second = false;
+}
 void ChannelMap::Print()
 {
     stringstream ss;
