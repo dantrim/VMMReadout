@@ -125,6 +125,10 @@ class MainWindow : public QMainWindow
     private:
         Ui::MainWindow *ui;
 
+        // sets the GUI to whatever state
+        // the ConfigHandle object is in
+        void updateConfigState();
+
         const int FECPORT;
         const int DAQPORT;
         const int VMMASICPORT;
@@ -141,6 +145,7 @@ class MainWindow : public QMainWindow
         bool m_configOK;
         bool m_tdaqOK;
         bool m_runModeOK;
+        QString m_acqMode;
 
     signals :
         void checkFSM();
@@ -165,6 +170,12 @@ class MainWindow : public QMainWindow
 
         // set the acquisition mode
         void setACQMode();
+
+        // load a configuration from an XML
+        void loadConfigurationFromFile();
+
+        // write configuration to an XML file
+        void writeConfigurationToFile();
 
         // number of FECs
         void setNumberOfFecs(int);

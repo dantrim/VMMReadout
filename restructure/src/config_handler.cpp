@@ -59,12 +59,20 @@ void ConfigHandler::LoadConfig(const QString &filename)
     ptree pt;
     read_xml(filename.toStdString(), pt, trim_whitespace | no_comments);
 
-    LoadCommInfo(pt);
-    LoadGlobalSettings(pt);
-    LoadDAQConfig(pt);
-    LoadHDMIChannels(pt);
+    m_commSettings = LoadCommInfo(pt);
+    m_commSettings.Print();
+
+    m_globalSettings = LoadGlobalSettings(pt);
+    m_globalSettings.Print();
+
+    m_daqSettings = LoadDAQConfig(pt);
+    m_daqSettings.Print();
+
+    m_channelmap = LoadHDMIChannels(pt);
     setHDMIChannelMap();
-    LoadVMMChannelConfig(pt);
+
+
+    m_channels = LoadVMMChannelConfig(pt);
 
     bool ok;
     std::cout << "ChannelMap size   : " << m_channelmap.size() << std::endl;
@@ -73,12 +81,205 @@ void ConfigHandler::LoadConfig(const QString &filename)
 
 }
 //// ------------------------------------------------------------------------ //
-void ConfigHandler::LoadCommInfo(const boost::property_tree::ptree& pt)
+void ConfigHandler::WriteConfig(QString filename)
+{
+    using boost::format;
+    using boost::property_tree::ptree;
+    using namespace boost::property_tree::xml_parser;
+    ptree defaultpt;
+    ptree outpt;
+
+
+    // read in the default configuration to ~get the structure
+    string default_name = "../configs/config.xml";
+    read_xml(default_name, defaultpt, trim_whitespace | no_comments);
+    std::vector<Channel> def_vmmchan = LoadVMMChannelConfig(defaultpt);
+
+   // commSettings()
+   // daqSettings()
+   // globalSettings()
+   // hdmiChannelSettings(int)
+   // channelSettings(int)
+
+
+    ptree out_root;
+    ptree out_channels;
+
+    // ----------------------------------------------- //
+    //  udp_setup
+    // ----------------------------------------------- //
+    CommInfo def_commInfo = LoadCommInfo(defaultpt);
+
+    ptree out_udpsetup;
+    out_udpsetup.put("fec_port", commSettings().fec_port);
+    out_udpsetup.put("daq_port", commSettings().daq_port);
+    out_udpsetup.put("vmmasic_port", commSettings().vmmasic_port);
+    out_udpsetup.put("vmmapp_port", commSettings().vmmapp_port);
+    out_udpsetup.put("s6_port", commSettings().s6_port);
+
+    // ----------------------------------------------- //
+    //  general_info
+    // ----------------------------------------------- //
+    ptree out_general;
+    out_general.put("config_version", def_commInfo.config_version.toStdString());
+    out_general.put("vmm_id", def_commInfo.vmm_id_list.toStdString());
+    string iplistout = (commSettings().ip_list != "" ? commSettings().ip_list.toStdString() :
+                                        def_commInfo.ip_list.toStdString());
+    out_general.put("ip", iplistout);
+    string comment = (commSettings().comment != "" ? commSettings().comment.toStdString() :
+            "");
+    out_general.put("comment", comment);
+    out_general.put("debug", def_commInfo.debug);
+
+    // ----------------------------------------------- //
+    // trigger_daq
+    // ----------------------------------------------- //
+    TriggerDAQ def_tdaq = LoadDAQConfig(defaultpt);
+
+    ptree out_tdaq;
+    out_tdaq.put("tp_delay", daqSettings().tp_delay);
+    out_tdaq.put("trigger_period", daqSettings().trigger_period.toStdString());
+    out_tdaq.put("acq_sync", daqSettings().acq_sync);
+    out_tdaq.put("acq_window", daqSettings().acq_window);
+    out_tdaq.put("run_mode", daqSettings().run_mode.toStdString());
+    out_tdaq.put("run_count", def_tdaq.run_count);
+    out_tdaq.put("ignore16", daqSettings().ignore16);
+    string outpath = (daqSettings().output_path != "" ? daqSettings().output_path.toStdString() :
+                                def_tdaq.output_path.toStdString());
+    out_tdaq.put("output_path", outpath);
+    string outname = (daqSettings().output_filename != "" ? daqSettings().output_filename.toStdString() :
+                        def_tdaq.output_filename.toStdString());
+    out_tdaq.put("output_filename", outname);
+
+    // ----------------------------------------------- //
+    //  hdmi channel map
+    // ----------------------------------------------- //
+    std::vector<ChannelMap> def_hdmichan = LoadHDMIChannels(defaultpt);
+
+    ptree out_hdmi;
+    stringstream ss;
+    stringstream val;
+    for(int iHDMI = 1; iHDMI < 9; iHDMI++) {
+        ss.str("");
+        ss << "hdmi_" << format("%1i") % iHDMI;
+
+        //switch
+        val.str("");
+        val << ss.str() << ".switch";
+        out_hdmi.put(val.str(), isOnOrOff((int)hdmiChannelSettings(iHDMI-1).on));
+        //first
+        val.str("");
+        val << ss.str() << ".first";
+        out_hdmi.put(val.str(), (int)hdmiChannelSettings(iHDMI-1).first);
+        //second
+        val.str("");
+        val << ss.str() << ".second";
+        out_hdmi.put(val.str(), (int)hdmiChannelSettings(iHDMI-1).second);
+    } // iHDMI
+
+    // ----------------------------------------------- //
+    //  global settings
+    // ----------------------------------------------- //
+    GlobalSetting def_global = LoadGlobalSettings(defaultpt);
+
+    ptree out_global;
+    out_global.put("ch_polarity",
+        ConfigHandler::all_polarities[globalSettings().polarity].toStdString());
+    out_global.put("ch_leakage_current",
+        isEnaOrDis(globalSettings().leakage_current));
+    out_global.put("analog_tristates",
+        isOnOrOff(globalSettings().analog_tristates));
+    out_global.put("double_leakage",
+        isOnOrOff(globalSettings().double_leakage));
+    out_global.put("gain",
+        ConfigHandler::all_gains[globalSettings().gain].toStdString());
+    out_global.put("peak_time",
+        ConfigHandler::all_peakTimes[globalSettings().peak_time]);
+    out_global.put("neighbor_trigger",
+        isOnOrOff(globalSettings().neighbor_trigger));
+    out_global.put("TAC_slop_adj",
+        ConfigHandler::all_TACslopes[globalSettings().tac_slope]);
+    out_global.put("disable_at_peak",
+        isOnOrOff(globalSettings().disable_at_peak));
+    out_global.put("ART",
+        isOnOrOff(globalSettings().art));
+    out_global.put("ART_mode",
+        ConfigHandler::all_ARTmodes[globalSettings().art_mode].toStdString());
+    out_global.put("dual_clock_ART",
+        isOnOrOff(globalSettings().dual_clock_art));
+    out_global.put("out_buffer_mo",
+        isOnOrOff(globalSettings().out_buffer_mo));
+    out_global.put("out_buffer_pdo",
+        isOnOrOff(globalSettings().out_buffer_pdo));
+    out_global.put("out_buffer_tdo",
+        isOnOrOff(globalSettings().out_buffer_tdo));
+    out_global.put("channel_monitoring",
+        globalSettings().channel_monitor);
+    out_global.put("monitoring_control",
+        isOnOrOff(globalSettings().monitoring_control));
+    out_global.put("monitor_pdo_out",
+        isOnOrOff(globalSettings().monitor_pdo_out));
+    out_global.put("ADCs",
+        isOnOrOff(globalSettings().adcs));
+    out_global.put("sub_hyst_discr",
+        isOnOrOff(globalSettings().sub_hysteresis));
+    out_global.put("direct_time",
+        isOnOrOff(globalSettings().direct_time));
+    out_global.put("direct_time_mode",
+        ConfigHandler::all_directTimeModes[globalSettings().direct_time_mode].toStdString());
+    out_global.put("conv_mode_8bit",
+        isOnOrOff(globalSettings().conv_mode_8bit));
+    out_global.put("enable_6bit",
+        isOnOrOff(globalSettings().enable_6bit));
+    out_global.put("ADC_10bit",
+        ConfigHandler::all_ADC10bits[globalSettings().adc_10bit].toStdString());
+    out_global.put("ADC_8bit",
+        ConfigHandler::all_ADC8bits[globalSettings().adc_8bit].toStdString());
+    out_global.put("ADC_6bit",
+        ConfigHandler::all_ADC6bits[globalSettings().adc_6bit].toStdString());
+    out_global.put("dual_clock_data",
+        isOnOrOff(globalSettings().dual_clock_data));
+    out_global.put("dual_clock_6bit",
+        isOnOrOff(globalSettings().dual_clock_6bit));
+    out_global.put("threshold_DAC",
+        globalSettings().threshold_dac);
+    out_global.put("test_pulse_DAC",
+        globalSettings().test_pulse_dac);
+    
+
+
+
+
+    // stitch together the fields
+    out_root.add_child("udp_setup", out_udpsetup);
+    out_root.add_child("general_info", out_general);
+    out_root.add_child("trigger_daq", out_tdaq);
+    out_root.add_child("channel_map", out_hdmi);
+    out_root.add_child("global_settings", out_global);
+
+
+    // put everything under a global node
+    outpt.add_child("configuration", out_root);
+
+
+    #if BOOST_VERSION >= 105800
+    write_xml(filename.toStdString(), outpt, std::locale(),
+            boost::property_tree::xml_writer_make_settings<std::string>('\t',1));
+    #else
+    write_xml(filename.toStdString(), outpt, std::locale(),
+            boost::property_tree::xml_writer_make_settings<char>('\t',1));
+    #endif
+
+}
+//// ------------------------------------------------------------------------ //
+CommInfo ConfigHandler::LoadCommInfo(const boost::property_tree::ptree& pt)
 {
     using boost::property_tree::ptree;
+
+    CommInfo comm;
+
     try
     {
-        CommInfo comm;
         for(const auto& conf : pt.get_child("configuration")) {
             if(!(conf.first == "udp_setup" || conf.first == "general_info"))
                 continue;
@@ -116,8 +317,8 @@ void ConfigHandler::LoadCommInfo(const boost::property_tree::ptree& pt)
             }
         }
 
-        m_commSettings = comm;
-        m_commSettings.Print();
+     //   m_commSettings = comm;
+     //   m_commSettings.Print();
 
     }
     catch(std::exception &e)
@@ -127,6 +328,8 @@ void ConfigHandler::LoadCommInfo(const boost::property_tree::ptree& pt)
         std::cout << "!! --------------------------------- !!" << std::endl;
         exit(1);
     }
+
+    return comm;
 
 
 }
@@ -138,15 +341,17 @@ void ConfigHandler::LoadCommInfo(const CommInfo& info)
     
 }
 //// ------------------------------------------------------------------------ //
-void ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptree& pt)
+GlobalSetting ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptree& pt)
 {
     using boost::property_tree::ptree;
+
+    GlobalSetting g;
+
     try
     {
         for(const auto& conf : pt.get_child("configuration")) {
             if( !(conf.first == "global_settings") ) continue;
 
-            GlobalSetting g;
 
             // ------------------------------------------------------------- //
             // global channel polarity
@@ -373,8 +578,8 @@ void ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptree& pt)
             // test pulse DAC
             g.test_pulse_dac = conf.second.get<int>("test_pulse_DAC");
 
-            m_globalSettings = g;
-            m_globalSettings.Print();
+         //   m_globalSettings = g;
+         //   m_globalSettings.Print();
             
         }
     }
@@ -387,19 +592,22 @@ void ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptree& pt)
 
     }
 
+    return g;
+
 
 }
 //// ------------------------------------------------------------------------ //
-void ConfigHandler::LoadDAQConfig(const boost::property_tree::ptree& pt)
+TriggerDAQ ConfigHandler::LoadDAQConfig(const boost::property_tree::ptree& pt)
 {
     using boost::property_tree::ptree;
+
+    TriggerDAQ daq;
 
     try
     {
         for(const auto& conf : pt.get_child("configuration")) {
             if( !(conf.first == "trigger_daq") ) continue;
 
-            TriggerDAQ daq;
 
             // tp delay
             daq.tp_delay = conf.second.get<int>("tp_delay");
@@ -424,8 +632,8 @@ void ConfigHandler::LoadDAQConfig(const boost::property_tree::ptree& pt)
             string oname = conf.second.get<string>("output_filename");
             daq.output_filename = QString::fromStdString(oname);
 
-            m_daqSettings = daq;
-            m_daqSettings.Print();
+         //   m_daqSettings = daq;
+         //   m_daqSettings.Print();
         }
     }
     catch(std::exception &e)
@@ -435,12 +643,18 @@ void ConfigHandler::LoadDAQConfig(const boost::property_tree::ptree& pt)
         std::cout << "!! --------------------------------- !!" << std::endl;
         exit(1);
     }
+
+    return daq;
 }
 //// ------------------------------------------------------------------------ //
-void ConfigHandler::LoadHDMIChannels(const boost::property_tree::ptree& pt)
+std::vector<ChannelMap> ConfigHandler::LoadHDMIChannels(const boost::property_tree::ptree& pt)
 {
     using boost::property_tree::ptree;
     using boost::format;
+
+    // clear the channelmap vector
+    m_channelmap.clear();
+    std::vector<ChannelMap> outmap;
 
     stringstream ss;
     stringstream val;
@@ -470,7 +684,7 @@ void ConfigHandler::LoadHDMIChannels(const boost::property_tree::ptree& pt)
                 chMap.second = bool(conf.second.get<int>(val.str()));
 
                 //chMap.Print();
-                m_channelmap.push_back(chMap);
+                outmap.push_back(chMap);
 
             } // iHDMI
         }
@@ -483,6 +697,7 @@ void ConfigHandler::LoadHDMIChannels(const boost::property_tree::ptree& pt)
         exit(1);
     }
 
+    return outmap;
 }
 //// ------------------------------------------------------------------------ //
 void ConfigHandler::setHDMIChannelMap()
@@ -512,10 +727,14 @@ void ConfigHandler::setHDMIChannelMap()
     }
 }
 //// ------------------------------------------------------------------------ //
-void ConfigHandler::LoadVMMChannelConfig(const boost::property_tree::ptree& pt)
+std::vector<Channel> ConfigHandler::LoadVMMChannelConfig(const boost::property_tree::ptree& pt)
 {
     using boost::property_tree::ptree;
     using boost::format;
+
+    // clear the current channels
+    m_channels.clear();
+    std::vector<Channel> channels;
 
     stringstream ss;
     stringstream where;
@@ -580,7 +799,7 @@ void ConfigHandler::LoadVMMChannelConfig(const boost::property_tree::ptree& pt)
                 chan.s6bitADC = conf.second.get<int>("s06bADC_time_set");
 
                 chan.Print();
-                m_channels.push_back(chan);
+                channels.push_back(chan);
 
             }
             
@@ -592,8 +811,9 @@ void ConfigHandler::LoadVMMChannelConfig(const boost::property_tree::ptree& pt)
         std::cout << "ERROR : " << e.what() << std::endl;
         std::cout << "!! --------------------------------- !!" << std::endl;
         exit(1);
-
     }
+
+    return channels;
 
 }
 //// ------------------------------------------------------------------------ //

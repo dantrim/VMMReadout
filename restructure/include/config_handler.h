@@ -187,14 +187,15 @@ class ConfigHandler : public QObject
         bool dbg() { return m_dbg; }
 
         void LoadConfig(const QString &filename);
-        void LoadCommInfo(const boost::property_tree::ptree& p);
+        void WriteConfig(QString filename);
+        CommInfo LoadCommInfo(const boost::property_tree::ptree& p);
         void LoadCommInfo(const CommInfo& info);
-        void LoadGlobalSettings(const boost::property_tree::ptree& p);
-        void LoadDAQConfig(const boost::property_tree::ptree& p);
-        void LoadHDMIChannels(const boost::property_tree::ptree& p);
+        GlobalSetting LoadGlobalSettings(const boost::property_tree::ptree& p);
+        TriggerDAQ LoadDAQConfig(const boost::property_tree::ptree& p);
+        std::vector<ChannelMap> LoadHDMIChannels(const boost::property_tree::ptree& p);
         void setHDMIChannelMap();
         quint16 getHDMIChannelMap() { return m_channelMap; }
-        void LoadVMMChannelConfig(const boost::property_tree::ptree& p);
+        std::vector<Channel> LoadVMMChannelConfig(const boost::property_tree::ptree& p);
 
         // methods for GUI interaction
         void LoadBoardConfiguration(GlobalSetting& global,
@@ -211,6 +212,7 @@ class ConfigHandler : public QObject
         CommInfo& commSettings() { return m_commSettings; }
         TriggerDAQ& daqSettings() { return m_daqSettings; }
         GlobalSetting& globalSettings() { return m_globalSettings; }
+        ChannelMap& hdmiChannelSettings(int i) { return m_channelmap[i]; }
         Channel& channelSettings(int i) { return m_channels[i]; }
 
         ////////////////////////////

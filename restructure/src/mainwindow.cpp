@@ -11,7 +11,8 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    FECPORT(6007),
+    //FECPORT(6007),
+    FECPORT(6999),
     DAQPORT(6006),
     VMMASICPORT(6603),
     VMMAPPPORT(6600),
@@ -23,7 +24,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_commOK(false),
     m_configOK(false),
     m_tdaqOK(false),
-    m_runModeOK(false)
+    m_runModeOK(false),
+    m_acqMode("")
 {
 
     ui->setupUi(this);
@@ -83,8 +85,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->trgExternal->setCheckable(true);
 
     ////acquisition mode buttons
-    //ui->onACQ->setCheckable(true);
-    //ui->offACQ->setCheckable(true);
+    ui->onACQ->setCheckable(true);
+    ui->offACQ->setCheckable(true);
 
     /////////////////////////////////////////////////////////////////////
     //-----------------------------------------------------------------//
@@ -116,16 +118,16 @@ MainWindow::MainWindow(QWidget *parent) :
                                     this, SLOT(prepareAndSendTDAQConfig()));
 
     // set the run mode and send
-    connect(ui->trgPulser, SIGNAL(pressed()),
+    connect(ui->trgPulser, SIGNAL(clicked()),
                                     this, SLOT(setRunMode()));
 
-    connect(ui->trgExternal, SIGNAL(pressed()),
+    connect(ui->trgExternal, SIGNAL(clicked()),
                                     this, SLOT(setRunMode()));
 
     // set data acquisition on/off
-    connect(ui->onACQ, SIGNAL(pressed()),
+    connect(ui->onACQ, SIGNAL(clicked()),
                                     this, SLOT(setACQMode()));
-    connect(ui->offACQ, SIGNAL(pressed()),
+    connect(ui->offACQ, SIGNAL(clicked()),
                                     this, SLOT(setACQMode()));
 
 
@@ -136,6 +138,13 @@ MainWindow::MainWindow(QWidget *parent) :
     // set write data or not and pass to runModule
     connect(ui->writeData, SIGNAL(stateChanged(int)),
                                     this, SLOT(setWriteData(int)));
+
+    // load the board/global configuration from the XML
+    connect(ui->loadConfigXMLFileButton, SIGNAL(clicked()),
+                                    this, SLOT(loadConfigurationFromFile()));
+    // write the total configuration to an XML file
+    connect(ui->writeConfigXMLFileButton, SIGNAL(clicked()),
+                                    this, SLOT(writeConfigurationToFile()));
 
 
 
@@ -170,19 +179,23 @@ MainWindow::~MainWindow()
 // ------------------------------------------------------------------------- //
 void MainWindow::updateFSM()
 {
-    if(m_commOK && !m_configOK && !m_tdaqOK && !m_runModeOK) {
+    if(m_commOK && !m_configOK && !m_tdaqOK && !m_runModeOK && m_acqMode=="") {
         ui->SendConfiguration->setEnabled(true);
         ui->cmdlabel->setText("No\nConfig.");
     }
-    else if(m_commOK && m_configOK && !m_tdaqOK && !m_runModeOK) {
+    else if(m_commOK && m_configOK && !m_tdaqOK && !m_runModeOK && m_acqMode=="") {
         ui->setTrgAcqConst->setEnabled(true);
     }
-    else if(m_commOK && m_configOK && m_tdaqOK && !m_runModeOK) {
+    else if(m_commOK && m_configOK && m_tdaqOK && !m_runModeOK && m_acqMode=="") {
         ui->trgPulser->setEnabled(true);
         ui->trgExternal->setEnabled(true);
     }
-    else if(m_commOK && m_configOK && m_tdaqOK && m_runModeOK) {
+    else if(m_commOK && m_configOK && m_tdaqOK && m_runModeOK && m_acqMode=="") {
         ui->onACQ->setEnabled(true);
+    }
+    else if(m_commOK && m_configOK && m_tdaqOK && m_runModeOK &&
+                (m_acqMode=="ON")) {
+        ui->offACQ->setEnabled(true);
     }
 }
 // ------------------------------------------------------------------------- //
@@ -221,6 +234,9 @@ void MainWindow::Connect()
         iplist += ips[i] + separator;
     }
     commInfo.ip_list = iplist;
+
+    //comment
+    commInfo.comment = ui->userComments->text();
 
     configHandle().LoadCommInfo(commInfo);
     bool pingOK = socketHandle().loadIPList(iplist).ping();
@@ -414,16 +430,29 @@ void MainWindow::setRunMode()
     // run mode = pulser
     if(QObject::sender() == ui->trgPulser) {
 
+        // don't re-configure the board for a setting which it is
+        // already in
+        if(m_runModeOK && configHandle().daqSettings().run_mode=="pulser") {
             ui->trgPulser->setDown(true);
-            ui->trgExternal->setChecked(false);
-            //ui->trgPulser->blockSignals(true);
-            //ui->trgExternal->blockSignals(false);
+            return;
+        }
+        ui->trgPulser->setDown(true);
+        ui->trgExternal->setDown(false);
+        ui->trgExternal->setChecked(false);
         rmode = "pulser";
     }
     // run mode = external
     else if(QObject::sender() == ui->trgExternal) {
-            ui->trgPulser->setChecked(false);
+
+        // don't re-configure the board for a setting which it is
+        // already in
+        if(m_runModeOK && configHandle().daqSettings().run_mode=="external") {
             ui->trgExternal->setDown(true);
+            return;
+        }
+        ui->trgPulser->setDown(false);
+        ui->trgPulser->setChecked(false);
+        ui->trgExternal->setDown(true);
         rmode = "external";
     }
 
@@ -451,21 +480,37 @@ void MainWindow::setRunMode()
 // ------------------------------------------------------------------------- //
 void MainWindow::setACQMode()
 {
-
     // acquisition ON
     if(QObject::sender() == ui->onACQ) {
+        
+        // don't re-configure the board for a setting which it is
+        // already in
+        if(m_acqMode=="ON") {
+            ui->onACQ->setDown(true);
+            return;
+        }
         ui->offACQ->setChecked(false);
+        ui->offACQ->setDown(false);
         ui->onACQ->setStyleSheet("color: white");
         ui->offACQ->setStyleSheet("color: black");
         runModule().ACQon();
+        m_acqMode = "ON";
     }
     // acquisition OFF
     else if(QObject::sender() == ui->offACQ) {
+        if(m_acqMode=="OFF") {
+            ui->offACQ->setDown(true);
+            return;
+        }
         ui->onACQ->setChecked(false);
+        ui->onACQ->setDown(false);
         ui->onACQ->setStyleSheet("color: black");
         ui->offACQ->setStyleSheet("color: white");
         runModule().ACQoff();
+        m_acqMode = "OFF";
     }
+
+    emit checkFSM();
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::setNumberOfFecs(int)
@@ -821,7 +866,8 @@ void MainWindow::CreateChannelsFields()
         connect(VMMSZ06bCBox[i],SIGNAL(currentIndexChanged(int)),
                                             this,SLOT(updateChannelADCs(int)));
         // ----------- channel states ----------- //
-        connect(VMMNegativeButton[i],SIGNAL(pressed()),
+        //connect(VMMNegativeButton[i],SIGNAL(pressed()),
+        connect(VMMNegativeButton[i],SIGNAL(clicked()),
                                             this,SLOT(updateChannelState()));
         connect(VMMSC[i],SIGNAL(pressed()),this,SLOT(updateChannelState()));
         connect(VMMSM[i],SIGNAL(pressed()),this,SLOT(updateChannelState()));
@@ -1067,7 +1113,11 @@ void MainWindow::updateChannelState()
                 VMMSPBool[i]=false;
             }
         }
+
     }
+
+
+
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::updateChannelVoltages(int index){
@@ -1135,4 +1185,293 @@ void MainWindow::updateChannelADCs(int index)
         }
     }
 }
+// ------------------------------------------------------------------------- //
+void MainWindow::loadConfigurationFromFile()
+{
 
+    // Load the file from the user
+    QString filename = QFileDialog::getOpenFileName(this,
+        tr("Load Configuration XML File"), "../configs/",
+        tr("XML Files (*.xml)"));
+    if(filename.isNull()) return;
+
+    // pass the file to ConfigHandler to parse and load
+    configHandle().LoadConfig(filename);
+    updateConfigState();
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::updateConfigState()
+{
+
+    // ------------------------------------------- //
+    //  GlobalSetting
+    // ------------------------------------------- //
+    GlobalSetting global = configHandle().globalSettings();
+
+    ui->spg->setCurrentIndex(global.polarity);
+    ui->slg->setCurrentIndex(global.leakage_current);
+    ui->sdrv->setCurrentIndex(global.analog_tristates);
+    ui->sfm->setCurrentIndex(global.double_leakage);
+    ui->sg->setCurrentIndex(global.gain);
+    ui->st->setCurrentIndex(global.peak_time);
+    ui->sng->setCurrentIndex(global.neighbor_trigger);
+    ui->stc->setCurrentIndex(global.tac_slope);
+    ui->sdp->setCurrentIndex(global.disable_at_peak);
+    ui->sfa->setCurrentIndex(global.art);
+    ui->sfam->setCurrentIndex(global.art_mode);
+    ui->sdcka->setCurrentIndex(global.dual_clock_art);
+    ui->sbfm->setCurrentIndex(global.out_buffer_mo);
+    ui->sbfp->setCurrentIndex(global.out_buffer_pdo);
+    ui->sbft->setCurrentIndex(global.out_buffer_tdo);
+    ui->sm5_sm0->setCurrentIndex(global.channel_monitor);
+    ui->scmx->setCurrentIndex(global.monitoring_control);
+    ui->sbmx->setCurrentIndex(global.monitor_pdo_out);
+    ui->spdc->setCurrentIndex(global.adcs);
+    ui->ssh->setCurrentIndex(global.sub_hysteresis);
+    ui->sttt->setCurrentIndex(global.direct_time);
+    ui->stpp->setCurrentIndex(global.direct_time_mode0);
+    ui->stot->setCurrentIndex(global.direct_time_mode1);
+    ui->s8b->setCurrentIndex(global.conv_mode_8bit);
+    ui->s6b->setCurrentIndex(global.enable_6bit);
+    ui->sc010b->setCurrentIndex(global.adc_10bit);
+    ui->sc08b->setCurrentIndex(global.adc_8bit);
+    ui->sc06b->setCurrentIndex(global.adc_6bit);
+    ui->sdcks->setCurrentIndex(global.dual_clock_data);
+    ui->sdck6b->setCurrentIndex(global.dual_clock_6bit);
+    ui->sdt->setValue(global.threshold_dac);
+    ui->sdp_2->setValue(global.test_pulse_dac);
+ 
+
+/*
+    // ------------------------------------------- //
+    //  HDMI Channel Map
+    // ------------------------------------------- //
+    vector<ChannelMap> chMap;
+    for(int i = 0; i < 8; i++) {
+        chMap.push_back(configHandle().hdmiChannelSettings(i));
+    }
+    int ch = 0;
+    ui->hdmi1->setChecked(  chMap[ch].on);
+    ui->hdmi1_1->setChecked(chMap[ch].first);
+    ui->hdmi1_2->setChecked(chMap[ch].second);
+    ch++;
+    ui->hdmi2->setChecked(  chMap[ch].on);
+    ui->hdmi2_1->setChecked(chMap[ch].first);
+    ui->hdmi2_2->setChecked(chMap[ch].second);
+    ch++;
+    ui->hdmi3->setChecked(  chMap[ch].on);
+    ui->hdmi3_1->setChecked(chMap[ch].first);
+    ui->hdmi3_2->setChecked(chMap[ch].second);
+    ch++;
+    ui->hdmi4->setChecked(  chMap[ch].on);
+    ui->hdmi4_1->setChecked(chMap[ch].first);
+    ui->hdmi4_2->setChecked(chMap[ch].second);
+    ch++;
+    ui->hdmi5->setChecked(  chMap[ch].on);
+    ui->hdmi5_1->setChecked(chMap[ch].first);
+    ui->hdmi5_2->setChecked(chMap[ch].second);
+    ch++;
+    ui->hdmi6->setChecked(  chMap[ch].on);
+    ui->hdmi6_1->setChecked(chMap[ch].first);
+    ui->hdmi6_2->setChecked(chMap[ch].second);
+    ch++;
+    ui->hdmi7->setChecked(  chMap[ch].on);
+    ui->hdmi7_1->setChecked(chMap[ch].first);
+    ui->hdmi7_2->setChecked(chMap[ch].second);
+    ch++;
+    ui->hdmi8->setChecked(  chMap[ch].on);
+    ui->hdmi8_1->setChecked(chMap[ch].first);
+    ui->hdmi8_2->setChecked(chMap[ch].second);
+*/
+
+    // ------------------------------------------------- //
+    //  individual channels
+    // ------------------------------------------------- //
+    for(int i = 0; i < 64; i++) {
+        Channel chan = configHandle().channelSettings(i);
+        if(!((int)chan.number == i)) {
+            cout << "MainWindow::updateConfigState    ERROR"
+                 << " Channel config from ConfigHandler is out of sync!"
+                 << "MainWindow::updateConfigState    ERROR"
+                 << " Attempting to access state of channel " << i << " but "
+                 << "corresponding index in ConfigHandler channel map is "
+                 << chan.number << "! Exiting." << endl;
+            exit(1);
+        }
+
+        // for some reason in the original code
+        // booleans of 0 are 'true' and booleans
+        // of 1 are 'false'. go figure?
+        VMMSPBool[i] = !chan.polarity;
+        VMMSCBool[i] = !chan.capacitance;
+        VMMSLBool[i] = !chan.leakage_current;
+        VMMSTBool[i] = !chan.test_pulse;
+        VMMSMBool[i] = !chan.hidden_mode;
+        VMMSMXBool[i] = !chan.monitor;
+        VMMSDValue[i] = chan.trim;
+        VMMSZ010bValue[i] = chan.s10bitADC;
+        VMMSZ08bValue[i] = chan.s8bitADC;
+        VMMSZ06bValue[i] = chan.s6bitADC;
+
+        // make the gui gui
+        VMMNegativeButton[i]->click();
+        VMMSMX[i]->click();
+        VMMSM[i]->click();
+        VMMSL[i]->click();
+        VMMST[i]->click();
+        VMMSC[i]->click();
+        VMMSDVoltage[i]->setCurrentIndex(VMMSDValue[i]);
+        VMMSZ010bCBox[i]->setCurrentIndex(VMMSZ010bValue[i]);
+        VMMSZ08bCBox[i]->setCurrentIndex(VMMSZ08bValue[i]);
+        VMMSZ06bCBox[i]->setCurrentIndex(VMMSZ06bValue[i]);
+
+    }
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::writeConfigurationToFile()
+{
+
+    // open a dialog to select the output file name
+    QString filename = QFileDialog::getSaveFileName(this,
+        tr("Save XML Configuration File"), "../configs",
+        tr("XML Files (*.xml)"));
+
+    if(filename.isNull()) return;
+
+    // now be sure to load all the configuration
+    // ------------------------------------------------- //
+    //  global settings
+    // ------------------------------------------------- //
+    GlobalSetting global;
+
+    global.polarity            = ui->spg->currentIndex();
+    global.leakage_current     = ui->slg->currentIndex();
+    global.analog_tristates    = ui->sdrv->currentIndex();
+    global.double_leakage      = ui->sfm->currentIndex();
+    global.gain                = ui->sg->currentIndex();
+    global.peak_time           = ui->st->currentIndex();
+    global.neighbor_trigger    = ui->sng->currentIndex();
+    global.tac_slope           = ui->stc->currentIndex();
+    global.disable_at_peak     = ui->sdp->currentIndex();
+    global.art                 = ui->sfa->currentIndex();
+    global.art_mode            = ui->sfam->currentIndex();
+    global.dual_clock_art      = ui->sdcka->currentIndex();
+    global.out_buffer_mo       = ui->sbfm->currentIndex();
+    global.out_buffer_pdo      = ui->sbfp->currentIndex();
+    global.out_buffer_tdo      = ui->sbft->currentIndex();
+    global.channel_monitor     = ui->sm5_sm0->currentIndex();
+    global.monitoring_control  = ui->scmx->currentIndex();
+    global.monitor_pdo_out     = ui->sbmx->currentIndex();
+    global.adcs                = ui->spdc->currentIndex();
+    global.sub_hysteresis      = ui->ssh->currentIndex();
+    global.direct_time         = ui->sttt->currentIndex();
+
+
+    global.direct_time_mode0   = ui->stpp->currentIndex();
+    global.direct_time_mode1   = ui->stot->currentIndex();
+
+    // build up the 2-bit word from the mode0 and mode1
+    bool ok;
+    QString tmp;
+    tmp.append(QString::number(global.direct_time_mode0));
+    tmp.append(QString::number(global.direct_time_mode1));
+    global.direct_time_mode = tmp.toUInt(&ok,2);
+
+    global.conv_mode_8bit      = ui->s8b->currentIndex();
+    global.enable_6bit         = ui->s6b->currentIndex();
+    global.adc_10bit           = ui->sc010b->currentIndex();
+    global.adc_8bit            = ui->sc08b->currentIndex();
+    global.adc_6bit            = ui->sc06b->currentIndex();
+    global.dual_clock_data     = ui->sdcks->currentIndex();
+    global.dual_clock_6bit     = ui->sdck6b->currentIndex();
+    global.threshold_dac       = ui->sdt->value();
+    global.test_pulse_dac      = ui->sdp_2->value();
+    
+
+    // ------------------------------------------------- //
+    //  HDMI channel map
+    // ------------------------------------------------- //
+    vector<ChannelMap> chMap;
+    ChannelMap chm;
+    // do this by hand
+    for(int i = 0; i < 8; i++) {
+        chm.hdmi_no = i;
+        if       (i==0) {
+            chm.on     = (ui->hdmi1->isChecked() ? true : false);
+            chm.first  = (ui->hdmi1_1->isChecked() ? true : false);
+            chm.second = (ui->hdmi1_2->isChecked() ? true : false);
+        } else if(i==1) {
+            chm.on     = (ui->hdmi2->isChecked() ? true : false);
+            chm.first  = (ui->hdmi2_1->isChecked() ? true : false);
+            chm.second = (ui->hdmi2_2->isChecked() ? true : false);
+        } else if(i==2) {
+            chm.on     = (ui->hdmi3->isChecked() ? true : false);
+            chm.first  = (ui->hdmi3_1->isChecked() ? true : false);
+            chm.second = (ui->hdmi3_2->isChecked() ? true : false);
+        } else if(i==3) {
+            chm.on     = (ui->hdmi4->isChecked() ? true : false);
+            chm.first  = (ui->hdmi4_1->isChecked() ? true : false);
+            chm.second = (ui->hdmi4_2->isChecked() ? true : false);
+        } else if(i==4) {
+            chm.on     = (ui->hdmi5->isChecked() ? true : false);
+            chm.first  = (ui->hdmi5_1->isChecked() ? true : false);
+            chm.second = (ui->hdmi5_2->isChecked() ? true : false);
+        } else if(i==5) {
+            chm.on     = (ui->hdmi6->isChecked() ? true : false);
+            chm.first  = (ui->hdmi6_1->isChecked() ? true : false);
+            chm.second = (ui->hdmi6_2->isChecked() ? true : false);
+        } else if(i==6) {
+            chm.on     = (ui->hdmi7->isChecked() ? true : false);
+            chm.first  = (ui->hdmi7_1->isChecked() ? true : false);
+            chm.second = (ui->hdmi7_2->isChecked() ? true : false);
+        } else if(i==7) {
+            chm.on     = (ui->hdmi8->isChecked() ? true : false);
+            chm.first  = (ui->hdmi8_1->isChecked() ? true : false);
+            chm.second = (ui->hdmi8_2->isChecked() ? true : false);
+        }
+        chMap.push_back(chm);
+    } //i
+
+
+    // ------------------------------------------------- //
+    //  configuration of indiviual VMM channels
+    // ------------------------------------------------- //
+    vector<Channel> channels;
+    for(int i = 0; i < 64; i++) {
+        Channel ch;
+        ch.number           = i;
+        ch.polarity         = VMMSPBool[i];
+        ch.capacitance      = VMMSCBool[i];
+        ch.leakage_current  = VMMSLBool[i];
+        ch.test_pulse       = VMMSTBool[i];
+        ch.hidden_mode      = VMMSMBool[i];
+        ch.trim             = VMMSDValue[i];
+        ch.monitor          = VMMSMXBool[i];
+        ch.s10bitADC        = VMMSZ010bValue[i];
+        ch.s8bitADC         = VMMSZ08bValue[i];
+        ch.s6bitADC         = VMMSZ06bValue[i];
+        channels.push_back(ch);
+    } // i
+
+    // global, chMap, channels
+    configHandle().LoadBoardConfiguration(global, chMap, channels);
+
+    // ------------------------------------------------- //
+    //  T/DAQ settings
+    // ------------------------------------------------- //
+    TriggerDAQ daq;
+
+    daq.tp_delay        = ui->pulserDelay->value();
+    daq.trigger_period  = ui->trgPeriod->text();
+    daq.acq_sync        = ui->acqSync->value();
+    daq.acq_window      = ui->acqWindow->value();
+    daq.run_mode        = "pulser"; // dummy here
+    daq.run_count       = 20; // dummy here
+    daq.ignore16        = ui->ignore16->isChecked();
+    daq.output_path     = ui->runDirectoryField->text();
+
+    configHandle().LoadTDAQConfiguration(daq);
+
+    configHandle().WriteConfig(filename);
+
+}
