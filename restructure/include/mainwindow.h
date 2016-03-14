@@ -47,6 +47,7 @@ class MainWindow : public QMainWindow
         SocketHandler& socketHandle() { return *vmmSocketHandler; }
         Configuration& configModule() { return *vmmConfigModule;  }
         RunModule&     runModule()    { return *vmmRunModule;     }
+        DataHandler&   dataHandle()   { return *vmmDataHandler;    }
     
         //////////////////////////////////////////////////////
         // IPs
@@ -139,6 +140,7 @@ class MainWindow : public QMainWindow
         SocketHandler *vmmSocketHandler;
         Configuration *vmmConfigModule;
         RunModule     *vmmRunModule;
+        DataHandler   *vmmDataHandler;
 
 
         bool m_commOK;

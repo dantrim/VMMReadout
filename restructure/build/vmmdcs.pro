@@ -28,6 +28,8 @@ else:LIBS += -L$(ROOTSYS)/lib -lCore -lCint -lRIO -lNet \
        -lRint -lPostscript -lMatrix -lPhysics \
        -lGui -lRGL -lMathCore
 
+LIBS += -L./objects -lMylib
+
 INCLUDEPATH += $$includepath
 DEPENDPATH  += $$includepath
 INCLUDEPATH += $$boostinclude
@@ -64,3 +66,4 @@ FORMS    += $$sourcepath/mainwindow.ui
 #RESOURCES += \
 #    $$sourcepath_/icons.qrc \
 #    $$sourcepath_/calibration_data.qrc
+

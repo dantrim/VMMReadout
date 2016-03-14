@@ -53,7 +53,7 @@ MainWindow::MainWindow(QWidget *parent) :
     cout << endl;
     cout << " !! SOCKETHANDLER SET FOR DRY RUN !! " << endl;
     cout << endl;
-    vmmSocketHandler->setDryRun();
+   // vmmSocketHandler->setDryRun();
 
     connect(vmmSocketHandler, SIGNAL(commandCounterUpdated()),
                                             this, SLOT(updateCounter()));
@@ -62,7 +62,6 @@ MainWindow::MainWindow(QWidget *parent) :
     vmmConfigModule->setDebug(true);
     vmmRunModule     = new RunModule();
     vmmRunModule->setDebug(true);
-    vmmRunModule->setDoWrite(ui->writeData->isChecked());
 
     // load the things
     vmmConfigModule->LoadConfig(*vmmConfigHandler);
@@ -70,6 +69,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     vmmRunModule->LoadConfig(*vmmConfigHandler);
     vmmRunModule->LoadSocket(*vmmSocketHandler);
+
+    vmmDataHandler = new DataHandler();
+    vmmDataHandler->setDebug(true);
+    connect(this, SIGNAL(EndRun()), vmmDataHandler, SLOT(writeAndCloseDataFile()));
 
     channelGridLayout = new QGridLayout(this);
     CreateChannelsFields();
@@ -130,14 +133,20 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->offACQ, SIGNAL(clicked()),
                                     this, SLOT(setACQMode()));
 
+    // start run
+    connect(ui->checkTriggers, SIGNAL(clicked()),
+                                    this, SLOT(triggerHandler()));
+    // stop run
+    connect(ui->stopTriggerCnt, SIGNAL(clicked()),
+                                    this, SLOT(triggerHandler()));
+    // clear trigger count
+    connect(ui->clearTriggerCnt, SIGNAL(clicked()),
+                                    this, SLOT(triggerHandler()));
+
 
     // ------------------------------------------------------ //
     // ------------- remaining buttons/widgets -------------- //
     // ------------------------------------------------------ //
-
-    // set write data or not and pass to runModule
-    connect(ui->writeData, SIGNAL(stateChanged(int)),
-                                    this, SLOT(setWriteData(int)));
 
     // load the board/global configuration from the XML
     connect(ui->loadConfigXMLFileButton, SIGNAL(clicked()),
@@ -526,11 +535,6 @@ void MainWindow::setNumberOfFecs(int)
     ui->setVMMs->addItem("All");
     ui->setVMMs->setCurrentIndex(ui->setVMMs->currentIndex()+1);
 
-}
-// ------------------------------------------------------------------------- //
-void MainWindow::setWriteData(int)
-{
-    runModule().setDoWrite(ui->writeData->isChecked());
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::SetInitialState()
@@ -1473,5 +1477,183 @@ void MainWindow::writeConfigurationToFile()
     configHandle().LoadTDAQConfiguration(daq);
 
     configHandle().WriteConfig(filename);
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::setAndSendEventHeaders()
+{
+    runModule().setEventHeaders(ui->evbld_infodata->currentIndex(),
+                                ui->evbld_mode->currentIndex());
+    ui->appRB->setChecked(1);
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::resetASICs()
+{
+    runModule().resetASICs();
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::resetFEC()
+{
+    bool do_reset = (ui->fec_reset == QObject::sender() ? true : false);
+    runModule().resetFEC(do_reset);
+    ui->fecRB->setChecked(1);
+
+    ui->trgExternal->setChecked(false);
+    ui->trgPulser->setChecked(false);
+    ui->setMask->setChecked(false);
+    ui->onACQ->setChecked(false);
+    ui->offACQ->setChecked(false);
+    ui->setTrgAcqConst->setChecked(false);
+
+    SetInitialState();
+    m_commOK = true;
+    m_configOK = false;
+    m_tdaqOK = false;
+    m_runModeOK = false;
+    m_acqMode = "";
+    emit checkFSM();
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::setHDMIMask()
+{
+    runModule().setMask();
+    ui->appRB->setChecked(true);
+
+    if(m_hdmiMaskON) {
+        ui->setMask->setDown(true);
+    }
+    ui->setMask->setDown(true);
+    m_hdmiMaskON = true;
 
 }
+// ------------------------------------------------------------------------- //
+void MainWindow::checkLinkStatus()
+{
+    ui->appRB->setChecked(true);
+    runModule().checkLinkStatus();
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::writeFECStatus()
+{
+    QByteArray buff;
+    buff.clear();
+    buff.resize(socketHandle().fecSocket().pendingDatagramSize());
+    socketHandle().fecSocket().readDatagram(buff.data(), buff.size());
+    if(buff.size()==0) return;
+
+    bool ok;
+    QString sizeOfPackageReceived, datagramCheck;
+    datagramCheck = buff.mid(0,4).toHex();
+    quint32 check = datagramCheck.toUInt(&ok,16);
+
+    sizeOfPackageReceived = sizeOfPackageReceived.number(buff.size(),10);
+
+    #warning What is this check?
+    if(check<1000000) {
+        stringstream ss;
+        ss << " ****** NEW PACKET RECEIVED ****** " << endl;
+        ss << " Data received size: " << sizeOfPackageReceived.toStdString()
+           << " bytes" << endl;
+        QString bin, hex;
+        for(int i = 0; i < buff.size()/4; i++) {
+            hex = buff.mid(i*4, 4).toHex();
+            quint32 tmp32 = hex.toUInt(&ok,16);
+            if(i==0) ss << " Rec'd ID: " << bin.number(tmp32,10).toStdString() << endl;
+            else {
+                ss << " Data, " << i << ": " << bin.number(tmp32,16).toStdString() << endl;
+            }
+        } // i
+        ui->debugScreen->append(QString::fromStdString(ss.str()));
+        ui->debugScreen->moveCursor(QTextCursor::End, QTextCursor::MoveAnchor);
+    }
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::resetLinks()
+{
+    ui->appRB->setChecked(true);
+    runModule().resetLinks();
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::triggerHandler()
+
+{
+    dataHandle().LoadDAQSocket(socketHandle().daqSocket());
+    dataHandle().setWriteNtuple(ui->writeData->isChecked());
+    dataHandle().setIgnore16(ui->ignore16->isChecked());
+    dataHandle().setCalibrationRun(ui->calibration->isChecked());
+    #warning channel map not implemented
+    //dataHanlde().setUseChannelMap(...);
+
+    if(QObject::sender() == ui->checkTriggers) {
+        bool ok;
+        if(ui->writeData->isChecked()) {
+
+            // setup the output files
+            QString rootFileDir = ui->runDirectoryField->text();
+            if(!rootFileDir.endsWith("/")) rootFileDir = rootFileDir + "/";
+            QString filename_init = "run_%04d.root";
+            const char* filename_formed = Form(filename_init.toStdString().c_str(),
+                            ui->runNumber->text().toInt(&ok,10));
+            dataHandle().setupOutputFiles(configHandle().daqSettings(),
+                                rootFileDir, filename_formed);
+
+            // setup and initialize the output trees
+            dataHandle().setupOutputTrees();
+
+            //now that files are setup, setup the header for the dump file
+            dataHandle().dataFileHeader(configHandle().commSettings(),
+                                        configHandle().globalSettings(),
+                                        configHandle().daqSettings());
+
+
+            //fill the run properties
+            dataHandle().getRunProperties(configHandle().globalSettings(),
+                        ui->runNumber->value(), ui->angle->value());
+
+            //reset DAQ count for this run
+            dataHandle().resetDAQCount();
+            QString cnt;
+            ui->triggerCntLabel->setText(cnt.number(dataHandle().getDAQCount(), 10));
+
+            // gui stuff
+            ui->runStatusField->setText("Run:"+ui->runNumber->text()+" ongoing");
+            ui->runStatusField->setStyleSheet("background-color:green");
+            ui->checkTriggers->setEnabled(false);
+            ui->stopTriggerCnt->setEnabled(true);
+
+            #warning ADD IN CALIBRATION LOOP
+            //if(ui->calibration->isChecked()) {
+            //    if(ui->autoCalib->isChecked())
+            //        startCalibration();
+            //    else if(ui->manCalib->isChecked())
+            //        cout << "Manual Calibration" << endl;
+            //} // calibration
+
+        } // writeData
+        else {
+            ui->checkTriggers->setEnabled(false);
+            ui->stopTriggerCnt->setEnabled(true);
+        } // not writing data
+
+    } // checkTriggers
+
+    if(QObject::sender() == ui->clearTriggerCnt) {
+        dataHandle().resetDAQCount();
+        QString cnt;
+        ui->triggerCntLabel->setText(cnt.number(dataHandle().getDAQCount(), 10));
+    } // clearTriggerCnt
+
+    if(QObject::sender() == ui->stopTriggerCnt) {
+        ui->runStatusField->setText("Run:"+ui->runNumber->text()+" finished");
+        ui->runStatusField->setStyleSheet("background-color: lightGray");
+        if(ui->writeData->isChecked()) {
+            #warning make this a signal and slot
+            emit EndRun();
+        } // writeData
+        ui->runNumber->setValue(ui->runNumber->value()+1);
+        ui->checkTriggers->setEnabled(true);
+        ui->stopTriggerCnt->setEnabled(false);
+    } // stopTriggerCnt
+
+}
+
+

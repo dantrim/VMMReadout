@@ -23,7 +23,7 @@ DataHandler::DataHandler(QObject *parent) :
     QObject(parent),
     m_dbg(false),
     m_calibRun(false),
-    m_writeNtuple(false),
+    m_write(false),
     n_daqCnt(0),
     m_ignore16(false),
     m_daqSocket(0),
@@ -38,7 +38,7 @@ DataHandler::DataHandler(QObject *parent) :
 {
 }
 // ------------------------------------------------------------------------ //
-DataHandler& DataHandler::LoadDAQSocket(VMMSocket& vmmsocket)
+void DataHandler::LoadDAQSocket(VMMSocket& vmmsocket)
 {
     if(!m_daqSocket) {
         m_daqSocket = &vmmsocket;
@@ -47,20 +47,20 @@ DataHandler& DataHandler::LoadDAQSocket(VMMSocket& vmmsocket)
     else {
         cout << "DataHandler::LoadDAQSocket    WARNING VMMSocket instance is "
              << "already active (non-null)! Will keep the first." << endl;
-        return *this;
+        return;
     }
 
     if(m_daqSocket) {
         cout << "------------------------------------------------------" << endl;
-        cout << " DataHandler::LoadSocket    VMMSocket loaded" << endl;
+        cout << " DataHandler::LoadDAQSocket    VMMSocket loaded" << endl;
         m_daqSocket->Print();
         cout << "------------------------------------------------------" << endl;
     }
     else {
-        cout << "DataHandler::LoadSocket    ERROR VMMSocket instance null" << endl;
+        cout << "DataHandler::LoadDAQSocket    ERROR VMMSocket instance null" << endl;
         exit(1);
     }
-    return *this;
+    return;
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::setupOutputFiles(TriggerDAQ& daq, QString outdir,
@@ -139,8 +139,14 @@ void DataHandler::setupOutputFiles(TriggerDAQ& daq, QString outdir,
             exit(1);
         }
         QString spacer = "";
+        QString filename_dump = "";
         if(!m_outDir.endsWith("/")) spacer = "/";
-        fullfilename = m_outDir + spacer + filename;
+        if(filename.endsWith(".root")) {
+            filename_dump = filename.remove(".root");
+            filename_dump = filename_dump + ".txt";
+        }
+    
+        fullfilename = m_outDir + spacer + "dump_" + filename_dump;
 
         m_daqFile.setFileName(fullfilename);
         cout << "Setting output data file to: " << fullfilename.toStdString() << endl;
@@ -162,7 +168,8 @@ void DataHandler::setupOutputFiles(TriggerDAQ& daq, QString outdir,
         // output root file
         //////////////////////////////////////////////////
         if(writeNtuple()) {
-            fullfilename = DataHandler::getRootFileName(m_outDir);
+            fullfilename = m_outDir + spacer + filename + ".root";
+            //fullfilename = DataHandler::getRootFileName(m_outDir);
             if(dbg()) cout << "DataHandler::setupOutputFiles    "
                            << "Setting output ROOT file to: "
                            << fullfilename.toStdString() << endl;
@@ -260,6 +267,29 @@ void DataHandler::dataFileHeader(CommInfo& info, GlobalSetting& global,
 
 }
 // ------------------------------------------------------------------------ //
+void DataHandler::getRunProperties(const GlobalSetting& global,
+        int runNumber, int angle)
+{
+    if(dbg()) cout << "DataHandler::getRunProperties" << endl;
+
+    m_gain          = ConfigHandler::all_gains[global.gain].toDouble();
+    m_runNumber     = runNumber;
+    m_tacSlope      = global.tac_slope;
+    m_peakTime      = global.peak_time;
+    m_dacCounts     = global.threshold_dac;
+    m_pulserCounts  = global.test_pulse_dac;
+    m_angle         = angle;
+
+    if(writeNtuple()) {
+        m_daqRootFile->cd();
+        m_runProperties->Fill();
+        m_runProperties->Write("", TObject::kOverwrite);
+        delete m_runProperties;
+    }
+   
+    m_runPropertiesFilled = true; 
+}
+// ------------------------------------------------------------------------ //
 void DataHandler::setupOutputTrees()
 {
     // clear the data
@@ -320,6 +350,44 @@ void DataHandler::setupOutputTrees()
 
     m_treesSetup = true;
 
+}
+// ------------------------------------------------------------------------ //
+void DataHandler::writeAndCloseDataFile()
+{
+    if(dbg()) cout << "DataHandler::writeAndCloseDataFile" << endl;
+    if(!m_vmm2 || !m_treesSetup) {
+        cout << "DataHandler::writeAndCloseDataFile    "
+             << "Event data tree is null!" << endl;
+        exit(1);
+    }
+    if(!m_daqRootFile || !m_rootFileOK) {
+        cout << "DataHandler::writeAndCloseDataFile    "
+             << "Output ROOT file is not setup!" << endl;
+        exit(1);
+    }
+    if(!m_fileOK) {
+        cout << "DataHandler::writeAndCloseDataFile    "
+             << "Dump file has not be setup!" << endl;
+        exit(1);
+    }
+
+
+    //close the dump file
+    m_daqFile.close();
+
+    // ensure that we are writing to file OK
+    if(writeNtuple()){
+        m_daqRootFile->cd();
+        if(!(m_vmm2->Write("", TObject::kOverwrite))) {
+            cout << "DataHandler::writeAndCloseDataFile    "
+                 << "ERROR writing event data to file!" << endl;
+        }
+        if(!(m_daqRootFile->Write())) {
+            cout << "DataHandler::writeAndCloseDataFile    "
+                 << "ERROR Unable to successfully write output DAQ ROOT file!" << endl;
+        }
+        m_daqRootFile->Close();
+    }//writeNtuple
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::clearData()
@@ -619,9 +687,6 @@ void DataHandler::fillEventData()
     m_vmm2->Fill();
 }
 
-
-
-
 //////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------ //
 //  Misc Methods
@@ -650,10 +715,6 @@ quint32 DataHandler::ValueToReplaceHEX32(QString hex, int bitToChange,
     commandToSend.setBit(31-bitToChange, newBitValue);
     QByteArray byteArr = bitsToBytes(commandToSend);
     quint32 tmp32 = byteArr.toHex().toUInt(&ok,16);
- //   QString yep;
- //   yep.setNum(tmp32, 2);
- //   cout << "YEP  : " << yep.toStdString() << endl;
- //   cout << "FINAL : " << QBitArrayToString(commandToSend).toStdString() << endl; 
     return tmp32; 
 }
 // ------------------------------------------------------------------------ //
@@ -689,7 +750,6 @@ QString DataHandler::QBitArrayToString(const QBitArray& array)
         value <<= 1;
         value += (int)array.at(i);
     }
-
     QString str;
     str.setNum(value, 10);
     

@@ -36,23 +36,31 @@ class DataHandler : public QObject
         explicit DataHandler(QObject *parent = 0);
         virtual ~DataHandler(){};
 
-        DataHandler& setDebug(bool dbg) { m_dbg = dbg; return *this; }
+        void setDebug(bool dbg) { m_dbg = dbg; }
         bool dbg() { return m_dbg; }
-        DataHandler& LoadDAQSocket(VMMSocket& socket); 
+        void setCalibrationRun(bool calib) { m_calibRun = calib; }
+        bool calibRun() { return m_calibRun; }
+        void setIgnore16(bool doit) { m_ignore16 = doit; }
+        bool ignore16() { return m_ignore16; }
+        void setWriteNtuple(bool doit) { m_write = doit; }
+        bool writeNtuple() { return m_write; }
+
+        void LoadDAQSocket(VMMSocket& socket); 
 
         void setupOutputFiles(TriggerDAQ& daq, QString outdir = "",
                                             QString filename = "");
+
         void dataFileHeader(CommInfo& comm, GlobalSetting& global,
                                 TriggerDAQ& daq);
+        void getRunProperties(const GlobalSetting& global, int runNumber,
+                                            int angle);
+
         QString getRootFileName(const QString& outdir);
 
-        DataHandler& setCalibrationRun(bool calib) { m_calibRun = calib; return *this; }
-        bool calibRun() { return m_calibRun; }
 
         // output ntuples
-        DataHandler& setWriteNtuple(bool doit) { m_writeNtuple = doit; return *this; }
-        bool writeNtuple() { return m_writeNtuple; }
         void setupOutputTrees();
+
 
         /////////////////////////////////////////
         // general methods
@@ -72,8 +80,6 @@ class DataHandler : public QObject
         VMMSocket& daqSocket() { return *m_daqSocket; }
         void decodeAndWriteData(const QByteArray& datagram);
         void resetDAQCount() { n_daqCnt = 0; }
-        void setIgnore16(bool doit) { m_ignore16 = doit; }
-        bool ignore16() { return m_ignore16; }
         int getDAQCount() { return n_daqCnt; } 
         void updateDAQCount() { n_daqCnt++; }
         void fillEventData();
@@ -84,7 +90,7 @@ class DataHandler : public QObject
     private :
         bool m_dbg;
         bool m_calibRun;
-        bool m_writeNtuple;
+        bool m_write;
         int n_daqCnt;
         bool m_ignore16;
         VMMSocket *m_daqSocket;
@@ -178,6 +184,7 @@ class DataHandler : public QObject
     public slots :
         void readEvent();
         void EndRun();
+        void writeAndCloseDataFile();
 
     private slots :
 

@@ -34,6 +34,8 @@ LIBS += -L$(ROOTSYS)/lib -lCore -lCint -lRIO -lNet -lHist -lGraf \
                          -lGraf3d -lGpad -lTree -lRint -lPostscript \
                          -lMatrix -lPhysics -lGui -lRGL -lMathCore
 
+LIBS += -L./objects -lMylib
+
 QMAKE_CXXFLAGS += -stdlib=libc++
 QMAKE_CXXFLAGS += -std=c++11
 QMAKE_LFLAGS   += -stdlib=libc++

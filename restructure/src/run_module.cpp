@@ -63,74 +63,21 @@ RunModule& RunModule::LoadConfig(ConfigHandler& inconfig)
 // ------------------------------------------------------------------------ //
 RunModule& RunModule::LoadSocket(SocketHandler& socket)
 {
-    if(!m_socketHandler /* !m_initSocketHandler */) {
-        m_socketHandler = &socket;
+    m_socketHandler = &socket;
+    if(!m_socketHandler) {
+        cout << "RunModule::LoadSocket    ERROR SocketHandler instance null" << endl;
+        exit(1);
     }
-    else {
-        cout << "RunModule::LoadSocket    WARNING SocketHandler instance is "
-             << "already active (non-null)!" << endl;
-        cout << "RunModule::LoadSocket    WARNING Will keep the first "
-             << "instance." << endl;
-        return *this;
-    }
-
-    if(m_socketHandler) {
+    else if(dbg()){
         cout << "------------------------------------------------------" << endl;
         cout << "RunModule::LoadSocket    SocketHandler instance loaded" << endl;
         m_socketHandler->Print();
         cout << "------------------------------------------------------" << endl;
     }
-    else {
-        cout << "RunModule::LoadSocket    ERROR SocketHandler instance null" << endl;
-        exit(1);
-    }
 
     m_initSocketHandler = true;
 
     return *this;
-}
-
-// ------------------------------------------------------------------------ //
-RunModule& RunModule::initializeDataHandler()
-{
-    if(!m_initSocketHandler) {
-        cout << "RunModule::initializeDataHandler    "
-             << "ERROR SocketHandler must be initialized before calling this"
-             << " method!"
-             << endl;
-        exit(1);
-    }
-    if(!m_initConfigHandler) {
-        cout << "RunModule::initializeDataHandler    "
-             << "ERROR ConfigHandler must be initialized before calling this"
-             << " method!" << endl;
-        exit(1);
-    }
-      
-    cout << "RunModule::initializeDataHandler    Setting up DataHandler..." << endl;  
-    m_dataHandler = new DataHandler();
-    connect(this, SIGNAL(EndRun()), m_dataHandler, SLOT(EndRun()));
-    m_dataHandler->LoadDAQSocket(m_socketHandler->daqSocket());
-    m_dataHandler->setDebug(dbg());
-    m_dataHandler->setWriteNtuple(writeOut());
-    m_dataHandler->setIgnore16((bool)config().daqSettings().ignore16);
-
-    return *this;
-}
-// ------------------------------------------------------------------------ //
-void RunModule::setupOutputFiles(TriggerDAQ& daq, QString outdir,
-                                                    QString filename)
-{
-    if(!m_dataHandler) {
-        cout << "RunModule::setupOutputFiles    "
-             << "ERROR You must call 'initializeDataHandler' before calling "
-             << "this method! Exiting." << endl;
-        exit(1);
-    }
-    m_dataHandler->setupOutputFiles(daq, outdir, filename);
-    m_dataHandler->dataFileHeader(config().commSettings(),
-                                    config().globalSettings(),
-                                    config().daqSettings());
 }
 // ------------------------------------------------------------------------ //
 void RunModule::prepareRun()
@@ -144,7 +91,6 @@ void RunModule::prepareRun()
 // ------------------------------------------------------------------------ //
 void RunModule::Run()
 {
-
     cout << "RunModule::Run    Starting run..." << endl;
     if(externalTrig())
         beginTimedRun();
@@ -243,7 +189,6 @@ void RunModule::sendPulse()
         }
         finishRun();
     }
-
 
 }
 // ------------------------------------------------------------------------ //

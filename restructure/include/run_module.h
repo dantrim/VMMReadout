@@ -5,7 +5,6 @@
 // vmm
 #include "socket_handler.h"
 #include "config_handler.h"
-#include "data_handler.h"
 
 // qt
 #include <QObject>
@@ -56,7 +55,6 @@ class RunModule : public QObject
 
         SocketHandler *m_socketHandler;
         ConfigHandler *m_configHandler;
-        DataHandler *m_dataHandler;
 
     signals :
         void EndRun();
@@ -66,8 +64,6 @@ class RunModule : public QObject
         void readEvent();
         void sendPulse();
         void finishRun();
-
-
 
 }; // class RunModule
 

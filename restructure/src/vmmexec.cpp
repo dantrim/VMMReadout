@@ -133,7 +133,10 @@ int main(int argc, char *argv[])
     
 
     RunModule runModule;
-    runModule.setDebug(dbg).setDoWrite(writeNtuple);
+    runModule.setDebug(dbg);
+
+    DataHandler dataHandle;
+
  //   runModule.LoadConfig(conf_handler).LoadSocket(socketHandler);
  //   runModule.initializeDataHandler();
 
@@ -151,10 +154,30 @@ int main(int argc, char *argv[])
     if(!sendConfigOnly) {
         // pass the configuration
         runModule.LoadConfig(conf_handler).LoadSocket(socketHandler);
-        runModule.initializeDataHandler();
-        runModule.setupOutputFiles(conf_handler.daqSettings(),
-            "/Users/dantrim/workarea/NSW/VMMReadout/restructure/build",
-            "testing.txt");
+
+        dataHandle.LoadDAQSocket(socketHandler.daqSocket());
+
+        QObject::connect(&runModule, SIGNAL(EndRun()),
+                &dataHandle, SLOT(writeAndCloseDataFile()));
+
+        dataHandle.setWriteNtuple(writeNtuple);
+        if(writeNtuple) {
+            dataHandle.setIgnore16((bool)conf_handler.daqSettings().ignore16);
+            dataHandle.setupOutputFiles(conf_handler.daqSettings(),
+                "/Users/dantrim/workarea/NSW/VMMReadout/restructure/build/",
+                "test_run.root");
+            dataHandle.setupOutputTrees();
+            dataHandle.dataFileHeader(conf_handler.commSettings(),
+                    conf_handler.globalSettings(), conf_handler.daqSettings());
+            #warning runNumber and angle in standalone executable?
+            dataHandle.getRunProperties(conf_handler.globalSettings(), 0, 0);
+        } //writeNtuple
+        
+
+//        runModule.initializeDataHandler();
+//        runModule.setupOutputFiles(conf_handler.daqSettings(),
+//            "/Users/dantrim/workarea/NSW/VMMReadout/restructure/build",
+//            "testing.txt");
         socketHandler.fecSocket().TestUDP();
 
         // pass the DAQ configuration
