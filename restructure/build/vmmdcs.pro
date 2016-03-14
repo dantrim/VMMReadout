@@ -6,7 +6,8 @@
 
 sourcepath= "../src"
 includepath="../include"
-boostinclude="/Users/dantrim/boost_1_60_0/"
+boostinclude="../include/boost"
+#boostinclude="/Users/dantrim/boost_1_60_0/"
 
 QT       += core gui
 QT       += network
