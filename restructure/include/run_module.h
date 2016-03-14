@@ -17,37 +17,56 @@ class RunModule : public QObject
         explicit RunModule(QObject *parent = 0);
         virtual ~RunModule(){};
         RunModule& setDebug(bool dbg) { m_dbg = dbg; return *this; }
-        RunModule& setDoWrite(bool doit) { m_writeNtuple = doit; return *this; }
         bool dbg() { return m_dbg; }
-        bool writeOut() { return m_writeNtuple; }
+
+        ////////////////////////////////////////////
+        // Run toggles
+        ////////////////////////////////////////////
+        /**
+         set flag for running with external or internal
+         triggers
+        */
         void setExternalTrig(bool doit) { m_externalTrigger = doit; }
         bool externalTrig() { return m_externalTrigger; }
+
+        /// pulse counter for running with internal trigger
         void updatePulseCount() { m_pulseCount++; }
         long int pulseCount() { return m_pulseCount; }
 
+        ///////////////////////////////////////////
+        // VMM handles
+        ///////////////////////////////////////////
         RunModule& LoadConfig(ConfigHandler& config);
         RunModule& LoadSocket(SocketHandler& socket);
-
-        RunModule& initializeDataHandler();
-        void setupOutputFiles(TriggerDAQ& daq, QString outdir="",
-                                                    QString filename="");
 
         SocketHandler& socket() { return *m_socketHandler; }
         ConfigHandler& config() { return *m_configHandler; }
 
-        // meaty methods
+        ///////////////////////////////////////////
+        // Methods for setting up T/DAQ
+        // and sending the configuration
+        ///////////////////////////////////////////
         void prepareRun();
         void setTriggerAcqConstants();
         void setTriggerMode();
         void ACQon();
         void ACQoff();
-
         void beginTimedRun();
         void beginPulserRun();
 
+
+        //////////////////////////////////////////////////////
+        // Misc. methods
+        //////////////////////////////////////////////////////
+        void setEventHeaders(const int evbld_info, const int evbld_mode);
+        void resetASICs();
+        void resetFEC(bool do_reset);
+        void setMask();
+        void checkLinkStatus();
+        void resetLinks();
+
     private :
         bool m_dbg;
-        bool m_writeNtuple;
         bool m_externalTrigger;
         long int m_pulseCount; 
         bool m_initSocketHandler;

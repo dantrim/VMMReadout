@@ -1569,6 +1569,18 @@
            </property>
           </widget>
          </item>
+         <item>
+          <widget class="QLabel" name="dacmvLabel">
+           <property name="font">
+            <font>
+             <pointsize>9</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </item>
        <item>
@@ -1599,6 +1611,18 @@
            </property>
            <property name="value">
             <number>300</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="dacmvLabel_TP">
+           <property name="font">
+            <font>
+             <pointsize>9</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>TextLabel</string>
            </property>
           </widget>
          </item>
@@ -1634,24 +1658,6 @@
       </widget>
      </item>
     </layout>
-    <widget class="QLabel" name="dacmvLabel">
-     <property name="geometry">
-      <rect>
-       <x>92</x>
-       <y>471</y>
-       <width>62</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>9</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>TextLabel</string>
-     </property>
-    </widget>
    </widget>
    <widget class="QGroupBox" name="groupBox_7">
     <property name="geometry">
@@ -1986,7 +1992,7 @@
       <number>1000000</number>
      </property>
      <property name="value">
-      <number>9000</number>
+      <number>0</number>
      </property>
     </widget>
     <widget class="QLabel" name="label_6">
@@ -3168,64 +3174,6 @@ p, li { white-space: pre-wrap; }
      <property name="title">
       <string>Channels</string>
      </property>
-     <widget class="QPushButton" name="setMask">
-      <property name="geometry">
-       <rect>
-        <x>20</x>
-        <y>220</y>
-        <width>71</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>9</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Set Mask</string>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="linkPB">
-      <property name="geometry">
-       <rect>
-        <x>20</x>
-        <y>240</y>
-        <width>71</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>9</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Link Status</string>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="resetLinks">
-      <property name="enabled">
-       <bool>true</bool>
-      </property>
-      <property name="geometry">
-       <rect>
-        <x>20</x>
-        <y>260</y>
-        <width>71</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <family>Arial</family>
-        <pointsize>9</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Reset Links</string>
-      </property>
-     </widget>
      <widget class="QLabel" name="label_17">
       <property name="geometry">
        <rect>
@@ -3310,7 +3258,7 @@ p, li { white-space: pre-wrap; }
         <x>10</x>
         <y>50</y>
         <width>81</width>
-        <height>171</height>
+        <height>151</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_9" rowstretch="0,0,0,0,0,0,0,0" columnstretch="0,0,0" rowminimumheight="0,0,0,0,0,0,0,0" columnminimumwidth="0,0,0">
@@ -3631,14 +3579,68 @@ p, li { white-space: pre-wrap; }
        </item>
       </layout>
      </widget>
+     <widget class="QPushButton" name="setMask">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>200</y>
+        <width>81</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Set Mask</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="linkPB">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>220</y>
+        <width>81</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Link Status</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="resetLinks">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>240</y>
+        <width>81</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Reset Links</string>
+      </property>
+     </widget>
      <zorder>layoutWidget</zorder>
-     <zorder>setMask</zorder>
-     <zorder>linkPB</zorder>
-     <zorder>resetLinks</zorder>
      <zorder>label_17</zorder>
      <zorder>label_11</zorder>
      <zorder>label_12</zorder>
      <zorder>label_13</zorder>
+     <zorder>setMask</zorder>
+     <zorder>linkPB</zorder>
+     <zorder>resetLinks</zorder>
     </widget>
     <widget class="QComboBox" name="evbld_mode">
      <property name="geometry">
@@ -3674,7 +3676,7 @@ p, li { white-space: pre-wrap; }
       </property>
      </item>
     </widget>
-    <widget class="QComboBox" name="evebld_infodata">
+    <widget class="QComboBox" name="evbld_infodata">
      <property name="geometry">
       <rect>
        <x>90</x>
@@ -4017,7 +4019,7 @@ p, li { white-space: pre-wrap; }
      <enum>QTabWidget::North</enum>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <property name="iconSize">
      <size>
@@ -5290,7 +5292,7 @@ p, li { white-space: pre-wrap; }
       <property name="title">
        <string>FEC Response</string>
       </property>
-      <widget class="QTextEdit" name="debugScreen_2">
+      <widget class="QTextEdit" name="debugScreen">
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -5305,7 +5307,7 @@ p, li { white-space: pre-wrap; }
         </font>
        </property>
       </widget>
-      <widget class="QPushButton" name="clearDebugScreenPB_2">
+      <widget class="QPushButton" name="clearDebugScreenPB">
        <property name="geometry">
         <rect>
          <x>10</x>

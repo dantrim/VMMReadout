@@ -144,11 +144,15 @@ class MainWindow : public QMainWindow
         bool m_tdaqOK;
         bool m_runModeOK;
         QString m_acqMode;
+        bool m_hdmiMaskON;
 
     signals :
         void checkFSM();
+        void EndRun();
 
     public slots:
+        // dac-to-mV
+        void changeDACtoMVs(int);
         // ~"FSM"
         void updateFSM();
 
@@ -178,8 +182,16 @@ class MainWindow : public QMainWindow
         // number of FECs
         void setNumberOfFecs(int);
 
-        // writeData check box
-        void setWriteData(int);
+        /// remaining buttons/widgets
+
+        void setAndSendEventHeaders();
+        void resetASICs();
+        void resetFEC();
+        void setHDMIMask();
+        void checkLinkStatus();
+        void writeFECStatus();
+        void resetLinks();
+        void triggerHandler();
 
         // channel fields
         void updateChannelState();

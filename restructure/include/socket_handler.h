@@ -72,6 +72,7 @@ class SocketHandler : public QObject
         bool m_dbg;
         bool m_pinged;
         bool m_dryrun;
+        bool m_skipProcessing;
         quint32 n_globalCommandCounter;
         VMMSocket *m_fecSocket;
         VMMSocket *m_vmmappSocket;

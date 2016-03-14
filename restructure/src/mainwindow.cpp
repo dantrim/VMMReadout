@@ -166,6 +166,37 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->writeConfigXMLFileButton, SIGNAL(clicked()),
                                     this, SLOT(writeConfigurationToFile()));
 
+    // set event headers
+    connect(ui->setEvbld, SIGNAL(clicked()),
+                                    this, SLOT(setAndSendEventHeaders()));
+
+    // reset ASICs
+    connect(ui->asic_reset, SIGNAL(clicked()),
+                                    this, SLOT(resetASICs()));
+    // warm init or reboot FEC
+    connect(ui->fec_WarmInit, SIGNAL(clicked()),
+                                    this, SLOT(resetFEC()));
+    connect(ui->fec_reset, SIGNAL(clicked()),
+                                    this, SLOT(resetFEC()));
+
+    // set HDMI channel mask
+    connect(ui->setMask, SIGNAL(clicked()),
+                                    this, SLOT(setHDMIMask()));
+
+    // link status
+    connect(ui->linkPB, SIGNAL(clicked()),
+                                    this, SLOT(checkLinkStatus()));
+
+    // reset links
+    connect(ui->resetLinks, SIGNAL(clicked()),
+                                    this, SLOT(resetLinks()));
+
+    // daq ~conversion to mV
+    connect(ui->sdt, SIGNAL(valueChanged(int)),
+                                    this, SLOT(changeDACtoMVs(int)));
+    connect(ui->sdp_2, SIGNAL(valueChanged(int)),
+                                    this, SLOT(changeDACtoMVs(int)));
+
 
 
     /////////////////////////////////////////////////////////////////////
@@ -197,14 +228,30 @@ MainWindow::~MainWindow()
     delete ui;
 }
 // ------------------------------------------------------------------------- //
+void MainWindow::changeDACtoMVs(int)
+{
+    QString tmp;
+    if(QObject::sender() == ui->sdt)
+        ui->dacmvLabel->setText(tmp.number((0.6862*ui->sdt->value()+63.478), 'f', 2) + " mV");    
+    else if(QObject::sender() == ui->sdp_2)
+        ui->dacmvLabel_TP->setText(tmp.number((0.6862*ui->sdp_2->value()+63.478), 'f', 2) + " mV");    
+}
+// ------------------------------------------------------------------------- //
 void MainWindow::updateFSM()
 {
     if(m_commOK && !m_configOK && !m_tdaqOK && !m_runModeOK && m_acqMode=="") {
         ui->SendConfiguration->setEnabled(true);
         ui->cmdlabel->setText("No\nConfig.");
+
+        ui->asic_reset->setEnabled(true);
+
+        ui->setMask->setEnabled(true);
+        ui->linkPB->setEnabled(true);
+        ui->resetLinks->setEnabled(true);
     }
     else if(m_commOK && m_configOK && !m_tdaqOK && !m_runModeOK && m_acqMode=="") {
         ui->setTrgAcqConst->setEnabled(true);
+        ui->setEvbld->setEnabled(true);
     }
     else if(m_commOK && m_configOK && m_tdaqOK && !m_runModeOK && m_acqMode=="") {
         ui->trgPulser->setEnabled(true);
@@ -270,7 +317,10 @@ void MainWindow::Connect()
         // the sockets
         ///////////////////////////////////////////////////////
         socketHandle().addSocket("FEC", FECPORT);
+        connect(&vmmSocketHandler->fecSocket(), SIGNAL(dataReady()),
+                                            this, SLOT(writeFECStatus()));
         socketHandle().addSocket("DAQ", DAQPORT); 
+
         
 
     } else {
@@ -565,6 +615,23 @@ void MainWindow::SetInitialState()
     ui->trgExternal->setEnabled(false);
     ui->onACQ->setEnabled(false);
     ui->offACQ->setEnabled(false);
+
+    // misc DAQ buttons
+    ui->setEvbld->setEnabled(false);
+    ui->asic_reset->setEnabled(false);
+
+    // hdmi mask
+    ui->setMask->setChecked(false);
+    ui->setMask->setEnabled(false);
+    ui->linkPB->setEnabled(false);
+    ui->resetLinks->setEnabled(false);
+
+    // dac to mV
+    QString tmp;
+    #warning is this conversion still valid?
+    ui->dacmvLabel->setText(tmp.number((0.6862*ui->sdt->value()+63.478), 'f', 2) + " mV");
+    ui->dacmvLabel_TP->setText(tmp.number((0.6862*ui->sdp_2->value()+63.478), 'f', 2) + " mV");
+
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::CreateChannelsFields()
