@@ -247,6 +247,70 @@ void ConfigHandler::WriteConfig(QString filename)
     out_root.add_child("global_settings", out_global);
 
 
+
+    // ----------------------------------------------- //
+    //  individual VMM channels
+    // ----------------------------------------------- //
+    std::vector<Channel> def_vmmchan = LoadVMMChannelConfig(defaultpt);
+
+    for(int i = 0; i < 64; i++) {
+        ptree out_channels;
+        if((int)channelSettings(i).number != i) {
+            cout << "ConfigHandler::WriteConfig    ERROR "
+                 << "VMM Channel numbers out of sync! Expecting "
+                 << "VMM Channel " << i << " but at this index " << endl;
+            cout << "ConfigHandler::WriteConfig    ERROR "
+                 << "we have VMM " << channelSettings(i).number << "." << endl;
+            exit(1);
+        }
+
+        ss.str("");
+        ss << "channel_" << format("%02i") % i;
+
+        //polarity (SP)
+        out_channels.put("polarity",
+            ConfigHandler::all_polarities[channelSettings(i).polarity].toStdString());
+
+        //capacitance (SC)
+        out_channels.put("capacitance",
+            isOnOrOff(channelSettings(i).capacitance));
+
+        //leakage_current (SL)
+        out_channels.put("leakage_current",
+            isEnaOrDis(channelSettings(i).leakage_current));
+
+        //test_pulse (ST)
+        out_channels.put("test_pulse",
+            isOnOrOff(channelSettings(i).test_pulse));
+
+        //hidden_mode (SM)
+        out_channels.put("hidden_mode",
+            isOnOrOff(channelSettings(i).hidden_mode));
+
+        //trim
+        out_channels.put("trim",
+            channelSettings(i).trim);
+
+        //monitor
+        out_channels.put("monitor",
+            isOnOrOff(channelSettings(i).monitor));
+
+        //s10bADC
+        out_channels.put("s10bADC_time_set",
+            channelSettings(i).s10bitADC);
+
+        //s08bADC_time_set
+        out_channels.put("s08bADC_time_set",
+            channelSettings(i).s8bitADC);
+
+        //s06bADC_time_set
+        out_channels.put("s06bADC_time_set",
+            channelSettings(i).s6bitADC);
+
+        out_root.add_child(ss.str(), out_channels);
+        
+    }
+
     // put everything under a global node
     outpt.add_child("configuration", out_root);
 
