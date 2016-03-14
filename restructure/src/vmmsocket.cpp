@@ -83,7 +83,7 @@ void VMMSocket::readyRead()
     if(dbg()) cout << getName() << " socket receiving data..." << endl;
 
     if     (getName()=="fec" || getName()=="FEC")
-        return; // not yet implemented
+        emit dataReady();
     else if(getName()=="DAQ" || getName()=="daq")
         emit dataReady();
 }

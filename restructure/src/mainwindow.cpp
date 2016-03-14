@@ -25,7 +25,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_configOK(false),
     m_tdaqOK(false),
     m_runModeOK(false),
-    m_acqMode("")
+    m_acqMode(""),
+    m_hdmiMaskON(false)
 {
 
     ui->setupUi(this);
@@ -38,6 +39,13 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tabWidget->setTabText(0,"Channel Registers");
     ui->tabWidget->setTabText(1,"Calibration");
     ui->tabWidget->setTabText(2,"Response");
+
+
+    cout << " !! DISABLING S6 AND TEST PULSE BOXES !! " << endl;
+    // disable S6 box
+    ui->groupBox_8->setEnabled(false);
+    // disable test pulse box
+    ui->groupBox_7->setEnabled(false);
 
     /////////////////////////////////////////////////////////////////////
     //-----------------------------------------------------------------//
@@ -90,6 +98,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ////acquisition mode buttons
     ui->onACQ->setCheckable(true);
     ui->offACQ->setCheckable(true);
+
+    //hdmi mask
+    ui->setMask->setCheckable(true);
 
     /////////////////////////////////////////////////////////////////////
     //-----------------------------------------------------------------//
@@ -498,10 +509,9 @@ void MainWindow::setACQMode()
             ui->onACQ->setDown(true);
             return;
         }
+        ui->onACQ->setDown(true);
         ui->offACQ->setChecked(false);
         ui->offACQ->setDown(false);
-        ui->onACQ->setStyleSheet("color: white");
-        ui->offACQ->setStyleSheet("color: black");
         runModule().ACQon();
         m_acqMode = "ON";
     }
@@ -511,10 +521,9 @@ void MainWindow::setACQMode()
             ui->offACQ->setDown(true);
             return;
         }
+        ui->offACQ->setDown(true);
         ui->onACQ->setChecked(false);
         ui->onACQ->setDown(false);
-        ui->onACQ->setStyleSheet("color: black");
-        ui->offACQ->setStyleSheet("color: white");
         runModule().ACQoff();
         m_acqMode = "OFF";
     }

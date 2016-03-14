@@ -93,17 +93,8 @@ void ConfigHandler::WriteConfig(QString filename)
     // read in the default configuration to ~get the structure
     string default_name = "../configs/config.xml";
     read_xml(default_name, defaultpt, trim_whitespace | no_comments);
-    std::vector<Channel> def_vmmchan = LoadVMMChannelConfig(defaultpt);
-
-   // commSettings()
-   // daqSettings()
-   // globalSettings()
-   // hdmiChannelSettings(int)
-   // channelSettings(int)
-
 
     ptree out_root;
-    ptree out_channels;
 
     // ----------------------------------------------- //
     //  udp_setup
@@ -245,12 +236,10 @@ void ConfigHandler::WriteConfig(QString filename)
         globalSettings().threshold_dac);
     out_global.put("test_pulse_DAC",
         globalSettings().test_pulse_dac);
-    
-
-
-
-
+   
+    // ----------------------------------------------- //
     // stitch together the fields
+    // ----------------------------------------------- //
     out_root.add_child("udp_setup", out_udpsetup);
     out_root.add_child("general_info", out_general);
     out_root.add_child("trigger_daq", out_tdaq);
@@ -316,10 +305,6 @@ CommInfo ConfigHandler::LoadCommInfo(const boost::property_tree::ptree& pt)
                 comm.debug = isOn(dbg);
             }
         }
-
-     //   m_commSettings = comm;
-     //   m_commSettings.Print();
-
     }
     catch(std::exception &e)
     {
@@ -338,7 +323,6 @@ void ConfigHandler::LoadCommInfo(const CommInfo& info)
 {
     m_commSettings = info;
     m_commSettings.Print();
-    
 }
 //// ------------------------------------------------------------------------ //
 GlobalSetting ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptree& pt)
@@ -351,7 +335,6 @@ GlobalSetting ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptre
     {
         for(const auto& conf : pt.get_child("configuration")) {
             if( !(conf.first == "global_settings") ) continue;
-
 
             // ------------------------------------------------------------- //
             // global channel polarity
@@ -383,7 +366,6 @@ GlobalSetting ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptre
             // ------------------------------------------------------------- //
             // gain
             string gain = conf.second.get<string>("gain");
-        //    g.gain = QString::fromStdString(gain);
             if(all_gains.indexOf(QString::fromStdString(gain))>=0)
                 g.gain = all_gains.indexOf(QString::fromStdString(gain));
             else {
@@ -578,9 +560,6 @@ GlobalSetting ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptre
             // test pulse DAC
             g.test_pulse_dac = conf.second.get<int>("test_pulse_DAC");
 
-         //   m_globalSettings = g;
-         //   m_globalSettings.Print();
-            
         }
     }
     catch(std::exception &e)
@@ -593,8 +572,6 @@ GlobalSetting ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptre
     }
 
     return g;
-
-
 }
 //// ------------------------------------------------------------------------ //
 TriggerDAQ ConfigHandler::LoadDAQConfig(const boost::property_tree::ptree& pt)
@@ -607,7 +584,6 @@ TriggerDAQ ConfigHandler::LoadDAQConfig(const boost::property_tree::ptree& pt)
     {
         for(const auto& conf : pt.get_child("configuration")) {
             if( !(conf.first == "trigger_daq") ) continue;
-
 
             // tp delay
             daq.tp_delay = conf.second.get<int>("tp_delay");
@@ -632,8 +608,6 @@ TriggerDAQ ConfigHandler::LoadDAQConfig(const boost::property_tree::ptree& pt)
             string oname = conf.second.get<string>("output_filename");
             daq.output_filename = QString::fromStdString(oname);
 
-         //   m_daqSettings = daq;
-         //   m_daqSettings.Print();
         }
     }
     catch(std::exception &e)
@@ -696,7 +670,6 @@ std::vector<ChannelMap> ConfigHandler::LoadHDMIChannels(const boost::property_tr
         std::cout << "!! --------------------------------- !!" << std::endl;
         exit(1);
     }
-
     return outmap;
 }
 //// ------------------------------------------------------------------------ //
@@ -712,7 +685,6 @@ void ConfigHandler::setHDMIChannelMap()
                     << " entries." << std::endl;
         exit(1);
     }
-
     bool ok;
     QString chMapString = "0000000000000000"; 
     for(int i = 0; i < (int)m_channelmap.size(); ++i) {
@@ -827,7 +799,6 @@ void ConfigHandler::LoadBoardConfiguration(GlobalSetting& global,
  //   tmp.append(QString::number(global.direct_time_mode1));
  //   m_globalSettings.direct_time_mode = tmp.toUInt(&ok,2);
     
-
     m_channelmap.clear();
     for(int i = 0; i < (int)chMap.size(); i++) {
         m_channelmap.push_back(chMap[i]);

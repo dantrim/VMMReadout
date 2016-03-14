@@ -21,17 +21,12 @@ SocketHandler::SocketHandler(QObject* parent) :
     m_dbg(false),
     m_pinged(false),
     m_dryrun(false),
+    m_skipProcessing(true),
     n_globalCommandCounter(0),
     m_fecSocket(0),
     m_vmmappSocket(0),
     m_daqSocket(0)
 {
-
-    //Socket = new QUdpSocket();
-    //// use SocketHandler readyRead
-    ////socket->bind(QHostAddress::LocalHost, 1234);
-    //Connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
-
 }
 // ---------------------------------------------------------------------- //
 void SocketHandler::setDryRun()
@@ -95,8 +90,6 @@ void SocketHandler::updateCommandCounter()
 void SocketHandler::addSocket(std::string name, quint16 bindingPort,
                                     QAbstractSocket::BindMode mode)
 {
-    using namespace std;
-
     QString lname = QString::fromStdString(name).toLower();
     if(lname=="fec") {
         m_fecSocket = new VMMSocket();
@@ -106,10 +99,10 @@ void SocketHandler::addSocket(std::string name, quint16 bindingPort,
         if(!dryrun())
             m_fecSocket->bindSocket(bindingPort, mode);
 
-        std::cout << "----------------------------------------------------" << std::endl;
-        std::cout << " SocketHandler::addSocket    VMMSocket added:" << std::endl;
+        cout << "----------------------------------------------------" << endl;
+        cout << " SocketHandler::addSocket    VMMSocket added:" << endl;
         m_fecSocket->Print();
-        std::cout << "----------------------------------------------------" << std::endl;
+        cout << "----------------------------------------------------" << endl;
 
     } // fec
     else if(lname=="daq") {
@@ -120,10 +113,10 @@ void SocketHandler::addSocket(std::string name, quint16 bindingPort,
         if(!dryrun())
             m_daqSocket->bindSocket(bindingPort, mode);
         
-        std::cout << "----------------------------------------------------" << std::endl;
-        std::cout << " SocketHandler::addSocket    VMMSocket added:" << std::endl;
+        cout << "----------------------------------------------------" << endl;
+        cout << " SocketHandler::addSocket    VMMSocket added:" << endl;
         m_daqSocket->Print();
-        std::cout << "----------------------------------------------------" << std::endl;
+        cout << "----------------------------------------------------" << endl;
     } //daq
     else if(lname=="vmmapp") {
         m_vmmappSocket = new VMMSocket();
@@ -133,10 +126,10 @@ void SocketHandler::addSocket(std::string name, quint16 bindingPort,
         if(!dryrun())
             m_vmmappSocket->bindSocket(bindingPort, mode);
 
-        std::cout << "----------------------------------------------------" << std::endl;
-        std::cout << " SocketHandler::addSocket    VMMSocket added:" << std::endl;
+        cout << "----------------------------------------------------" << endl;
+        cout << " SocketHandler::addSocket    VMMSocket added:" << endl;
         m_vmmappSocket->Print();
-        std::cout << "----------------------------------------------------" << std::endl;
+        cout << "----------------------------------------------------" << endl;
     } //vmmapp
     else {
         cout << "ERROR addSocket    Currently can only add the fec, daq, or vmmapp "
@@ -152,6 +145,7 @@ void SocketHandler::SendDatagram(const QByteArray& datagram, const QString& ip,
     std::string fn = "";
     if(callingFn!="") fn = "(" + callingFn.toStdString() + ") ";
 
+    // get the requested VMMSocket
     VMMSocket& socket = getSocket(whichSocket.toStdString());
 
     //CHECK STATUS ENUM
@@ -161,11 +155,14 @@ void SocketHandler::SendDatagram(const QByteArray& datagram, const QString& ip,
              << "ERROR Boards are not in pinged OK state" << endl;
         exit(1);
     }
+
+    // make sure the socket is connected (bound) to the correct port
     if(!dryrun()) {
         if(!socket.checkAndReconnect(callingFn.toStdString()))
             exit(1);
     }
 
+    // now send the data
     bool ok;
     if(dbg()) cout << "SocketHandler::SendDatagram    " << fn
                    << (dryrun() ? "[dry run]" : "")
@@ -179,14 +176,12 @@ void SocketHandler::SendDatagram(const QByteArray& datagram, const QString& ip,
 
     #warning does closing socket here prevent reply processing???
     //socket.closeAndDisconnect();
-    
-
 }
 // ---------------------------------------------------------------------- //
 bool SocketHandler::waitForReadyRead(std::string name, int msec)
 {
     bool status = false;
-    if(dryrun()) status = true;
+    if(dryrun() || m_skipProcessing) status = true;
     else {
         VMMSocket& vmmsocket = getSocket(name);
         status = vmmsocket.socket().waitForReadyRead(msec);
@@ -200,8 +195,10 @@ void SocketHandler::processReply(std::string name, const QString& ip_to_check,
     quint32 count = commandCounter();
     cout << "HANDLER : delay = " << cmd_delay << "  global : " << count << endl; 
 
-    if(dryrun())
+    if(dryrun() || m_skipProcessing) {
+        cout << " SocketHandler::processReply    NOT PROCESSING REPLIES! " << endl;
         return;
+    }
 
     VMMSocket& socket = getSocket(name);
     socket.processReply(ip_to_check, cmd_delay, count);

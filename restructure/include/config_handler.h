@@ -10,9 +10,8 @@
 // boost
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
-#include <boost/foreach.hpp>
-//
-//// std/stdl
+
+// std/stdl
 #include <iostream>
 
 
@@ -158,13 +157,13 @@ struct Channel {
     Channel();
 
     unsigned int number;
-    bool polarity;          //SP
-    bool capacitance;       //SC
-    bool leakage_current;   //SL
-    bool test_pulse;        //ST
-    bool hidden_mode;       //SM
+    int polarity;          //SP
+    int capacitance;       //SC
+    int leakage_current;   //SL
+    int test_pulse;        //ST
+    int hidden_mode;       //SM
     int trim;
-    bool monitor;           //SMX
+    int monitor;           //SMX
     int s10bitADC;
     int s8bitADC;
     int s6bitADC;

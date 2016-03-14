@@ -10,10 +10,6 @@
 #include <QFont>
 //#include <constants.h>
 
-// std/stl
-//using std::vector;
-using namespace std;
-
 // vmm
 #include "config_handler.h"
 #include "configuration_module.h"

@@ -3,6 +3,7 @@
 #include "data_handler.h"
 
 // std/stl
+#include <math.h>
 #include <iostream>
 using namespace std;
 
@@ -17,32 +18,26 @@ using namespace std;
 RunModule::RunModule(QObject *parent) :
     QObject(parent),
     m_dbg(true),
-    m_writeNtuple(true),
     m_externalTrigger(false),
     m_pulseCount(0),
     m_initSocketHandler(false),
     m_initConfigHandler(false),
     m_socketHandler(0),
-    m_configHandler(0),
-    m_dataHandler(0)
+    m_configHandler(0)
 {
 }
 // ------------------------------------------------------------------------ //
 RunModule& RunModule::LoadConfig(ConfigHandler& inconfig)
 {
-    if(!m_configHandler)
-        m_configHandler = &inconfig;
-    else {
-        cout << "RunModule::LoadConfig    WARNING ConfigHandler instance is "
-             << "already active (non-null)!" << endl;
-        cout << "RunModule::LoadConfig    WARNING Will keep the first "
-             << "instance." << endl;
-        return *this;
-    }
-        
+    m_configHandler = &inconfig;
     if(!m_configHandler) {
         cout << "RunModule::LoadConfig    ERROR ConfigHandler instance null" << endl;
         exit(1);
+    }
+    else if(dbg()){
+        cout << "------------------------------------------------------" << endl;
+        cout << "RunModule::LoadConfig    ConfigHandler instance loaded" << endl;
+        cout << "------------------------------------------------------" << endl;
     }
 
     //depending on the run_mode set in the configuration

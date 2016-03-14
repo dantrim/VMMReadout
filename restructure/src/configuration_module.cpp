@@ -34,29 +34,26 @@ Configuration& Configuration::LoadConfig(ConfigHandler& config)
         cout << "Configuration::LoadConfig    ERROR ConfigHandler instance null" << endl;
         exit(1);
     }
+    else if(dbg()) {
+        cout << "------------------------------------------------------" << endl;
+        cout << "Configuration::LoadConfig    ConfigHandler instance loade" << endl;
+        cout << "------------------------------------------------------" << endl;
+    }
     return *this;
 }
 // ------------------------------------------------------------------------ //
 Configuration& Configuration::LoadSocket(SocketHandler& socket)
 {
-    if(!m_socketHandler)
-        m_socketHandler = &socket;
-    else {
-        cout << "Configuration::LoadSocket    WARNING SocketHandler instance "
-             << "is already active (non-null)!" << endl;
-        cout << "Configuration::LoadSocket    WARNING Will keep first "
-             << "instance." << endl;
-        return *this;
+    m_socketHandler = &socket;
+    if(!m_socketHandler) {
+        cout << "Configuration::LoadSocket    ERROR SocketHandler instance null" << endl;
+        exit(1);
     }
-    if(m_socketHandler) {
+    else if(dbg()) {
         cout << "----------------------------------------------------------" << endl; 
         cout << "Configuration::LoadSocket    SocketHandler instance loaded" << endl;
         m_socketHandler->Print();
         cout << "----------------------------------------------------------" << endl; 
-    }
-    else {
-        cout << "Configuration::LoadSocket    ERROR SocketHandler instance null" << endl;
-        exit(1);
     }
         
     return *this;
