@@ -6,13 +6,17 @@
 #include <QDir>
 #include <QFileDialog>
 
+// std/stl
+#include <iostream>
+#include <sstream>
+using namespace std;
+
 
 // ------------------------------------------------------------------------- //
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    //FECPORT(6007),
-    FECPORT(6999),
+    FECPORT(6007),
     DAQPORT(6006),
     VMMASICPORT(6603),
     VMMAPPPORT(6600),
