@@ -3258,7 +3258,7 @@ p, li { white-space: pre-wrap; }
         <x>10</x>
         <y>50</y>
         <width>81</width>
-        <height>151</height>
+        <height>167</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_9" rowstretch="0,0,0,0,0,0,0,0" columnstretch="0,0,0" rowminimumheight="0,0,0,0,0,0,0,0" columnminimumwidth="0,0,0">
@@ -4015,11 +4015,16 @@ p, li { white-space: pre-wrap; }
       <height>681</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
     <property name="tabPosition">
      <enum>QTabWidget::North</enum>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>2</number>
     </property>
     <property name="iconSize">
      <size>
@@ -5284,7 +5289,7 @@ p, li { white-space: pre-wrap; }
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>0</y>
+        <y>400</y>
         <width>601</width>
         <height>151</height>
        </rect>
@@ -5297,7 +5302,7 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>10</x>
          <y>50</y>
-         <width>551</width>
+         <width>581</width>
          <height>91</height>
         </rect>
        </property>
@@ -5324,6 +5329,35 @@ p, li { white-space: pre-wrap; }
        </property>
        <property name="text">
         <string>Clear</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="groupBox_5">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>0</y>
+        <width>601</width>
+        <height>401</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Logging</string>
+      </property>
+      <widget class="QTextEdit" name="loggingScreen">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>581</width>
+         <height>361</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Courier</family>
+         <pointsize>9</pointsize>
+        </font>
        </property>
       </widget>
      </widget>

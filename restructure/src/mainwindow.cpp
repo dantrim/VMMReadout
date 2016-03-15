@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-//#include "constants.h"
 
 // qt
 #include <QDir>
@@ -33,11 +32,17 @@ MainWindow::MainWindow(QWidget *parent) :
     m_hdmiMaskON(false)
 {
 
+    vmmMessageHandler = new MessageHandler();
+    vmmMessageHandler->setMessageSize(75);
+    vmmMessageHandler->setGUI(true);
+    connect(vmmMessageHandler, SIGNAL(logReady()), this, SLOT(readLog()));
+
     ui->setupUi(this);
     //this->setFixedSize(1200,720); // 1400, 725
     this->setMinimumHeight(720);
     this->setMinimumWidth(1200);
     Font.setFamily("Arial");
+    ui->loggingScreen->setReadOnly(true);
 
     ui->tabWidget->setStyleSheet("QTabBar::tab { height: 18px; width: 100px; }");
     ui->tabWidget->setTabText(0,"Channel Registers");
@@ -45,7 +50,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tabWidget->setTabText(2,"Response");
 
 
-    cout << " !! DISABLING S6 AND TEST PULSE BOXES !! " << endl;
+    stringstream test;
+    test << "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+    msg()(test, "MainWindow::CONSTRUCTOR", true);
+
+    msg()(" !! DISABLING S6 AND TEST PULSE BOXES !! ");
     // disable S6 box
     ui->groupBox_8->setEnabled(false);
     // disable test pulse box
@@ -58,13 +67,12 @@ MainWindow::MainWindow(QWidget *parent) :
     /////////////////////////////////////////////////////////////////////
     vmmConfigHandler = new ConfigHandler();
     vmmConfigHandler->setDebug(true);
+    vmmConfigHandler->LoadMessageHandler(msg());
     vmmSocketHandler = new SocketHandler();
     vmmSocketHandler->setDebug(true);
 
     // set dry run for testing
-    cout << endl;
-    cout << " !! SOCKETHANDLER SET FOR DRY RUN !! " << endl;
-    cout << endl;
+   // msg()(" !! SOCKETHANDLER SET FOR DRY RUN !! ");
    // vmmSocketHandler->setDryRun();
 
     connect(vmmSocketHandler, SIGNAL(commandCounterUpdated()),
@@ -72,6 +80,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     vmmConfigModule  = new Configuration();
     vmmConfigModule->setDebug(true);
+    vmmConfigModule->LoadMessageHandler(msg());
+
     vmmRunModule     = new RunModule();
     vmmRunModule->setDebug(true);
 
@@ -239,6 +249,14 @@ void MainWindow::changeDACtoMVs(int)
         ui->dacmvLabel->setText(tmp.number((0.6862*ui->sdt->value()+63.478), 'f', 2) + " mV");    
     else if(QObject::sender() == ui->sdp_2)
         ui->dacmvLabel_TP->setText(tmp.number((0.6862*ui->sdp_2->value()+63.478), 'f', 2) + " mV");    
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::readLog()
+{
+    string buff = msg().buffer();
+    ui->loggingScreen->append(QString::fromStdString(buff));
+    ui->loggingScreen->moveCursor(QTextCursor::End, QTextCursor::MoveAnchor);
+    msg().clear(); 
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::updateFSM()
@@ -460,9 +478,7 @@ void MainWindow::prepareAndSendBoardConfig()
   //  configModule().LoadConfig(configHandle()).LoadSocket(socketHandle()); 
 
     // send the configuration to the FEC/boards
-    cout << endl;
-    cout << " !! NOT SENDING CONFIG !! " << endl;
-    cout << endl;
+    //msg()(" !! NOT SENDING SPI CONFIG !! ");
     socketHandle().updateCommandCounter();
     configModule().SendConfig();
 
@@ -1374,12 +1390,12 @@ void MainWindow::updateConfigState()
     for(int i = 0; i < 64; i++) {
         Channel chan = configHandle().channelSettings(i);
         if(!((int)chan.number == i)) {
-            cout << "MainWindow::updateConfigState    ERROR"
-                 << " Channel config from ConfigHandler is out of sync!"
-                 << "MainWindow::updateConfigState    ERROR"
-                 << " Attempting to access state of channel " << i << " but "
-                 << "corresponding index in ConfigHandler channel map is "
-                 << chan.number << "! Exiting." << endl;
+            stringstream ss;
+            ss << "Channel config from ConfigHandler is out of sync!"
+               << " Attempting to access state of channel number " << i
+               << " but corresponding index in ConfigHandler channel map is "
+               << chan.number << "!";
+            msg()(ss, "MainWindow::updateConfigState", true);
             exit(1);
         }
 
@@ -1705,7 +1721,7 @@ void MainWindow::triggerHandler()
             //    if(ui->autoCalib->isChecked())
             //        startCalibration();
             //    else if(ui->manCalib->isChecked())
-            //        cout << "Manual Calibration" << endl;
+            //        msg()("Manual Calibration");
             //} // calibration
 
         } // writeData

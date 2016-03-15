@@ -14,6 +14,9 @@
 // std/stdl
 #include <iostream>
 
+// vmm
+#include "message_handler.h"
+
 
 // ---------------------------------------------------------------------- //
 //  Structures for holding config items
@@ -185,6 +188,9 @@ class ConfigHandler : public QObject
         ConfigHandler& setDebug(bool dbg) { m_dbg = dbg; return *this;}
         bool dbg() { return m_dbg; }
 
+        void LoadMessageHandler(MessageHandler& msg);
+        MessageHandler& msg() { return *m_msg; }
+
         void LoadConfig(const QString &filename);
         void WriteConfig(QString filename);
         CommInfo LoadCommInfo(const boost::property_tree::ptree& p);
@@ -236,6 +242,9 @@ class ConfigHandler : public QObject
         std::vector<ChannelMap> m_channelmap;
         quint16 m_channelMap; 
         std::vector<Channel> m_channels;
+
+        MessageHandler* m_msg;
+
 
 
 }; // class ConfigHandler

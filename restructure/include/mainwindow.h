@@ -16,6 +16,7 @@
 #include "run_module.h"
 #include "socket_handler.h"
 #include "data_handler.h"
+#include "message_handler.h"
 
 namespace Ui {
 class MainWindow;
@@ -44,6 +45,7 @@ class MainWindow : public QMainWindow
         Configuration& configModule() { return *vmmConfigModule;  }
         RunModule&     runModule()    { return *vmmRunModule;     }
         DataHandler&   dataHandle()   { return *vmmDataHandler;    }
+        MessageHandler& msg()         { return *vmmMessageHandler; }
     
         //////////////////////////////////////////////////////
         // IPs
@@ -137,6 +139,7 @@ class MainWindow : public QMainWindow
         Configuration *vmmConfigModule;
         RunModule     *vmmRunModule;
         DataHandler   *vmmDataHandler;
+        MessageHandler *vmmMessageHandler;
 
 
         bool m_commOK;
@@ -155,6 +158,9 @@ class MainWindow : public QMainWindow
         void changeDACtoMVs(int);
         // ~"FSM"
         void updateFSM();
+
+        // logging
+        void readLog();
 
         // counter
         void updateCounter();

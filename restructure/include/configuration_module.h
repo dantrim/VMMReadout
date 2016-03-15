@@ -5,6 +5,7 @@
 // vmm
 #include "config_handler.h"
 #include "socket_handler.h"
+#include "message_handler.h"
 
 // Qt
 #include <QString>
@@ -26,6 +27,9 @@ class Configuration : public QObject
         Configuration& setDebug(bool dbg) { m_dbg = dbg; return *this; }
         bool dbg() { return m_dbg; }
 
+        void LoadMessageHandler(MessageHandler& msg);
+        MessageHandler& msg() { return *m_msg; }
+
         Configuration& LoadConfig(ConfigHandler& config);
         Configuration& LoadSocket(SocketHandler& socket);
 
@@ -40,6 +44,7 @@ class Configuration : public QObject
 
         SocketHandler *m_socketHandler;
         ConfigHandler *m_configHandler;
+        MessageHandler* m_msg;
 
 
 }; // class Configuration

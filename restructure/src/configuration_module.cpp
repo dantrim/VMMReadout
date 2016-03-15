@@ -23,21 +23,25 @@ Configuration::Configuration(QObject *parent) :
     QObject(parent),
     m_dbg(false),
     m_socketHandler(0),
-    m_configHandler(0)
+    m_configHandler(0),
+    m_msg(0)
 {
+}
+// ------------------------------------------------------------------------ //
+void Configuration::LoadMessageHandler(MessageHandler& m)
+{
+    m_msg = &m;
 }
 // ------------------------------------------------------------------------ //
 Configuration& Configuration::LoadConfig(ConfigHandler& config)
 {
     m_configHandler = &config;
     if(!m_configHandler) {
-        cout << "Configuration::LoadConfig    ERROR ConfigHandler instance null" << endl;
+        msg()("ERROR ConfigHandler instance is null", "Configuration::LoadConfig", true);
         exit(1);
     }
     else if(dbg()) {
-        cout << "------------------------------------------------------" << endl;
-        cout << "Configuration::LoadConfig    ConfigHandler instance loade" << endl;
-        cout << "------------------------------------------------------" << endl;
+        msg()("ConfigHandler instance loaded", "Configuration::LoadConfig");
     }
     return *this;
 }
@@ -46,14 +50,12 @@ Configuration& Configuration::LoadSocket(SocketHandler& socket)
 {
     m_socketHandler = &socket;
     if(!m_socketHandler) {
-        cout << "Configuration::LoadSocket    ERROR SocketHandler instance null" << endl;
+        msg()("ERROR SocketHandler instance is null", "Configuration::LoadSocket", true);
         exit(1);
     }
     else if(dbg()) {
-        cout << "----------------------------------------------------------" << endl; 
-        cout << "Configuration::LoadSocket    SocketHandler instance loaded" << endl;
+        msg()("SocketHandler instance loaded", "Configuration::LoadSocket");
         m_socketHandler->Print();
-        cout << "----------------------------------------------------------" << endl; 
     }
         
     return *this;
@@ -80,7 +82,7 @@ void Configuration::SendConfig()
     globalRegisters.clear();
     fillGlobalRegisters(globalRegisters);
     if(globalRegisters.size()!=3){
-        std::cout << "ERROR global SPI does not have 3 words." << std::endl;
+        msg()("ERROR Global SPI does not have 3 words", "Configuration::SendConfig", true);
         exit(1);
     }
     ///////////////////////////////////////////////////
@@ -90,7 +92,7 @@ void Configuration::SendConfig()
     channelRegisters.clear();
     fillChannelRegisters(channelRegisters);
     if(channelRegisters.size()!=64){
-        std::cout << "ERROR channel registers does not have 64 values." << std::endl;
+        msg()("ERROR Channel registers do not have 64 values", "Configuration::SendConfig", true);
         exit(1);
     }
 
@@ -139,13 +141,11 @@ void Configuration::SendConfig()
                                         "Configuration::SendConfig"); 
         readOK = socket().waitForReadyRead("fec");
         if(readOK) {
-            if(dbg()) cout << "Configuration::SendConfig    "
-                           << "Processing replies..." << endl;
+            if(dbg()) msg()("Processing replies...", "Configuration::SendConfig");
             socket().processReply("fec", ip);
         }
         else {
-            cout << "Configuration::SendConfig    Timeout while waiting for replies "
-                 << "from VMM" << endl;
+            msg()("Timeout while waiting for replies from VMM", "Configuration::SendConfig");
             socket().closeAndDisconnect("fec","Configuration::SendConfig");
             exit(1);
         }
@@ -156,6 +156,10 @@ void Configuration::SendConfig()
 // ------------------------------------------------------------------------ //
 void Configuration::fillGlobalRegisters(std::vector<QString>& global)
 {
+    stringstream sx;
+
+    if(dbg()) msg()("Loading global register configuration...", "Configuration::fillGlobalRegisters");
+
     global.clear();
     int sequence = 0;
 
@@ -222,8 +226,9 @@ void Configuration::fillGlobalRegisters(std::vector<QString>& global)
 
     if(m_dbg)
     {
-        std::cout << "Configuration::GlobalRegister    SPI[0] "
-                << spi0.toStdString() << std::endl;
+        sx.str("");
+        sx << "SPI[0]: "<<spi0.toStdString();
+        msg()(sx,"Configuration::fillGlobalRegisters");
     }
 
     global.push_back(spi0);
@@ -301,8 +306,9 @@ void Configuration::fillGlobalRegisters(std::vector<QString>& global)
 
     if(m_dbg)
     {
-        std::cout << "Configuration::GlobalRegister    SPI[1] "
-                << spi1.toStdString() << std::endl;
+        sx.str("");
+        sx << "SPI[1]: " << spi1.toStdString();
+        msg()(sx,"Configuration::fillGlobalRegisters");
     }
 
     global.push_back(spi1);
@@ -383,8 +389,9 @@ void Configuration::fillGlobalRegisters(std::vector<QString>& global)
 
     if(m_dbg)
     {
-        std::cout << "Configuration::GlobalRegister    SPI[2] "
-                << spi2.toStdString() << std::endl;
+        sx.str("");
+        sx << "SPI[2]: "<<spi2.toStdString();
+        msg()(sx,"Configuration::fillGlobalRegisters");
     }
 
     global.push_back(spi2);
@@ -393,6 +400,9 @@ void Configuration::fillGlobalRegisters(std::vector<QString>& global)
 // ------------------------------------------------------------------------ //
 void Configuration::fillChannelRegisters(std::vector<QString>& registers)
 {
+    stringstream sx;
+    if(dbg()) msg()("Loading channel configuration...", "Configuration::fillChannelRegisters");
+
     registers.clear();
     int sequence;
     QString tmp;
@@ -473,10 +483,13 @@ void Configuration::fillChannelRegisters(std::vector<QString>& registers)
             using boost::format; 
             std::stringstream chan;
             chan.str("");
-            chan << format("%02i") % i;
-            std::cout << "-----------------------------------------------" << std::endl;
-            std::cout << " Channel [" << chan.str() << "] register "
-                 << reg.toStdString() << std::endl;
+            chan << " Chan["<< format("%02i") % i <<"]: " << reg.toStdString();
+            msg()(chan, "Configuration::fillChannelRegisters");
+            //chan << format("%02i") % i;
+            //
+            //std::cout << "-----------------------------------------------" << std::endl;
+            //std::cout << " Channel [" << chan.str() << "] register "
+            //     << reg.toStdString() << std::endl;
         } 
 
         registers.push_back(reg);

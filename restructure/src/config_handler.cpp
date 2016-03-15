@@ -43,10 +43,16 @@ const QStringList ConfigHandler::all_ADC6bits
 //////////////////////////////////////////////////////////////////////////////
 ConfigHandler::ConfigHandler(QObject *parent) :
     QObject(parent),
-    m_dbg(false)
+    m_dbg(false),
+    m_msg(0)
 {
     m_channelmap.clear();
     m_channels.clear();
+}
+//// ------------------------------------------------------------------------ //
+void ConfigHandler::LoadMessageHandler(MessageHandler& m)
+{
+    m_msg = &m;
 }
 //// ------------------------------------------------------------------------ //
 void ConfigHandler::LoadConfig(const QString &filename)
@@ -74,10 +80,12 @@ void ConfigHandler::LoadConfig(const QString &filename)
 
     m_channels = LoadVMMChannelConfig(pt);
 
+    stringstream sx;
     bool ok;
-    std::cout << "ChannelMap size   : " << m_channelmap.size() << std::endl;
-    std::cout << "HDMI channel map  : " << getHDMIChannelMap() << std::endl;
-    std::cout << "VMM channels size : " << m_channels.size()   << std::endl;
+    sx << "ChannelMap size    : " << m_channelmap.size () << "\n"
+       << "HDMI channel map   : " << getHDMIChannelMap()  << "\n"
+       << "VMM channels size  : " << m_channels.size();
+    msg()(sx,"ConfigHandler::LoadConfig");
 
 }
 //// ------------------------------------------------------------------------ //
@@ -256,11 +264,10 @@ void ConfigHandler::WriteConfig(QString filename)
     for(int i = 0; i < 64; i++) {
         ptree out_channels;
         if((int)channelSettings(i).number != i) {
-            cout << "ConfigHandler::WriteConfig    ERROR "
-                 << "VMM Channel numbers out of sync! Expecting "
-                 << "VMM Channel " << i << " but at this index " << endl;
-            cout << "ConfigHandler::WriteConfig    ERROR "
-                 << "we have VMM " << channelSettings(i).number << "." << endl;
+            stringstream sx;
+            sx << "ERROR VMM Channel numbers out of sync! Expecting VMM channel "
+               << i << " but at this index we have VMM " << channelSettings(i).number;
+            msg()(sx, "ConfigHandler::WriteConfig", true);
             exit(1);
         }
 
@@ -372,9 +379,11 @@ CommInfo ConfigHandler::LoadCommInfo(const boost::property_tree::ptree& pt)
     }
     catch(std::exception &e)
     {
-        std::cout << "!! --------------------------------- !!" << std::endl;
-        std::cout << "ERROR CONF: " << e.what() << std::endl;
-        std::cout << "!! --------------------------------- !!" << std::endl;
+        stringstream sx;
+        sx << "!! -------------------------------------------- !! \n"
+           << "  ERROR CONF: " << e.what() << "\n"
+           << "!! -------------------------------------------- !!"; 
+        msg()(sx,"ConfigHandler::LoadCommInfo", true); 
         exit(1);
     }
 
@@ -406,9 +415,11 @@ GlobalSetting ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptre
             if(all_polarities.indexOf(QString::fromStdString(pol))>=0)
                 g.polarity = all_polarities.indexOf(QString::fromStdString(pol));
             else {
-                cout << "ERROR ch_polarity value must be one of: [";
-                for(auto& i : all_polarities) cout << " " << i.toStdString() << " ";
-                cout << "], you have provided: " << pol << endl;
+                stringstream sx;
+                sx << "ERROR ch_polarity value must be one of: [";
+                for(auto& i : all_polarities) sx << " " << i.toStdString() << " ";
+                sx << "]\nYou have provided: " << pol;
+                msg()(sx,"ConfigHandler::LoadGlobalSettings", true);
                 exit(1);
             }
 
@@ -433,9 +444,11 @@ GlobalSetting ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptre
             if(all_gains.indexOf(QString::fromStdString(gain))>=0)
                 g.gain = all_gains.indexOf(QString::fromStdString(gain));
             else {
-                cout << "ERROR gain value must be one of: [";
-                for(auto& i : all_gains)  cout << " " << i.toStdString() << " ";
-                cout << "] mV/fC, you have provided: " << gain << endl;
+                stringstream sx;
+                sx << "ERROR gain value must be one of: [";
+                for(auto& i : all_gains)  sx << " " << i.toStdString() << " ";
+                sx << "] mV/fC\nYou have provided: " << gain;
+                msg()(sx,"ConfigHandler::LoadGlobalSettings", true);
                 exit(1);
             }
             
@@ -445,9 +458,11 @@ GlobalSetting ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptre
             if(all_peakTimes.indexOf(ptime)>=0)
                 g.peak_time = all_peakTimes.indexOf(ptime);
             else {
-                cout << "ERROR peak_time value must be one of: [";
-                for(auto& i : all_peakTimes) cout << " " << i << " ";
-                cout << "] ns, you have provided: " << ptime << endl;
+                stringstream sx;
+                sx << "ERROR peak_time value must be one of: [";
+                for(auto& i : all_peakTimes) sx << " " << i << " ";
+                sx << "] ns\nYou have provided: " << ptime;
+                msg()(sx,"ConfigHandler::LoadGlobalSettings", true);
                 exit(1);
             }
 
@@ -462,9 +477,11 @@ GlobalSetting ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptre
             if(all_TACslopes.indexOf(tacslope)>=0)
                 g.tac_slope = all_TACslopes.indexOf(tacslope);
             else {
-                cout << "ERROR TAC_slope_adj value must be one of: [";
-                for(auto& i : all_TACslopes) cout << " " << i << " ";
-                cout << "] ns, you have provided: " << tacslope << endl;
+                stringstream sx;
+                sx << "ERROR TAC_slope_adj value must be one of: [";
+                for(auto& i : all_TACslopes) sx << " " << i << " ";
+                sx << "] ns\nYou have provided: " << tacslope;
+                msg()(sx,"ConfigHandler::LoadGlobalSettings", true);
                 exit(1);
             }
 
@@ -486,9 +503,11 @@ GlobalSetting ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptre
                 g.art_mode = all_ARTmodes.indexOf(mode);
             }
             else {
-                cout << "ERROR ART_mode value must be one of: [";
-                for(auto& i : all_ARTmodes) cout << " " << i.toStdString() << " ";
-                cout << "], you have provided: " << artmode << endl;
+                stringstream sx;
+                sx << "ERROR ART_mode value must be one of: [";
+                for(auto& i : all_ARTmodes) sx << " " << i.toStdString() << " ";
+                sx << "]\nYou have provided: " << artmode;
+                msg()(sx,"ConfigHandler::LoadGlobalSettings", true);
                 exit(1);
             }
 
@@ -554,9 +573,11 @@ GlobalSetting ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptre
                 g.direct_time_mode1 = tmp.at(1).digitValue();
             }
             else {
-                cout << "ERROR direct_time_mode value must be one of: [";
-                for(auto& i : all_directTimeModes)cout<<" "<< i.toStdString()<<" ";
-                cout << "], you have provided: " << dtmode << endl;
+                stringstream sx;
+                sx << "ERROR direct_time_mode value must be one of: [";
+                for(auto& i : all_directTimeModes) sx <<" "<< i.toStdString()<<" ";
+                sx << "]\nYou have provided: " << dtmode;
+                msg()(sx,"ConfigHandler::LoadGlobalSettings", true);
                 exit(1);
             } 
 
@@ -576,9 +597,11 @@ GlobalSetting ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptre
             if(all_ADC10bits.indexOf(QString::fromStdString(adc10))>=0)
                 g.adc_10bit = all_ADC10bits.indexOf(QString::fromStdString(adc10));
             else {
-                cout << "ERROR ADC_10bit value must be one of: [";
-                for(auto& i : all_ADC10bits) cout << " " << i.toStdString() << " ";
-                cout << "], you have provided: " << adc10 << endl;
+                stringstream sx;
+                sx << "ERROR ADC_10bit value must be one of: [";
+                for(auto& i : all_ADC10bits) sx << " " << i.toStdString() << " ";
+                sx << "]\nYou have provided: " << adc10;
+                msg()(sx,"ConfigHandler::LoadGlobalSettings", true);
                 exit(1);
             }
 
@@ -588,9 +611,11 @@ GlobalSetting ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptre
             if(all_ADC8bits.indexOf(QString::fromStdString(adc8))>=0)
                 g.adc_8bit = all_ADC8bits.indexOf(QString::fromStdString(adc8));
             else {
-                cout << "ERROR ADC_8bit value must be one of: [";
-                for(auto& i : all_ADC8bits) cout << " " << i.toStdString() << " ";
-                cout << "], you have provided: " << adc8 << endl;
+                stringstream sx;
+                sx << "ERROR ADC_8bit value must be one of: [";
+                for(auto& i : all_ADC8bits) sx << " " << i.toStdString() << " ";
+                sx << "]\nYou have provided: " << adc8;
+                msg()(sx,"ConfigHandler::LoadGlobalSettings", true);
                 exit(1);
             }
 
@@ -600,9 +625,11 @@ GlobalSetting ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptre
             if(all_ADC6bits.indexOf(QString::fromStdString(adc6))>=0)
                 g.adc_6bit = all_ADC6bits.indexOf(QString::fromStdString(adc6));
             else {
-                cout << "ERROR ADC_6bit value must be one of: [";
-                for(auto& i : all_ADC6bits) cout << " " << i.toStdString() << " ";
-                cout << "], you have provided: " << adc6 << endl;
+                stringstream sx;
+                sx << "ERROR ADC_6bit value must be one of: [";
+                for(auto& i : all_ADC6bits) sx << " " << i.toStdString() << " ";
+                sx << "]\nYou have provided: " << adc6;
+                msg()(sx,"ConfigHandler::LoadGlobalSettings", true);
                 exit(1);
             }
 
@@ -628,9 +655,11 @@ GlobalSetting ConfigHandler::LoadGlobalSettings(const boost::property_tree::ptre
     }
     catch(std::exception &e)
     {
-        std::cout << "!! --------------------------------- !!" << std::endl;
-        std::cout << "ERROR GLOBAL: " << e.what() << std::endl;
-        std::cout << "!! --------------------------------- !!" << std::endl;
+        stringstream sx;
+        sx << "!! -------------------------------------------- !! \n"
+           << "  ERROR GLOBAL: " << e.what() << "\n"
+           << "!! -------------------------------------------- !!"; 
+        msg()(sx,"ConfigHandler::LoadCommInfo", true); 
         exit(1);
 
     }
@@ -676,9 +705,11 @@ TriggerDAQ ConfigHandler::LoadDAQConfig(const boost::property_tree::ptree& pt)
     }
     catch(std::exception &e)
     {
-        std::cout << "!! --------------------------------- !!" << std::endl;
-        std::cout << "ERROR DAQ: " << e.what() << std::endl;
-        std::cout << "!! --------------------------------- !!" << std::endl;
+        stringstream sx;
+        sx << "!! --------------------------------- !!\n"
+           << "    ERROR DAQ: " << e.what() << "\n"
+           << "!! --------------------------------- !!";
+        msg()(sx, "ConfigHandler::LoadDAQConfig", true); 
         exit(1);
     }
 
@@ -729,9 +760,11 @@ std::vector<ChannelMap> ConfigHandler::LoadHDMIChannels(const boost::property_tr
     }
     catch(std::exception &e)
     {
-        std::cout << "!! --------------------------------- !!" << std::endl;
-        std::cout << "ERROR HDMI: " << e.what() << std::endl;
-        std::cout << "!! --------------------------------- !!" << std::endl;
+        stringstream sx;
+        sx << "!! --------------------------------- !!\n"
+           << "ERROR HDMI: " << e.what() << "\n"
+           << "!! --------------------------------- !!"; 
+        msg()(sx, "ConfigHandler::LoadHDMIChannels", true);
         exit(1);
     }
     return outmap;
@@ -739,14 +772,18 @@ std::vector<ChannelMap> ConfigHandler::LoadHDMIChannels(const boost::property_tr
 //// ------------------------------------------------------------------------ //
 void ConfigHandler::setHDMIChannelMap()
 {
+    stringstream sx;
     if(m_channelmap.size()==0) {
-        std::cout << "ERROR getChMapString    channel map vector is empty!" << std::endl;
+        sx.str("");
+        sx << "ERROR Channel map vector is empty!";
+        msg()(sx, "ConfigHandler::setHDMIChannelMap", true);
         exit(1);
     }
     if(m_channelmap.size()!=8) {
-        std::cout << "ERROR getChMapString    channel map vector must have 8 entries!" << std::endl;
-        std::cout << "ERROR getChMapString    current vector has " << m_channelmap.size()
-                    << " entries." << std::endl;
+        sx.str("");
+        sx << "ERROR Channel map vector must have 8 entries.\n"
+           << "      Current vector has " << m_channelmap.size() << " entries.";
+        msg()(sx, "ConfigHandler::setHDMIChannelMap", true);
         exit(1);
     }
     bool ok;
@@ -774,6 +811,7 @@ std::vector<Channel> ConfigHandler::LoadVMMChannelConfig(const boost::property_t
 
     stringstream ss;
     stringstream where;
+    stringstream sx;
 
     try {
         for(int iChan = 0; iChan < 64; iChan++) {
@@ -797,10 +835,12 @@ std::vector<Channel> ConfigHandler::LoadVMMChannelConfig(const boost::property_t
                     chan.polarity = all_polarities.indexOf(pol);
                 }
                 else {
-                    cout << "ERROR polarity value for channel " << iChan << " "
+                    sx.str("");
+                    sx << "ERROR polarity value for channel " << iChan << " "
                          << " must be one of: [";
-                    for(auto& i : all_polarities) cout<<" "<<i.toStdString()<<" ";
-                    cout << "], you have provided: " << polarity << endl;
+                    for(auto& i : all_polarities) sx <<" "<<i.toStdString()<<" ";
+                    sx << "]\nYou have provided: " << polarity;
+                    msg()(sx,"ConfigHandler::LoadVMMChannelConfig",true);
                     exit(1);
                 }
                 // capacitance
@@ -843,9 +883,11 @@ std::vector<Channel> ConfigHandler::LoadVMMChannelConfig(const boost::property_t
     }
     catch(std::exception &e)
     {
-        std::cout << "!! --------------------------------- !!" << std::endl;
-        std::cout << "ERROR : " << e.what() << std::endl;
-        std::cout << "!! --------------------------------- !!" << std::endl;
+        sx.str("");
+        sx << "!! --------------------------------- !!\n"
+           << "ERROR VMM Channel: " << e.what() << "\n"
+           << "!! --------------------------------- !!";
+        msg()(sx,"ConfigHandler::LoadVMMChannelConfig",true);
         exit(1);
     }
 
@@ -886,6 +928,8 @@ void ConfigHandler::LoadTDAQConfiguration(TriggerDAQ& daq)
 //// ------------------------------------------------------------------------ //
 int ConfigHandler::isOn(std::string onOrOff, std::string where)
 {
+    stringstream sx;
+
     #warning SEE WHY LOGIC IS REVERSED FOR ENA/DIS
     if(onOrOff=="on" || onOrOff=="disabled")
     //if(onOrOff=="on" || onOrOff=="enabled")
@@ -896,31 +940,31 @@ int ConfigHandler::isOn(std::string onOrOff, std::string where)
     else {
         std::string from = "";
         if(where!="") from = " [for " + where + "]";
-        std::cout << "Expecting either 'on'/'enabled'"
-                  << " or 'off'/'disabled'" << from << "."
-                  << " Returning 'off'/'disabled'."
-        << std::endl; 
+        sx << "Expecting either 'on'/'enabled' or 'off'/'disabled'" << from << ".\n"
+           << ">>> Returning 'off'/'disabled'.";
+        msg()(sx,"ConfigHandler::isOn");
         return 0;
     } 
 }
 //// ------------------------------------------------------------------------ //
 std::string ConfigHandler::isOnOrOff(int onOrOff)
 {
+    stringstream sx;
 
     if(onOrOff==1)
         return "on";
     else if(onOrOff==0)
         return "off";
     else {
-        cout << "ERROR isOnOrOff expects only '0' or '1' as input." << endl;
-        cout << "ERROR You have provided: " << onOrOff << endl;
+        sx << "ERROR Expect only '0' or '1' as input. You have provided: " << onOrOff;
+        msg()(sx,"ConfigHandler::isOnOrOff",true);
         exit(1);
     }
 }
 //// ------------------------------------------------------------------------ //
 std::string ConfigHandler::isEnaOrDis(int enaOrDis)
 {
-
+    stringstream sx;
     #warning SEE WHY LOGIC IS REVERSED FOR ENA/DIS
     if(enaOrDis==0)
     //if(enaOrDis==1)
@@ -929,8 +973,8 @@ std::string ConfigHandler::isEnaOrDis(int enaOrDis)
     //else if(enaOrDis==0)
         return "disabled";
     else {
-        cout << "ERROR isEnaOrDis expects only '0' or '1' as input." << endl;
-        cout << "ERROR You have provided: " << enaOrDis << endl;
+        sx << "ERROR Expect only '0' or '1' as input. You have provided: " << enaOrDis;
+        msg()(sx,"ConfigHandler::isEnaOrDis",true);
         exit(1);
     }
 }
