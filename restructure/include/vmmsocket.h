@@ -2,6 +2,9 @@
 // Qt
 #include <QUdpSocket>
 
+// vmm
+#include "message_handler.h"
+
 /////////////////////////////////////////////////////////////////////////////
 // ----------------------------------------------------------------------- //
 //  VMMSocket
@@ -18,6 +21,10 @@ class VMMSocket : public QObject
 
         VMMSocket& setDebug(bool dbg) { m_dbg = dbg; return *this; }
         bool dbg() { return m_dbg; }
+
+        void LoadMessageHandler(MessageHandler& msg);
+        MessageHandler& msg() { return *m_msg; }
+
         void setName(std::string n = "") { m_name = n; }
         std::string getName() { return m_name; }
         void setBindingPort(quint16 port) { m_bindingPort = port; }
@@ -55,6 +62,7 @@ class VMMSocket : public QObject
 
     private :
         bool m_dbg;
+        MessageHandler *m_msg;
         std::string m_name;
         quint16 m_bindingPort;
         QUdpSocket *m_socket;

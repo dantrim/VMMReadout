@@ -13,6 +13,7 @@ using namespace std;
 #include "run_module.h"
 #include "socket_handler.h"
 #include "data_handler.h"
+#include "message_handler.h"
 
 
 void help()
@@ -106,16 +107,33 @@ int main(int argc, char *argv[])
         }
     }
     // ---------------------------------------- //
+    MessageHandler msg_handler;
 
     ConfigHandler conf_handler;
+    SocketHandler socketHandler;
+    Configuration configModule;
+    RunModule runModule;
+    DataHandler dataHandle;
+
+    conf_handler.LoadMessageHandler(msg_handler);
+    socketHandler.LoadMessageHandler(msg_handler);
+    configModule.LoadMessageHandler(msg_handler);
+    runModule.LoadMessageHandler(msg_handler);
+    dataHandle.LoadMessageHandler(msg_handler);
+
     conf_handler.setDebug(dbg);
+    socketHandler.setDebug(dbg);
+    configModule.setDebug(dbg);
+    runModule.setDebug(dbg);
+    dataHandle.setDebug(dbg);
+
+
+    // load the configuration file
     conf_handler.LoadConfig(inputConfigFile);
 
     cout << "______________" << endl;
     cout << "Testing Socket" << endl;
 
-    SocketHandler socketHandler;
-    socketHandler.setDebug(dbg);
     socketHandler.loadIPList(conf_handler.getIPList());
     int pingOK = socketHandler.ping();
     if(!pingOK)
@@ -126,16 +144,6 @@ int main(int argc, char *argv[])
     socketHandler.addSocket("FEC", 1235);
     socketHandler.addSocket("DAQ", 1234);
     //socketHandler.addSocket("VMMAPP", 1236); // we only ever send to this, never binding
-
-    
-    Configuration configModule;
-    configModule.setDebug(dbg);
-    
-
-    RunModule runModule;
-    runModule.setDebug(dbg);
-
-    DataHandler dataHandle;
 
  //   runModule.LoadConfig(conf_handler).LoadSocket(socketHandler);
  //   runModule.initializeDataHandler();

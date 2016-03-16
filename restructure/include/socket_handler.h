@@ -9,6 +9,7 @@
 
 // vmm
 #include "vmmsocket.h"
+#include "message_handler.h"
 
 // std/stl
 #include <string>
@@ -29,6 +30,10 @@ class SocketHandler : public QObject
         virtual ~SocketHandler(){};
         SocketHandler& setDebug(bool dbg) { m_dbg = dbg; return *this; }
         bool dbg() { return m_dbg; }
+
+        void LoadMessageHandler(MessageHandler& msg);
+        MessageHandler& msg() { return *m_msg; }
+
         void setDryRun();
         bool dryrun() { return m_dryrun; }
 
@@ -70,6 +75,7 @@ class SocketHandler : public QObject
 
     private :
         bool m_dbg;
+        MessageHandler *m_msg;
         bool m_pinged;
         bool m_dryrun;
         bool m_skipProcessing;

@@ -16,14 +16,23 @@ using namespace std;
 MessageHandler::MessageHandler(QObject* parent) :
     QObject(parent),
     m_gui(false),
-    m_size(80)
+    m_size(80),
+    m_callborder(25)
 {
 }
 // ---------------------------------------------------------------------- //
 void MessageHandler::operator () (stringstream& s, string caller, bool exit)
 {
-    caller.resize(25);
+    //cout << "A" << endl;
+    if(caller.size()>25) caller.resize(25);
     string x = s.str();
+
+    size_t size = caller.size();
+    for(int i = 0; i < (m_callborder-(int)size); i++) {
+        caller = caller + " ";
+    }
+
+
     vector<string> substrings;
 
     QStringList split;
@@ -64,8 +73,15 @@ void MessageHandler::operator () (stringstream& s, string caller, bool exit)
 // ---------------------------------------------------------------------- //
 void MessageHandler::operator () (stringstream& s, const char* call, bool exit)
 {
+    //cout << "B" << endl;
     string caller(call); 
-    caller.resize(25);
+    if(caller.size()>25) caller.resize(25);
+
+    size_t size = caller.size();
+    for(int i = 0; i < (m_callborder-(int)size); i++) {
+        caller = caller + " ";
+    }
+
     string x = s.str();
     vector<string> substrings;
 
@@ -107,11 +123,14 @@ void MessageHandler::operator () (stringstream& s, const char* call, bool exit)
 // ---------------------------------------------------------------------- //
 void MessageHandler::operator () (stringstream& s, bool exit)
 {
-    string from = "VMMDCS Info";
-    size_t size = from.size();
-    for(int i = 0; i < (25-(int)size); i++) {
-        from = from + " ";
+    //cout << "C" << endl;
+    string caller = "VMMDCS Info";
+
+    size_t size = caller.size();
+    for(int i = 0; i < (m_callborder-(int)size); i++) {
+        caller = caller + " ";
     }
+
     string x = s.str();
     vector<string> substrings;
 
@@ -141,19 +160,26 @@ void MessageHandler::operator () (stringstream& s, bool exit)
     for(int i = 0; i < (int)substrings.size(); i++) {
         if(gui()) {
             clear();
-            m_buffer << setw(25) << from << "    " << substrings[i];
+            m_buffer << setw(25) << caller << "    " << substrings[i];
             emit logReady();
         }
-        cout << from << "    " << substrings[i] << endl;
+        cout << caller << "    " << substrings[i] << endl;
     }
     if(exit)
-        cout << setw(25) << from << "     >>> Exiting." << endl;
+        cout << setw(25) << caller << "     >>> Exiting." << endl;
 }
 // ---------------------------------------------------------------------- //
 void MessageHandler::operator () (string s, string caller, bool exit)
 {
-    caller.resize(25);
+    //cout << "D" << endl;
+    if(caller.size()>25) caller.resize(25);
     vector<string> substrings;
+
+    size_t size = caller.size();
+    for(int i = 0; i < (m_callborder-(int)size); i++) {
+        caller = caller + " ";
+    }
+
 
     QStringList split;
     QString str = QString::fromStdString(s);
@@ -192,8 +218,15 @@ void MessageHandler::operator () (string s, string caller, bool exit)
 // ---------------------------------------------------------------------- //
 void MessageHandler::operator () (string s, const char* call, bool exit)
 {
+    //cout << "E" << endl;
     string caller(call);
-    caller.resize(25);
+    if(caller.size()>25) caller.resize(25);
+
+    size_t size = caller.size();
+    for(int i = 0; i < (m_callborder-(int)size); i++) {
+        caller = caller + " ";
+    }
+
     vector<string> substrings;
 
     QStringList split;
@@ -236,8 +269,15 @@ void MessageHandler::operator () (string s, const char* call, bool exit)
 // ---------------------------------------------------------------------- //
 void MessageHandler::operator () (const char* m, const char* call, bool exit)
 {
+    //cout << "F" << endl;
     string caller(call);
-    caller.resize(25);
+    if(caller.size()>25) caller.resize(25);
+
+    size_t size = caller.size();
+    for(int i = 0; i < (m_callborder-(int)size); i++) {
+        caller = caller + " ";
+    }
+
     string s(m);
     vector<string> substrings;
 
@@ -281,11 +321,13 @@ void MessageHandler::operator () (const char* m, const char* call, bool exit)
 // ---------------------------------------------------------------------- //
 void MessageHandler::operator () (string s, bool exit)
 {
-    string from = "VMMDCS Info";
-    size_t size = from.size();
-    for(int i = 0; i < (25-(int)size); i++) {
-        from = from + " ";
+    //cout << "G" << endl;
+    string caller = "VMMDCS Info";
+    size_t size = caller.size();
+    for(int i = 0; i < (m_callborder-(int)size); i++) {
+        caller = caller + " ";
     }
+
     string x = s;
     vector<string> substrings;
 
@@ -315,24 +357,27 @@ void MessageHandler::operator () (string s, bool exit)
     for(int i = 0; i < (int)substrings.size(); i++) {
         if(gui()) {
             clear();
-            m_buffer << setw(25) << from << "    " << substrings[i];
+            m_buffer << setw(25) << caller << "    " << substrings[i];
             emit logReady();
         }
-        cout << from << "    " << substrings[i] << endl;
+        cout << caller << "    " << substrings[i] << endl;
     }
     if(exit)
-        cout << setw(25) << from << "     >>> Exiting." << endl;
+        cout << setw(25) << caller << "     >>> Exiting." << endl;
 }
 // ---------------------------------------------------------------------- //
 void MessageHandler::operator () (const char* msg, bool exit)
 {
+    //cout << "H" << endl;
     string x(msg);
 
-    string from = "VMMDCS Info";
-    size_t size = from.size();
-    for(int i = 0; i < (25-(int)size); i++) {
-        from = from + " ";
+    string caller = "VMMDCS Info";
+
+    size_t size = caller.size();
+    for(int i = 0; i < (m_callborder-(int)size); i++) {
+        caller = caller + " ";
     }
+
     vector<string> substrings;
 
     QStringList split;
@@ -361,11 +406,11 @@ void MessageHandler::operator () (const char* msg, bool exit)
     for(int i = 0; i < (int)substrings.size(); i++) {
         if(gui()) {
             clear();
-            m_buffer << setw(25) << from << "    " << substrings[i];
+            m_buffer << setw(25) << caller << "    " << substrings[i];
             emit logReady();
         }
-        cout << from << "    " << substrings[i] << endl;
+        cout << caller << "    " << substrings[i] << endl;
     }
     if(exit)
-        cout << setw(25) << from << "     >>> Exiting." << endl;
+        cout << setw(25) << caller << "     >>> Exiting." << endl;
 }

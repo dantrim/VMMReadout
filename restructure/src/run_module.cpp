@@ -18,6 +18,7 @@ using namespace std;
 RunModule::RunModule(QObject *parent) :
     QObject(parent),
     m_dbg(true),
+    m_msg(0),
     m_externalTrigger(false),
     m_pulseCount(0),
     m_initSocketHandler(false),
@@ -27,17 +28,20 @@ RunModule::RunModule(QObject *parent) :
 {
 }
 // ------------------------------------------------------------------------ //
+void RunModule::LoadMessageHandler(MessageHandler& m)
+{
+    m_msg = &m;
+}
+// ------------------------------------------------------------------------ //
 RunModule& RunModule::LoadConfig(ConfigHandler& inconfig)
 {
     m_configHandler = &inconfig;
     if(!m_configHandler) {
-        cout << "RunModule::LoadConfig    ERROR ConfigHandler instance null" << endl;
+        msg()("ERROR ConfigHandler instance null", "RunModule::LoadConfig", true);
         exit(1);
     }
     else if(dbg()){
-        cout << "------------------------------------------------------" << endl;
-        cout << "RunModule::LoadConfig    ConfigHandler instance loaded" << endl;
-        cout << "------------------------------------------------------" << endl;
+        msg()("ConfigHandler instance loaded", "RunModule::LoadConfig");
     }
 
     //depending on the run_mode set in the configuration
@@ -60,14 +64,12 @@ RunModule& RunModule::LoadSocket(SocketHandler& socket)
 {
     m_socketHandler = &socket;
     if(!m_socketHandler) {
-        cout << "RunModule::LoadSocket    ERROR SocketHandler instance null" << endl;
+        msg()("ERROR SocketHandler instance null","RunModule::LoadSocket",true);
         exit(1);
     }
     else if(dbg()){
-        cout << "------------------------------------------------------" << endl;
-        cout << "RunModule::LoadSocket    SocketHandler instance loaded" << endl;
+        msg()("SocketHandler instance loaded","RunModule::LoadSocket");
         m_socketHandler->Print();
-        cout << "------------------------------------------------------" << endl;
     }
 
     m_initSocketHandler = true;
@@ -77,7 +79,7 @@ RunModule& RunModule::LoadSocket(SocketHandler& socket)
 // ------------------------------------------------------------------------ //
 void RunModule::prepareRun()
 {
-    if(dbg()) cout << "RunModule::prepareRun    Preparing for DAQ" << endl;
+    if(dbg()) msg()("Preparing for DAQ...","RunModule::prepareRun");
 
     //configure the FE DAQ configuration
     setTriggerAcqConstants();
@@ -86,7 +88,7 @@ void RunModule::prepareRun()
 // ------------------------------------------------------------------------ //
 void RunModule::Run()
 {
-    cout << "RunModule::Run    Starting run..." << endl;
+    msg()("Starting run...","RunModule::Run");
     if(externalTrig())
         beginTimedRun();
     else
@@ -108,7 +110,7 @@ void RunModule::beginPulserRun()
 // ------------------------------------------------------------------------ //
 void RunModule::finishRun()
 {
-    cout << "RunModule::finishRun    Ending Run..." << endl;
+    msg()("Ending run...","RunModule::finishRun");
     ACQoff();
     socket().closeAndDisconnect("daq","RunModule::finishRun");
     emit EndRun();
@@ -116,14 +118,14 @@ void RunModule::finishRun()
 // ------------------------------------------------------------------------ //
 void RunModule::readEvent()
 {
-    cout << "RunModule::readEvent    This method is not implemented!" << endl;
+    msg()("This method is not implemented!","RunModule::readEvent", true);
     exit(1);
     return;
 }
 // ------------------------------------------------------------------------ //
 void RunModule::sendPulse()
 {
-    if(dbg()) cout << "RunModule::sendPulse    Sending pulse..." << endl;
+    if(dbg()) msg()("Sending pulse...","RunModule::sendPulse");
 
     bool ok;
     QByteArray datagram;
@@ -159,8 +161,8 @@ void RunModule::sendPulse()
         if(readOK)
             socket().processReply("fec", ip);
         else
-            cout << "RunModule::SendPulse    Timeout [1] while waiting for "
-                 << "replies from VMM. Pulse lost." << endl;
+            msg()("Timeout [1] while waiting for replies from VMM. Pulse lost.",
+                    "RunModule::sendPulse");
 
         out.device()->seek(12);
         out << (quint32) 0;
@@ -170,8 +172,8 @@ void RunModule::sendPulse()
         if(readOK)
             socket().processReply("fec", ip);
         else
-            cout << "RunModule::SendPulse    Timeout [2] wile waiting for "
-                 << "replies from VMM. Pulse lost." << endl;
+            msg()("Timout [2] while waiting for replies from VMM. Pulse lost.",
+                    "RunModule::sendPulse");
     } // ip loop
 
     socket().closeAndDisconnect("fec","RunModule::SendPulse");
@@ -189,7 +191,7 @@ void RunModule::sendPulse()
 // ------------------------------------------------------------------------ //
 void RunModule::setTriggerAcqConstants()
 {
-    if(dbg()) cout << "RunModule::setTriggerAcqConstants" << endl;
+    if(dbg()) msg()("Sending trigger ACQ constants...","RunModule::setTriggerAcqConstants");
 
     bool ok;
     QByteArray datagram;
@@ -246,13 +248,12 @@ void RunModule::setTriggerAcqConstants()
         bool readOK = true;
         readOK = socket().waitForReadyRead("fec");
         if(readOK) {
-            if(dbg()) cout << "RunModule::setTriggerAcqConstants    "
-                           << "Processing replies..." << endl;
+            if(dbg()) msg()("Processing replies...","RunModule::setTriggerAcqConstants");
             socket().processReply("fec", ip);
         }
         else {
-            cout << "RunModule::setTriggerAcqConstants    "
-                 << "Timeout while waiting for replies from VMM" << endl;
+            msg()("Timeout while waiting for replies from VMM",
+                        "RunModule::setTriggerAcqConstants", true);
             socket().closeAndDisconnect("fec","RunModule::setTriggerAcqConstants");
             exit(1);
         }
@@ -263,7 +264,7 @@ void RunModule::setTriggerAcqConstants()
 // ------------------------------------------------------------------------ //
 void RunModule::setTriggerMode()
 {
-    if(dbg()) cout << "RunModule::setTriggerMode" << endl;
+    if(dbg()) msg()("Setting trigger mode...","RunModule::setTriggerMode");
 
     bool ok;
     QByteArray datagram;
@@ -305,13 +306,11 @@ void RunModule::setTriggerMode()
             << (quint32) 0; //[16,19]
         if(config().daqSettings().run_mode == "external"){
             out << (quint32) 4; //[20,23]
-            if(dbg()) cout << "RunModule::setTriggerMode    "
-                           << "External trigger enabled" << endl;
+            if(dbg()) msg()("External trigger enabled","RunModule::setTriggerMode");
         } // external
         else {
             out << (quint32) 7; //[20,23]
-            if(dbg()) cout << "RunModule::setTriggerMode    "
-                           << "Internal trigger enabled" << endl;
+            if(dbg()) msg()("Internal trigger enabled","RunModule::setTriggerMode");
         }
         
         socket().SendDatagram(datagram, ip, send_to_port, "fec",
@@ -320,12 +319,12 @@ void RunModule::setTriggerMode()
         bool readOK = true;
         readOK = socket().waitForReadyRead("fec");
         if(readOK) {
-            if(dbg()) cout << "RunModule::setTriggerMode    Processing replies..." << endl;
+            if(dbg()) msg()("Processing replies...","RunModule::setTriggerMode");
             socket().processReply("fec", ip);
         }
         else {
-            cout << "RunModule::setTriggerMode    Timeout while waiting for "
-                 << "replies from VMM" << endl;
+            msg()("Timeout while waiting for replies from VMM",
+                        "RunModule::setTriggerMode",true);
             socket().closeAndDisconnect("fec","RunModule::setTriggerMode");
             exit(1);
         }
@@ -336,7 +335,7 @@ void RunModule::setTriggerMode()
 // ------------------------------------------------------------------------ //
 void RunModule::ACQon()
 {
-    if(dbg()) cout << "RunModule::ACQon" << endl;
+    if(dbg()) msg()("Setting ACQ ON","RunModule::ACQon");
 
     bool ok;
     QByteArray datagram;
@@ -380,7 +379,7 @@ void RunModule::ACQon()
         bool readOK = true;
         readOK = socket().waitForReadyRead("fec");
         if(readOK) {
-            if(dbg()) cout << "RunModule::ACQon    Processing replies..." << endl;
+            if(dbg()) msg()("Processing replies...", "RunModule::ACQon");
             socket().processReply("fec", ip);
 
             #warning DO WE NEED SECOND WORD SENT FOR ACQon?
@@ -411,8 +410,7 @@ void RunModule::ACQon()
 
         } // readOK
         else {
-            cout << "RunModule::ACQon    Timeout while waiting for replies "
-                 << "from VMM" << endl;
+            msg()("Timeout while waiting for replies from VMM","RunModule::ACQon",true);
             socket().closeAndDisconnect("fec","RunModule::ACQon");
             exit(1);
         }
@@ -422,7 +420,7 @@ void RunModule::ACQon()
 // ------------------------------------------------------------------------ //
 void RunModule::ACQoff()
 {
-    if(dbg()) cout << "RunModule::ACQoff" << endl;
+    if(dbg()) msg()("Setting ACQ OFF","RunModule::ACQoff");
 
     bool ok;
     QByteArray datagram;
@@ -466,7 +464,7 @@ void RunModule::ACQoff()
         bool readOK = true;
         readOK = socket().waitForReadyRead("fec");
         if(readOK) {
-            if(dbg()) cout << "RunModule::ACQoff    Processing replies..." << endl;
+            if(dbg()) msg()("Processing replies...","RunModule::ACQoff");
             socket().processReply("fec", ip);
 
             QByteArray buffer = socket().buffer("fec");
@@ -483,8 +481,8 @@ void RunModule::ACQoff()
                                                 "RunModule::ACQoff [2]");
         }
         else {
-            cout << "RunModule::ACQoff [1]    Timeout while waiting for replies "
-                 << "from VMM" << endl;
+            msg()("Timeout [1] while waiting for replies from VMM",
+                    "RunModule::ACQoff", true); 
             socket().closeAndDisconnect("fec","RunModule::ACQoff");
             exit(1);
         }
@@ -494,8 +492,8 @@ void RunModule::ACQoff()
             socket().processReply("fec", ip);
         }
         else {
-            cout << "RunModule::ACQoff [2]    Timeout while waiting for replies "
-                 << "from VMM" << endl;
+            msg()("Timeout [2] while waiting for replies from VMM",
+                    "RunModule::ACQoff", true);
             socket().closeAndDisconnect("fec","RunModule::ACQoff"); 
             exit(1);
         }
@@ -506,7 +504,7 @@ void RunModule::ACQoff()
 // ------------------------------------------------------------------------ //
 void RunModule::setEventHeaders(const int bld_info, const int bld_mode)
 {
-    if(dbg()) cout << "RunModule::setEventHeaders" << endl;
+    if(dbg()) msg()("Setting event headers...","RunModule::setEventHeaders");
 
     bool ok;
     QByteArray datagram;
@@ -553,11 +551,11 @@ void RunModule::setEventHeaders(const int bld_info, const int bld_mode)
         bool readOK = true;
         readOK = socket().waitForReadyRead("fec");
         if(readOK) {
-            if(dbg()) cout << "RunModule::setEventHeaders    Processing replies..." << endl;
+            if(dbg()) msg()("Processing replies...","RunModule::setEventHeaders");
             socket().processReply("fec", ip);
         } else {
-            cout << "RunModule::setEventHeaders    Timeout while waiting for replies "
-                 << "from VMM" << endl;
+            msg()("Timeout while waiting for replies from VMM",
+                    "RunModule::setEventHeaders",true);
             socket().closeAndDisconnect("fec","RunModule::setEventHeaders");
             exit(1);
         }
@@ -568,7 +566,7 @@ void RunModule::setEventHeaders(const int bld_info, const int bld_mode)
 // ------------------------------------------------------------------------ //
 void RunModule::resetASICs()
 {
-    if(dbg()) cout << "RunModule::resetASICs" << endl;
+    if(dbg()) msg()("Resetting ASICs...","RunModule::resetASICs");
 
     bool ok;
     QByteArray datagram;
@@ -613,11 +611,11 @@ void RunModule::resetASICs()
         bool readOK = true;
         readOK = socket().waitForReadyRead("fec");
         if(readOK) {
-            if(dbg()) cout << "RunModule::resetASICs    Processing replies..." << endl;
+            if(dbg()) msg()("Processing replies...","RunModule::resetASICs");
             socket().processReply("fec", ip);
         } else {
-            cout << "RunModule::resetASICs    Timeout while waiting for replies "
-                 << "from VMM" << endl;
+            msg()("Timeout while waiting for replies from VMM",
+                    "RunModule::resetASICs",true);
             socket().closeAndDisconnect("fec","RunModule::resetASICs");
             exit(1);
         }
@@ -628,7 +626,7 @@ void RunModule::resetASICs()
 // ------------------------------------------------------------------------ //
 void RunModule::resetFEC(bool do_reset)
 {
-    if(dbg()) cout << "RunModule::resetFEC" << endl;
+    if(dbg()) msg()("Resetting FEC...","RunModule::resetFEC");
 
     bool ok;
     QByteArray datagram;
@@ -648,10 +646,10 @@ void RunModule::resetFEC(bool do_reset)
     QString value = "";
     if(do_reset) {
         value = "FFFF8000";
-        if(dbg()) cout << "RunModule::resetFEC    Rebooting FEC..." << endl;
+        if(dbg()) msg()("Rebooting FEC...","RunModule::resetFEC");
     } else {
         value = "FFFF0001";
-        if(dbg()) cout << "RunModule::resetFEC    WarmInit FEC..." << endl;
+        if(dbg()) msg()("WarmInit FEC...","RunModule::resetFEC");
     } 
 
     for(const auto& ip : socket().ipList()) {
@@ -683,11 +681,11 @@ void RunModule::resetFEC(bool do_reset)
         bool readOK = true;
         readOK = socket().waitForReadyRead("fec");
         if(readOK) {
-            if(dbg()) cout << "RunModule::resetFEC    Processing replies..." << endl;
+            if(dbg()) msg()("Processing replies...","RunModule::resetFEC");
             socket().processReply("fec", ip);
         } else {
-            cout << "RunModule::resetFEC    Timeout while waiting for replies "
-                 << "from VMM" << endl;
+            if(dbg()) msg()("Timeout while waiting for replies from VMM",
+                            "RunModule::resetFEC",true);
             socket().closeAndDisconnect("fec","RunModule::resetFEC");
             exit(1);
         }
@@ -698,7 +696,7 @@ void RunModule::resetFEC(bool do_reset)
 // ------------------------------------------------------------------------ //
 void RunModule::setMask()
 {
-    if(dbg()) cout << "RunModule::setMask" << endl;
+    if(dbg()) msg()("Setting mask...","RunModule::setMask");
 
     bool ok;
     QByteArray datagram;
@@ -743,11 +741,11 @@ void RunModule::setMask()
         bool readOK = true;
         readOK = socket().waitForReadyRead("fec");
         if(readOK) {
-            if(dbg()) cout << "RunModule::setMask    Processing replies..." << endl;
+            if(dbg()) msg()("Processing replies...","RunModule::setMask");
             socket().processReply("fec", ip);
         } else {
-            cout << "RunModule::setMask    Timeout while waitinf ro replies "
-                 << "from VMM" << endl;
+            msg()("Timeout while waiting for replies from VMM",
+                    "RunModule::setMask",true);
             socket().closeAndDisconnect("fec", "RunModule::setMask");
             exit(1);
         }
@@ -759,7 +757,7 @@ void RunModule::setMask()
 // ------------------------------------------------------------------------ //
 void RunModule::checkLinkStatus()
 {
-    if(dbg()) cout << "RunModule::checkLinkStatus" << endl;
+    if(dbg()) msg()("Checking link status...","RunModule::checkLinkStatus");
 
     bool ok;
     QByteArray datagram;
@@ -797,11 +795,11 @@ void RunModule::checkLinkStatus()
         bool readOK = true;
         readOK = socket().waitForReadyRead("fec");
         if(readOK) {
-            if(dbg()) cout << "RunModule::checkLinkStatus    Processing replies..." << endl;
+            //if(dbg()) msg()("Processing replies...","RunModule::checkLinkStatus");
             //socket().processReply("fec", ip);
         } else {
-            cout << "RunModule::checkLinkStatus    Timeout while waiting for replies "
-                 << "from VMM" << endl;
+            msg()("Timeout while waiting for replies from VMM",
+                    "RunModule::checkLinkStatus", true);
             socket().closeAndDisconnect("fec", "RunModule::checkLinkStatus");
             exit(1);
         }
@@ -813,7 +811,7 @@ void RunModule::checkLinkStatus()
 // ------------------------------------------------------------------------ //
 void RunModule::resetLinks()
 {
-    if(dbg()) cout << "RunModule::resetLinks" << endl;
+    if(dbg()) msg()("Resetting linkes...","RunModule::resetLinks");
 
     bool ok;
     QByteArray datagram;

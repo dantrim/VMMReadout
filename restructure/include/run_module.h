@@ -5,6 +5,7 @@
 // vmm
 #include "socket_handler.h"
 #include "config_handler.h"
+#include "message_handler.h"
 
 // qt
 #include <QObject>
@@ -18,6 +19,9 @@ class RunModule : public QObject
         virtual ~RunModule(){};
         RunModule& setDebug(bool dbg) { m_dbg = dbg; return *this; }
         bool dbg() { return m_dbg; }
+
+        void LoadMessageHandler(MessageHandler& msg);
+        MessageHandler& msg() { return *m_msg; }
 
         ////////////////////////////////////////////
         // Run toggles
@@ -67,6 +71,7 @@ class RunModule : public QObject
 
     private :
         bool m_dbg;
+        MessageHandler *m_msg;
         bool m_externalTrigger;
         long int m_pulseCount; 
         bool m_initSocketHandler;

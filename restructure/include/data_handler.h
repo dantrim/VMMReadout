@@ -14,6 +14,7 @@ class QUdpSocket;
 
 // vmm
 #include "config_handler.h"
+#include "message_handler.h"
 class VMMSocket;
 
 // ROOT
@@ -38,6 +39,9 @@ class DataHandler : public QObject
 
         void setDebug(bool dbg) { m_dbg = dbg; }
         bool dbg() { return m_dbg; }
+        void LoadMessageHandler(MessageHandler& msg);
+        MessageHandler& msg() { return *m_msg; }
+
         void setCalibrationRun(bool calib) { m_calibRun = calib; }
         bool calibRun() { return m_calibRun; }
         void setIgnore16(bool doit) { m_ignore16 = doit; }
@@ -93,7 +97,9 @@ class DataHandler : public QObject
         bool m_write;
         int n_daqCnt;
         bool m_ignore16;
+
         VMMSocket *m_daqSocket;
+        MessageHandler *m_msg;
 
         QFile m_daqFile;
         bool m_fileOK;

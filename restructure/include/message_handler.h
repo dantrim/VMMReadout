@@ -53,6 +53,7 @@ class MessageHandler : public QObject
     private :
         bool m_gui;
         unsigned int m_size;
+        int m_callborder;
 
         std::stringstream m_buffer;
 

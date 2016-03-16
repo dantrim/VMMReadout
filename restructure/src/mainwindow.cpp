@@ -49,12 +49,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tabWidget->setTabText(1,"Calibration");
     ui->tabWidget->setTabText(2,"Response");
 
-
-    stringstream test;
-    test << "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-    msg()(test, "MainWindow::CONSTRUCTOR", true);
-
-    msg()(" !! DISABLING S6 AND TEST PULSE BOXES !! ");
+    msg()("Disabling S6 and test pulse group boxes");
     // disable S6 box
     ui->groupBox_8->setEnabled(false);
     // disable test pulse box
@@ -66,24 +61,31 @@ MainWindow::MainWindow(QWidget *parent) :
     //-----------------------------------------------------------------//
     /////////////////////////////////////////////////////////////////////
     vmmConfigHandler = new ConfigHandler();
-    vmmConfigHandler->setDebug(true);
-    vmmConfigHandler->LoadMessageHandler(msg());
     vmmSocketHandler = new SocketHandler();
-    vmmSocketHandler->setDebug(true);
+    vmmConfigModule  = new Configuration();
+    vmmRunModule     = new RunModule();
+    vmmDataHandler   = new DataHandler();
+
+    vmmConfigHandler->LoadMessageHandler(msg());
+    vmmSocketHandler->LoadMessageHandler(msg());
+    vmmConfigModule ->LoadMessageHandler(msg());
+    vmmDataHandler  ->LoadMessageHandler(msg());
+    vmmRunModule    ->LoadMessageHandler(msg());
+
+
+    vmmConfigHandler ->setDebug(true);
+    vmmSocketHandler ->setDebug(true);
+    vmmConfigModule  ->setDebug(true);
+    vmmRunModule     ->setDebug(true);
+    vmmDataHandler   ->setDebug(true);
 
     // set dry run for testing
-   // msg()(" !! SOCKETHANDLER SET FOR DRY RUN !! ");
-   // vmmSocketHandler->setDryRun();
+    msg()(" !! SOCKETHANDLER SET FOR DRY RUN !! ");
+    vmmSocketHandler->setDryRun();
 
+    // propagate command counter
     connect(vmmSocketHandler, SIGNAL(commandCounterUpdated()),
                                             this, SLOT(updateCounter()));
-
-    vmmConfigModule  = new Configuration();
-    vmmConfigModule->setDebug(true);
-    vmmConfigModule->LoadMessageHandler(msg());
-
-    vmmRunModule     = new RunModule();
-    vmmRunModule->setDebug(true);
 
     // load the things
     vmmConfigModule->LoadConfig(*vmmConfigHandler);
@@ -92,8 +94,6 @@ MainWindow::MainWindow(QWidget *parent) :
     vmmRunModule->LoadConfig(*vmmConfigHandler);
     vmmRunModule->LoadSocket(*vmmSocketHandler);
 
-    vmmDataHandler = new DataHandler();
-    vmmDataHandler->setDebug(true);
     connect(this, SIGNAL(EndRun()), vmmDataHandler, SLOT(writeAndCloseDataFile()));
 
     channelGridLayout = new QGridLayout(this);
@@ -331,6 +331,7 @@ void MainWindow::Connect()
     bool pingOK = socketHandle().loadIPList(iplist).ping();
 
     if(pingOK) {
+        msg()("Ping successful");
         ui->connectionLabel->setText("all alive");
         ui->connectionLabel->setStyleSheet("background-color: green");
 

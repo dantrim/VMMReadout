@@ -19,6 +19,7 @@ using namespace std;
 SocketHandler::SocketHandler(QObject* parent) :
     QObject(parent),
     m_dbg(false),
+    m_msg(0),
     m_pinged(false),
     m_dryrun(false),
     m_skipProcessing(true),
@@ -29,12 +30,17 @@ SocketHandler::SocketHandler(QObject* parent) :
 {
 }
 // ---------------------------------------------------------------------- //
+void SocketHandler::LoadMessageHandler(MessageHandler& m)
+{
+    m_msg = &m;
+}
+// ---------------------------------------------------------------------- //
 void SocketHandler::setDryRun()
 {
-    cout << "------------------------------------------------------" << endl;
-    cout << " SocketHandler configured for dry run (will not send  " << endl;
-    cout << " anything over the network)" << endl;
-    cout << "------------------------------------------------------" << endl;
+    stringstream sx;
+    sx << "SocketHandler configured for dry run (will not send anything "
+       << "over the network)";
+    msg()(sx,"SocketHandler::setDryRun");
     m_dryrun = true;
 }
 
@@ -43,18 +49,21 @@ SocketHandler& SocketHandler::loadIPList(const QString& ipstring)
 {
     m_iplist.clear();
     m_iplist << ipstring.split(",");
-    cout << "Loaded " << m_iplist.size() << " IP addresses." << endl;
+    stringstream sx;
+    sx << "Loaded " << m_iplist.size() << " IP addresses";
+    msg()(sx, "SocketHandler::loadIPList");
     return *this;
 }
 // ---------------------------------------------------------------------- //
 bool SocketHandler::ping()
 {
     if(m_dbg) {
-        cout << "INFO Pinging IP addresses" << endl;
+        msg()("Pinging IP address...","SocketHandler::ping");
     }
     if(m_iplist.size()==0) {
-        cout << "ERROR There are no IP addresses loaded. Please use" << endl;
-        cout << "ERROR SocketHandler::loadIPList." << endl;
+        stringstream sx;
+        sx << "ERROR There are no IP addresses loaded. Please use method 'loadIPList'";
+        msg()(sx,"SocketHandler::ping");
     }
     for(const auto& ip : m_iplist) {
         #ifdef __linux__
@@ -69,8 +78,8 @@ bool SocketHandler::ping()
                 m_pinged = true;
             else {
                 m_pinged = false;
-                cout << "ERROR Unable to successfully ping the IP "
-                        << ip.toStdString() << endl;
+                msg()("ERROR Unable to successfully ping the IP: " + ip.toStdString(),
+                        "SocketHandler::ping");
             } 
         }
         else {
@@ -90,51 +99,50 @@ void SocketHandler::updateCommandCounter()
 void SocketHandler::addSocket(std::string name, quint16 bindingPort,
                                     QAbstractSocket::BindMode mode)
 {
+    msg()("Adding socket");
     QString lname = QString::fromStdString(name).toLower();
     if(lname=="fec") {
         m_fecSocket = new VMMSocket();
+        m_fecSocket->LoadMessageHandler(msg());
         m_fecSocket->setDebug(dbg());
         m_fecSocket->setName(name);
         m_fecSocket->setBindingPort(bindingPort);
         if(!dryrun())
             m_fecSocket->bindSocket(bindingPort, mode);
 
-        cout << "----------------------------------------------------" << endl;
-        cout << " SocketHandler::addSocket    VMMSocket added:" << endl;
+        msg()("VMMSocket added:","SocketHandler::addSocket");
         m_fecSocket->Print();
-        cout << "----------------------------------------------------" << endl;
 
     } // fec
     else if(lname=="daq") {
         m_daqSocket = new VMMSocket();
+        m_daqSocket->LoadMessageHandler(msg());
         m_daqSocket->setDebug(dbg());
         m_daqSocket->setName(name);
         m_daqSocket->setBindingPort(bindingPort);
         if(!dryrun())
             m_daqSocket->bindSocket(bindingPort, mode);
         
-        cout << "----------------------------------------------------" << endl;
-        cout << " SocketHandler::addSocket    VMMSocket added:" << endl;
+        msg()("VMMSocket added:","SocketHandler::addSocket");
         m_daqSocket->Print();
-        cout << "----------------------------------------------------" << endl;
     } //daq
     else if(lname=="vmmapp") {
         m_vmmappSocket = new VMMSocket();
+        m_vmmappSocket->LoadMessageHandler(msg());
         m_vmmappSocket->setDebug(dbg());
         m_vmmappSocket->setName(name);
         m_vmmappSocket->setBindingPort(bindingPort);
         if(!dryrun())
             m_vmmappSocket->bindSocket(bindingPort, mode);
 
-        cout << "----------------------------------------------------" << endl;
-        cout << " SocketHandler::addSocket    VMMSocket added:" << endl;
+        msg()("VMMSocket added:","SocketHandler::addSocket");
         m_vmmappSocket->Print();
-        cout << "----------------------------------------------------" << endl;
     } //vmmapp
     else {
-        cout << "ERROR addSocket    Currently can only add the fec, daq, or vmmapp "
-             << "sockets named 'fec', 'daq', and 'vmmapp', respectively. You have "
-             << "attempted to add a socket named: " << name << endl;
+        stringstream sx;
+        sx << "ERROR Current can only add the 'fec', 'daq', or 'vmmapp' sockets\n"
+           << "ERROR You have attemped to add a socket named: " << name;
+        msg()(sx,"SocketHandler::addSocket",true);
         exit(1);
     }
 }
@@ -151,8 +159,8 @@ void SocketHandler::SendDatagram(const QByteArray& datagram, const QString& ip,
     //CHECK STATUS ENUM
     #warning TODO add STATUS ENUM AND CHECK (FSM)
     if(!pinged()) {
-        cout << "SocketHandler::SendDatagram    " << fn
-             << "ERROR Boards are not in pinged OK state" << endl;
+        msg()("ERROR Boards are not in pinged OK state...",
+                "SocketHandler::SendDatagram", true);
         exit(1);
     }
 
@@ -164,13 +172,16 @@ void SocketHandler::SendDatagram(const QByteArray& datagram, const QString& ip,
 
     // now send the data
     bool ok;
-    if(dbg()) cout << "SocketHandler::SendDatagram    " << fn
-                   << (dryrun() ? "[dry run]" : "")
-                   << "  Data from socket '" << socket.getName()
-                   << "' sent to (IP,port) = (" 
-                   << ip.toStdString() << ", " << destPort << ") :"
-                   << endl << "                               "
-                   << datagram.toHex().toStdString() << endl;
+    if(dbg()) {
+        stringstream sx;
+        sx << fn
+           << (dryrun() ? "[dry run]" : "")
+           << " Data from socket '" << socket.getName() << "' sent to "
+           << "(IP,port) = (" << ip.toStdString() << ", " << destPort << ") :\n"
+           << datagram.toHex().toStdString() << "\n";
+        msg()(sx,"SocketHandler::SendDatagram");
+
+    }
     if(!dryrun())
         socket.writeDatagram(datagram, QHostAddress(ip), destPort);
 
@@ -193,10 +204,12 @@ void SocketHandler::processReply(std::string name, const QString& ip_to_check,
                     quint32 cmd_delay)
 {
     quint32 count = commandCounter();
-    cout << "HANDLER : delay = " << cmd_delay << "  global : " << count << endl; 
+    stringstream sx;
+    sx << "HANDLER: delay = " << cmd_delay << " global: " << count;
+    msg()(sx, "SocketHandler::processReply");
 
     if(dryrun() || m_skipProcessing) {
-        cout << " SocketHandler::processReply    NOT PROCESSING REPLIES! " << endl;
+        msg()("NOT PROCESSING REPLIES!", "SocketHandler::processReply");
         return;
     }
 
@@ -221,37 +234,41 @@ QByteArray SocketHandler::buffer(std::string name)
 // ---------------------------------------------------------------------- //
 VMMSocket& SocketHandler::getSocket(std::string whichSocket)
 {
+    stringstream sx;
     if(whichSocket=="") {
-        cout << "SocketHandler::getSocket    ERROR This method must be passed "
-             << "a string containing the name of the desired socket" << endl;
+        sx.str("");
+        sx << "ERROR This method must be passed a string containing the name of "
+           << "the desired socket";
+        msg()(sx,"SocketHandler::getSocket",true);
         exit(1);
     }
     QString lname = QString::fromStdString(whichSocket).toLower();
     if(lname=="fec") {
         if(m_fecSocket) return *m_fecSocket;
         else {
-            cout << "SocketHandler::getSocket    Requested socket (fec) is null" << endl;
+            msg()("Requested socket (fec) is null!","SocketHandler::getSocket",true);
             exit(1);
         }
     }
     else if(lname=="daq") {
         if(m_daqSocket) return *m_daqSocket;
         else {
-            cout << "SocketHandler::getSocket    Requested socket (daq) is null" << endl;
+            msg()("Requested socket (daq) is null!","SocketHandler::getSocket",true);
             exit(1);
         }
     }
     else if(lname=="vmmapp") {
         if(m_vmmappSocket) return *m_vmmappSocket;
         else {
-            cout << "SocketHandler::getSocket    Requested socket (vmmapp) is null" << endl;
+            msg()("Requested socket (vmmapp) is null!","SocketHandler::getSocket",true);
             exit(1);
         }
     }
     else {
-        cout << "SocketHandler::getSocket    ERROR Currently can only retrieve the"
-             << " fec, daq, or vmmapp sockets. You have attempted to retrieve"
-             << " a socket named: " << whichSocket << endl;
+        sx.str("");
+        sx << "ERROR Currently can only retrieve the 'fec', 'daq', or 'vmmapp' sockets.\n"
+           << "ERROR You have attempted to retrieve a socket named: " << whichSocket;
+        msg()(sx, "SocketHandler::getSocket",true);
         exit(1);
     }
 }
@@ -259,9 +276,8 @@ VMMSocket& SocketHandler::getSocket(std::string whichSocket)
 void SocketHandler::Print()
 {
     if(!m_fecSocket && !m_daqSocket && !m_vmmappSocket) {
-        cout << "-----------------------------------------" << endl;
-        cout << "SocketHandler currently holds no sockets" << endl;
-        cout << "-----------------------------------------" << endl;
+        msg()("SocketHandler currently holds no sockets!",
+                "SocketHandler");
     }
     if(m_fecSocket)
         fecSocket().Print();

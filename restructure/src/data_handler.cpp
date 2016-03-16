@@ -27,6 +27,7 @@ DataHandler::DataHandler(QObject *parent) :
     n_daqCnt(0),
     m_ignore16(false),
     m_daqSocket(0),
+    m_msg(0),
     m_fileOK(false),
     m_outDir(""),
     m_daqRootFile(0),
@@ -38,6 +39,11 @@ DataHandler::DataHandler(QObject *parent) :
 {
 }
 // ------------------------------------------------------------------------ //
+void DataHandler::LoadMessageHandler(MessageHandler& m)
+{
+    m_msg = &m;
+}
+// ------------------------------------------------------------------------ //
 void DataHandler::LoadDAQSocket(VMMSocket& vmmsocket)
 {
     if(!m_daqSocket) {
@@ -45,19 +51,17 @@ void DataHandler::LoadDAQSocket(VMMSocket& vmmsocket)
         connect(m_daqSocket, SIGNAL(dataReady()), this, SLOT(readEvent()));
     }
     else {
-        cout << "DataHandler::LoadDAQSocket    WARNING VMMSocket instance is "
-             << "already active (non-null)! Will keep the first." << endl;
+        msg()("WARNING VMMSocket instance is already active (non-null). Will keep the first.",
+                "DataHandler::LoadDAQSocket");
         return;
     }
 
     if(m_daqSocket) {
-        cout << "------------------------------------------------------" << endl;
-        cout << " DataHandler::LoadDAQSocket    VMMSocket loaded" << endl;
+        msg()("VMMSocket loaded", "DataHandler::LoadDAQSocket");
         m_daqSocket->Print();
-        cout << "------------------------------------------------------" << endl;
     }
     else {
-        cout << "DataHandler::LoadDAQSocket    ERROR VMMSocket instance null" << endl;
+        msg()("ERROR VMMSocket instance null", "DataHandler::LoadDAQSocket", true);
         exit(1);
     }
     return;
@@ -84,8 +88,8 @@ void DataHandler::setupOutputFiles(TriggerDAQ& daq, QString outdir,
         m_outDir = fullfilename;
         QDir outDir(m_outDir);
         if(!outDir.exists()) {
-            cout << "DataHandler::setupOutputFiles    ERROR Output directory "
-                 << "from config XML does not exist. Exting." << endl;
+            msg()("ERROR Output directory from config XML does not exist!",
+                    "DataHandler::setupOutputFiles", true);
             exit(1);
         }
 
@@ -95,16 +99,18 @@ void DataHandler::setupOutputFiles(TriggerDAQ& daq, QString outdir,
         fullfilename.append(daq.output_filename);
         m_daqFile.setFileName(fullfilename);
 
-        cout << "Setting output data file to: " << fullfilename.toStdString() << endl;
+        msg()("Setting output data file to: " + fullfilename.toStdString(),
+                "DataHandler::setupOutputFiles");
         #warning implement test mode or increment of filename!!
         if(m_daqFile.exists() /*&&testmode */) {
-            cout << "Output file exists. Erasing existing version." << endl;
+            msg()("Output file exists. Erasing existing version.",
+                    "DataHandler::setupOutputFiles");
             m_daqFile.remove();
         }
         bool ok = m_daqFile.open(QIODevice::ReadWrite);
         if(!ok) {
-            cout << "DataHandler::setupOutputFiles    Output data file unable "
-                 << "to be opened! Exiting." << endl;
+            msg()("Output data file unable to be opened!",
+                    "DataHandler::setupOutputFiles", true);
             exit(1);
         }
         //m_daqFile.close();
@@ -115,9 +121,9 @@ void DataHandler::setupOutputFiles(TriggerDAQ& daq, QString outdir,
         //////////////////////////////////////////////////
         if(writeNtuple()) {
             fullfilename = DataHandler::getRootFileName(m_outDir);
-            if(dbg()) cout << "DataHandler::setupOutputFiles    "
-                           << "Setting output ROOT file to: "
-                           << fullfilename.toStdString() << endl;
+            if(dbg())
+                msg()("Setting output ROOT file to: " + fullfilename.toStdString(),
+                                    "DataHandler::setupOutputFiles");
 
             m_daqRootFile = new TFile(fullfilename.toStdString().c_str(), "UPDATE");
             m_rootFileOK = true;
@@ -134,8 +140,8 @@ void DataHandler::setupOutputFiles(TriggerDAQ& daq, QString outdir,
 
         QDir outdir(m_outDir);
         if(!outdir.exists()) {
-            cout << "DataHandler::setupOutputFiles    ERROR Output directory "
-                 << "from config XML does not exist. Exting." << endl;
+            msg()("ERROR Output directory from config XML does not exist.",
+                    "DataHandler::setupOutputFiles", true);
             exit(1);
         }
         QString spacer = "";
@@ -149,16 +155,18 @@ void DataHandler::setupOutputFiles(TriggerDAQ& daq, QString outdir,
         fullfilename = m_outDir + spacer + "dump_" + filename_dump;
 
         m_daqFile.setFileName(fullfilename);
-        cout << "Setting output data file to: " << fullfilename.toStdString() << endl;
+        msg()("Setting output data file to: " + fullfilename.toStdString(),
+                "DataHandler::setupOutputFiles");
         #warning implement test mode or increment of filename!!
         if(m_daqFile.exists() /*&&testmode*/) {
-            cout << "Output file exists. Erasing existing version." << endl;
+            msg()("Output file exists. Erasing existing version.",
+                    "DataHandler::setupOutputFiles");
             m_daqFile.remove();
         }
         bool ok = m_daqFile.open(QIODevice::ReadWrite);
         if(!ok) {
-            cout << "DataHandler::setupOutputFiles    Output data file unable "
-                 << "to be opened! Exiting." << endl;
+            msg()("Output data file unable to be opened",
+                    "DataHandler::setupOutputFiles", true);
             exit(1);
         }
         //m_daqFile.close();
@@ -170,9 +178,9 @@ void DataHandler::setupOutputFiles(TriggerDAQ& daq, QString outdir,
         if(writeNtuple()) {
             fullfilename = m_outDir + spacer + filename + ".root";
             //fullfilename = DataHandler::getRootFileName(m_outDir);
-            if(dbg()) cout << "DataHandler::setupOutputFiles    "
-                           << "Setting output ROOT file to: "
-                           << fullfilename.toStdString() << endl;
+            if(dbg())
+                msg()("Setting output ROOT file to: " + fullfilename.toStdString(),
+                        "DataHandler::setupOutputFiles");
             m_daqRootFile = new TFile(fullfilename.toStdString().c_str(), "UPDATE");
             m_rootFileOK = true;
         }
@@ -186,8 +194,10 @@ QString DataHandler::getRootFileName(const QString& dir)
         number = m_runNumber;
     }
     else {
-        cout << "DataHandler::getRootFileName    Run properties not yet filled."
-             << " Will set initial ROOT filename to run_0000.root" << endl;
+        stringstream sx;
+        sx << "Run properties not yet filled. Will set initial ROOT filename"
+           << " to run_0000.root";
+        msg()(sx, "DataHandler::getRootFileName");
     }
     QString spacer = "";
     if(!m_outDir.endsWith("/")) spacer = "/";
@@ -211,11 +221,12 @@ void DataHandler::dataFileHeader(CommInfo& info, GlobalSetting& global,
                                         TriggerDAQ& daq)
 {
     if(!m_fileOK) {
-        cout << "DataHandler::dataFileHeader    "
-             << "Output file has not been set up! Exiting." << endl;
+        msg()("Output file has not been set up!",
+                "DataHandler::DataFileHeader", true);
         exit(1);
     }
-    if(dbg()) cout << "DataHandler::dataFileHeader" << endl;
+    if(dbg())
+        msg()("Building data header...", "DataHandler::DataFileHeader");
 
 
     QTextStream out(&m_daqFile);
@@ -270,7 +281,9 @@ void DataHandler::dataFileHeader(CommInfo& info, GlobalSetting& global,
 void DataHandler::getRunProperties(const GlobalSetting& global,
         int runNumber, int angle)
 {
-    if(dbg()) cout << "DataHandler::getRunProperties" << endl;
+    if(dbg())
+        msg()("Filling run properties...",
+                "DataHandler::getRunProperties");
 
     m_gain          = ConfigHandler::all_gains[global.gain].toDouble();
     m_runNumber     = runNumber;
@@ -354,20 +367,22 @@ void DataHandler::setupOutputTrees()
 // ------------------------------------------------------------------------ //
 void DataHandler::writeAndCloseDataFile()
 {
-    if(dbg()) cout << "DataHandler::writeAndCloseDataFile" << endl;
+    if(dbg())
+        msg()("Writing output files and closing...",
+                "DataHandler::writeAndCloseDataFile");
     if(!m_vmm2 || !m_treesSetup) {
-        cout << "DataHandler::writeAndCloseDataFile    "
-             << "Event data tree is null!" << endl;
+        msg()("Event data tree is null!",
+                    "DataHandler::writeAndCloseDataFile", true);
         exit(1);
     }
     if(!m_daqRootFile || !m_rootFileOK) {
-        cout << "DataHandler::writeAndCloseDataFile    "
-             << "Output ROOT file is not setup!" << endl;
+        msg()("Output ROOT file is not setup!",
+                "DataHandler::writeAndCloseDataFile",true);
         exit(1);
     }
     if(!m_fileOK) {
-        cout << "DataHandler::writeAndCloseDataFile    "
-             << "Dump file has not be setup!" << endl;
+        msg()("Dump file has not been setup!",
+                "DataHandler::writeAndCloseDataFile", true);
         exit(1);
     }
 
@@ -379,12 +394,12 @@ void DataHandler::writeAndCloseDataFile()
     if(writeNtuple()){
         m_daqRootFile->cd();
         if(!(m_vmm2->Write("", TObject::kOverwrite))) {
-            cout << "DataHandler::writeAndCloseDataFile    "
-                 << "ERROR writing event data to file!" << endl;
+            msg()("ERROR writing event data to file!",
+                        "DataHandler::writeAndCloseDataFile");
         }
         if(!(m_daqRootFile->Write())) {
-            cout << "DataHandler::writeAndCloseDataFile    "
-                 << "ERROR Unable to successfully write output DAQ ROOT file!" << endl;
+            msg()("ERROR Unable to successfully write output DAQ ROOT file!",
+                        "DataHandler::writeAndCloseDataFile");
         }
         m_daqRootFile->Close();
     }//writeNtuple
@@ -425,16 +440,17 @@ void DataHandler::clearData()
 // ------------------------------------------------------------------------ //
 void DataHandler::EndRun()
 {
-    cout << "DataHandler::EndRun    Closing output files..." << endl;
-    cout << " > Output data file saved to: " 
-                                << m_daqFile.fileName().toStdString() << endl;
+    msg()("Closing output files...", "DataHandler::EndRun");
+    msg()("Output data file saved to: " + m_daqFile.fileName().toStdString(),
+                "DataHandler::EndRun");
     m_daqFile.close();
 }
 
 // ------------------------------------------------------------------------ //
 void DataHandler::readEvent()
 {
-    if(dbg()) cout << "DataHandler::readEvent    Receiving event packet..." << endl;
+    if(dbg()) msg()("Receiving event packet...", "DataHandler::readEvent");
+    stringstream sx;
 
     QHostAddress vmmip;
     QByteArray datagram;
@@ -445,10 +461,13 @@ void DataHandler::readEvent()
     while(daqSocket().hasPendingDatagrams()){
         datagram.resize(daqSocket().pendingDatagramSize());
         daqSocket().readDatagram(datagram.data(), datagram.size(), &vmmip);
-        cout << " *** DAQ socket receiving data *** " << endl;
-        cout << "   message from IP : " << vmmip.toString().toStdString() << endl;
-        cout << "   message content : " << datagram.toStdString() << endl;
-        cout << " ********* end of packet ********* " << endl;
+        msg()(" *** DAQ socket receiving data *** ", "DataHandler::readEvent");
+        msg()("  message from IP : " + vmmip.toString().toStdString()",
+                    "DataHandler::readEvent");
+        msg()("  message content : " + datagram.toStdString()",
+                    "DataHandler::ReadEvent");
+        msg()(" ********* end of packet ********* ",
+                    "DataHandler::readEvent");
     } // while
 */
 
@@ -459,10 +478,13 @@ void DataHandler::readEvent()
     while(daqSocket().hasPendingDatagrams()){
         datagram.resize(daqSocket().socket().pendingDatagramSize());
         daqSocket().socket().readDatagram(datagram.data(), datagram.size(), &vmmip);
-        if(dbg()) cout << "DataHandler::readEvent    DAQ datagram read: "
-                       << datagram.toHex().toStdString()
-                       << " from VMM with IP: " << vmmip.toString().toStdString()
-                       << endl;
+
+        if(dbg()){
+            sx.str("");
+            sx << "DAQ datagram read: " << datagram.toHex().toStdString()
+               << " from VMM with IP: " << vmmip.toString().toStdString();
+            msg()(sx, "DataHandler::readEvent");
+        }
 
         QString ip = vmmip.toString();
         QList<QByteArray> arr = datamap.value(ip); // datamap[ip] = arr 
@@ -477,9 +499,11 @@ void DataHandler::readEvent()
 
     QMap<QString, QList<QByteArray> >::iterator it;
     for(it = datamap.begin(); it!=datamap.end(); it++) {
-        if(dbg()) cout << "DataHandler::readEvent    "
-                       << "Reading data from address: " << it.key().toStdString()
-                       << endl;
+        if(dbg()) {
+            sx.str("");
+            sx << "Reading data from address: " << it.key().toStdString();
+            msg()(sx, "DataHandler::readEvent");
+        }
         QList<QByteArray> arr = datamap.value(it.key());
         QList<QByteArray>::iterator bit;
         for(bit = arr.begin(); bit != arr.end(); bit++) {
@@ -494,6 +518,7 @@ void DataHandler::readEvent()
 void DataHandler::decodeAndWriteData(const QByteArray& datagram)
 {
     bool ok;
+    stringstream sx;
 
     QString frameCounterStr = datagram.mid(0,4).toHex(); //Frame Counter
 
@@ -510,20 +535,20 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
         trigTimeStampStr = datagram.mid(10,2).toHex();
 
         if(dbg()) {
-            cout << "*****************************************************" << endl;
-            cout << "DataHandler::decodeAndWriteData    "
-                            << "Data from chip # : " << chipNumberStr.toStdString() << endl;
-            cout << "DataHandler::decodeAndWriteData    "
-                            << " > Header        : " << headerStr.toStdString() << endl;
-            cout << "DataHandler::decodeAndWriteData    "
-                            << " > Data          : " << fullEventDataStr.toStdString() << endl;
-            cout << "*****************************************************" << endl;
-            cout << endl;
+            sx.str("");
+            sx << "*****************************************************\n"
+               << " Data from chip # : " << chipNumberStr.toStdString() << "\n"
+               << "  > Header        : " << headerStr.toStdString() << "\n"
+               << "  > Data          : " << fullEventDataStr.toStdString() << "\n"
+               << "*****************************************************"; 
+            msg()(sx,"DataHandler::decodeAndWriteData");
         } //dbg
 
-        if(datagram.size()==12)
-            cout << "DataHandler::decodeAndWriteData    Empty event from chip #: "
-                 << chipNumberStr.toInt(&ok,16) << endl;
+        if(datagram.size()==12) {
+            sx.str("");
+            sx << "Empty event from chip #: " << chipNumberStr.toInt(&ok,16);
+            msg()(sx,"DataHandler::decodeAndWriteData");
+        }
 
         // data containers for this chip
         vector<int>     _pdo;           _pdo.clear();
@@ -601,17 +626,18 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
             _gray.push_back(gray);
 
             if(dbg()) {
-                string fn = "DataHandler::decodeAndWriteData    ";
-                cout << fn << "channel          : " << channel_no << endl;
-                cout << fn << "flag             : " << flag << endl;
-                cout << fn << "threshold        : " << threshold << endl;
-                cout << fn << "charge           : " << outCharge_ << endl;
-                cout << fn << "q_1              : " << q_1.toStdString() << endl;
-                cout << fn << "q_2              : " << q_2.toStdString() << endl;
-                cout << fn << "q_final          : " << q_final.toStdString() << endl;
-                cout << fn << "tac              : " << outTac_ << endl;
-                cout << fn << "bcid             : " << outBCID_ << endl;
-                cout << endl;
+                sx.str("");
+                sx << "channel          : " << channel_no << "\n"
+                   << "flag             : " << flag << "\n"
+                   << "threshold        : " << threshold << "\n"
+                   << "charge           : " << outCharge_ << "\n"
+                   << "q_1              : " << q_1.toStdString() << "\n"
+                   << "q_2              : " << q_2.toStdString() << "\n"
+                   << "q_final          : " << q_final.toStdString() << "\n"
+                   << "tac              : " << outTac_ << "\n"
+                   << "bcid             : " << outBCID_;
+                msg()(sx,"DataHandler::decodeAndWriteData");
+                msg()(" "," ");
             } // dbg
 
             // move to next channel (8 bytes forward)
@@ -663,22 +689,27 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
 // ------------------------------------------------------------------------ //
 void DataHandler::fillEventData()
 {
+    stringstream sx;
     if(!writeNtuple()) {
-        if(dbg()) cout << "DataHandler::fillEventData    "
-                       << "This method should only be called if writing an output"
-                       << " ROOT ntuple. Skipping." << endl;
+        if(dbg()) {
+            sx.str("");
+            sx << "This method should only be called if writing an output ROOT ntuple. Skipping.";
+            msg()(sx,"DataHandler::fillEventData");
+        }
         return;
     }
 
     if(!m_treesSetup || !m_vmm2 || !m_rootFileOK) {
-        cout << "DataHandler::fillEventData    Event data tree unable to be filled!"
-             << " Exiting." << endl;
+        msg()("Event data tree unable to be filled!",
+                "DataHandler::fillEventData",true);
         if(dbg()) {
-            cout << "--------------------------------------------- " << endl;
-            cout << "   trees setup OK ? : " << (m_treesSetup ? "yes" : "no") << endl;
-            cout << "   vmm2 tree OK   ? : " << (m_vmm2 ? "yes" : "no") << endl;
-            cout << "   root file OK   ? : " << (m_rootFileOK ? "yes" : "no") << endl;
-            cout << "--------------------------------------------- " << endl;
+            sx.str("");
+            sx << "---------------------------------------------\n"
+               << "  trees setup OK ? : " << (m_treesSetup ? "yes" : "no") << "\n"
+               << "  vmm2 tree OK   ? : " << (m_vmm2 ? "yes" : "no") << "\n"
+               << "  root file OK   ? : " << (m_rootFileOK ? "yes" : "no") << "\n"
+               << "---------------------------------------------";
+            msg()(sx,"DataHandler::fillEventData");
         } // dbg
         exit(1);
     }
@@ -764,6 +795,7 @@ quint32 DataHandler::reverse32(QString hex)
     bin = tmp.number(hex.toUInt(&ok,16),2); // convert input to binary
     if(bin.size()>32) {
         cout << "DataHandler::reverse32    Input datagram is larger than 32 bits!" << endl;
+        cout << "DataHandler::reverse32    >>> Exiting." << endl;
         exit(1);
     }
     // turn input array into QBitArray

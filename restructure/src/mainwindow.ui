@@ -5290,7 +5290,7 @@ p, li { white-space: pre-wrap; }
        <rect>
         <x>10</x>
         <y>400</y>
-        <width>601</width>
+        <width>621</width>
         <height>151</height>
        </rect>
       </property>
@@ -5302,7 +5302,7 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>10</x>
          <y>50</y>
-         <width>581</width>
+         <width>601</width>
          <height>91</height>
         </rect>
        </property>
@@ -5337,7 +5337,7 @@ p, li { white-space: pre-wrap; }
        <rect>
         <x>10</x>
         <y>0</y>
-        <width>601</width>
+        <width>621</width>
         <height>401</height>
        </rect>
       </property>
@@ -5349,7 +5349,7 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>10</x>
          <y>30</y>
-         <width>581</width>
+         <width>601</width>
          <height>361</height>
         </rect>
        </property>
@@ -5358,6 +5358,15 @@ p, li { white-space: pre-wrap; }
          <family>Courier</family>
          <pointsize>9</pointsize>
         </font>
+       </property>
+       <property name="lineWrapMode">
+        <enum>QTextEdit::NoWrap</enum>
+       </property>
+       <property name="lineWrapColumnOrWidth">
+        <number>150</number>
+       </property>
+       <property name="tabStopWidth">
+        <number>0</number>
        </property>
       </widget>
      </widget>
