@@ -4,6 +4,8 @@
 // qt
 #include <QDir>
 #include <QFileDialog>
+#include <QTime>
+#include <QScrollBar>
 
 // std/stl
 #include <iostream>
@@ -49,12 +51,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tabWidget->setTabText(1,"Calibration");
     ui->tabWidget->setTabText(2,"Response");
 
-    msg()("Disabling S6 and test pulse group boxes");
-    // disable S6 box
-    ui->groupBox_8->setEnabled(false);
-    // disable test pulse box
-    ui->groupBox_7->setEnabled(false);
-
     /////////////////////////////////////////////////////////////////////
     //-----------------------------------------------------------------//
     // VMM handles
@@ -73,11 +69,11 @@ MainWindow::MainWindow(QWidget *parent) :
     vmmRunModule    ->LoadMessageHandler(msg());
 
 
-    vmmConfigHandler ->setDebug(true);
-    vmmSocketHandler ->setDebug(true);
-    vmmConfigModule  ->setDebug(true);
-    vmmRunModule     ->setDebug(true);
-    vmmDataHandler   ->setDebug(true);
+    vmmConfigHandler ->setDebug(false);
+    vmmSocketHandler ->setDebug(false);
+    vmmConfigModule  ->setDebug(false);
+    vmmRunModule     ->setDebug(false);
+    vmmDataHandler   ->setDebug(false);
 
     // set dry run for testing
     msg()(" !! SOCKETHANDLER SET FOR DRY RUN !! ");
@@ -115,6 +111,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //hdmi mask
     ui->setMask->setCheckable(true);
+
+    // DAQ XML
+    ui->loadDAQXMLFile->setEnabled(false);
+    ui->writeDAQXMLFile->setEnabled(false);
 
     /////////////////////////////////////////////////////////////////////
     //-----------------------------------------------------------------//
@@ -211,6 +211,22 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->sdp_2, SIGNAL(valueChanged(int)),
                                     this, SLOT(changeDACtoMVs(int)));
 
+    // s6 clocks
+    connect(ui->setck_s6, SIGNAL(clicked()),
+                                    this, SLOT(setS6clocks()));
+
+    // test pulse config
+    connect(ui->setTp_s6, SIGNAL(clicked()),
+                                    this, SLOT(configureTP()));
+
+    // move to bottom of log screen
+    connect(ui->logBottom, SIGNAL(clicked()),
+                                    this, SLOT(updateLogScreen()));
+
+    // set debug and propagate to the tools
+    connect(ui->enableDebugPB, SIGNAL(stateChanged(int)),
+                                    this, SLOT(toggleDebug()));
+
 
 
     /////////////////////////////////////////////////////////////////////
@@ -242,6 +258,24 @@ MainWindow::~MainWindow()
     delete ui;
 }
 // ------------------------------------------------------------------------- //
+void MainWindow::toggleDebug()
+{
+    if(ui->enableDebugPB->isChecked()) {
+        vmmConfigHandler ->setDebug(true);
+        vmmSocketHandler ->setDebug(true);
+        vmmConfigModule  ->setDebug(true);
+        vmmRunModule     ->setDebug(true);
+        vmmDataHandler   ->setDebug(true);
+    }
+    else {
+        vmmConfigHandler ->setDebug(false);
+        vmmSocketHandler ->setDebug(false);
+        vmmConfigModule  ->setDebug(false);
+        vmmRunModule     ->setDebug(false);
+        vmmDataHandler   ->setDebug(false);
+    }
+}
+// ------------------------------------------------------------------------- //
 void MainWindow::changeDACtoMVs(int)
 {
     QString tmp;
@@ -255,8 +289,16 @@ void MainWindow::readLog()
 {
     string buff = msg().buffer();
     ui->loggingScreen->append(QString::fromStdString(buff));
-    ui->loggingScreen->moveCursor(QTextCursor::End, QTextCursor::MoveAnchor);
+    //ui->loggingScreen->moveCursor(QTextCursor::End, QTextCursor::MoveAnchor);
     msg().clear(); 
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::updateLogScreen()
+{
+    if(QObject::sender() == ui->logBottom) {
+        ui->loggingScreen->moveCursor(QTextCursor::End, QTextCursor::MoveAnchor);
+        ui->loggingScreen->verticalScrollBar()->setValue(ui->loggingScreen->verticalScrollBar()->maximum());
+    }
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::updateFSM()
@@ -619,6 +661,9 @@ void MainWindow::setNumberOfFecs(int)
 // ------------------------------------------------------------------------- //
 void MainWindow::SetInitialState()
 {
+    msg()("Waiting for open communication with FEC...");
+
+
     // write and SPI configuration
     ui->spiRB->setChecked(true);
     ui->writeRB->setChecked(true);
@@ -1296,6 +1341,10 @@ void MainWindow::loadConfigurationFromFile()
         tr("XML Files (*.xml)"));
     if(filename.isNull()) return;
 
+    stringstream sx;
+    sx << "Loading configuration from file: " << filename.toStdString();
+    msg()(sx);
+
     // pass the file to ConfigHandler to parse and load
     configHandle().LoadConfig(filename);
     updateConfigState();
@@ -1718,12 +1767,12 @@ void MainWindow::triggerHandler()
             ui->stopTriggerCnt->setEnabled(true);
 
             #warning ADD IN CALIBRATION LOOP
-            //if(ui->calibration->isChecked()) {
-            //    if(ui->autoCalib->isChecked())
-            //        startCalibration();
-            //    else if(ui->manCalib->isChecked())
-            //        msg()("Manual Calibration");
-            //} // calibration
+            if(ui->calibration->isChecked()) {
+                if(ui->autoCalib->isChecked())
+                    startCalibration();
+                else if(ui->manCalib->isChecked())
+                    msg()("Manual Calibration");
+            } // calibration
 
         } // writeData
         else {
@@ -1751,6 +1800,168 @@ void MainWindow::triggerHandler()
         ui->stopTriggerCnt->setEnabled(false);
     } // stopTriggerCnt
 
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::startCalibration()
+{
+    stringstream sx;
+
+    delay();
+    bool ok;
+    int x = 0;
+    int eventsMultiplier = 0;
+
+    sx << " ---------------------------------- \n"
+       << "  Starting calibration \n"
+       << " ---------------------------------- ";
+    msg()(sx); sx.str("");
+
+    for(int g = ui->sg_cal_min->currentIndex(); g <= ui->sg_cal_max->currentIndex(); g++) {
+        ui->sg->setCurrentIndex(g);
+        for(int thr = ui->sdt_cal_min->value(); thr <= ui->sdt_cal_max->value();
+                                                            thr += ui->sdt_cal_step->value()) {
+            ui->sdt->setValue(thr);
+            for(int p = ui->sdp_cal_min->value(); p <= ui->sdp_cal_max->value();
+                                                            p += ui->sdp_cal_step->value()) {
+                ui->sdp_2->setValue(p);
+
+                sx << " ---------------------------------- \n"
+                   << "  Calibration Loop \n"
+                   << "   > Gain            : " << ui->sg->currentText().toStdString() << "\n"
+                   << "   > Threshold       : " << ui->sdt->value() << "\n"
+                   << "   > Pulser DAC      : " << ui->sdp_2->value() << "\n"
+                   << " ----------------------------------";
+                msg()(sx); sx.str("");
+
+
+                // send the updated info to run_module here
+
+                for(int ch = ui->chRange_calib_min->currentIndex();
+                        ch <= ui->chRange_calib_max->currentIndex(); ch++) {
+                    delay();
+                    for(int chT = 0; chT < 64; chT++) {
+                        VMMSM[chT]->setStyleSheet("background-color: lightGray");
+                        VMMSMBool[chT]=0;
+                        VMMSMBoolAll=0;
+                        VMMSMBoolAll2=0;
+                        VMMST[chT]->setStyleSheet("background-color: lightGray");
+                        VMMSTBool[chT]=0;
+                        VMMSTBoolAll=0;
+                        VMMSTBoolAll2=0;
+                    } //chT
+                    if(ui->masking_calib->isChecked()) {
+                        emit SMLabel->click();
+                        emit SMLabel2->click();
+                        VMMSM[ch]->click();
+                        if(ch>0)
+                            VMMSM[ch-1]->click();
+                        if(ch<63)
+                            VMMSM[ch+1]->click();
+                    } //masking
+
+                    sx << " > Calibrating channel: " << ch;
+                    msg()(sx);sx.str("");
+
+                    VMMST[ch]->click();
+                    sx << " --> Set mask..."; msg()(sx); sx.str("");
+                    emit ui->setMask->click();
+                    delay();
+                    sx << " --> Set headers..."; msg()(sx); sx.str("");
+                    emit ui->setEvbld->click();
+                    delay();
+
+                    sx << " --> Initialize electronics..."; msg()(sx); sx.str("");
+                    emit ui->SendConfiguration->click();
+                    delay();
+                    emit ui->SendConfiguration->click();
+                    delay();
+
+                    sx << " --> Set trigger constants..."; msg()(sx); sx.str("");
+                    emit ui->setTrgAcqConst->click();
+                    delay();
+                    sx << " --> Setting pulser DAC..."; msg()(sx); sx.str("");
+                    emit ui->trgPulser->click();
+
+                    int initialEvents = ui->triggerCntLabel->text().toUInt(&ok,10);
+
+                    sx << " --> Enabling DAQ..."; msg()(sx); sx.str("");
+                    emit ui->onACQ->click();
+
+                    eventsMultiplier++;
+                    unsigned int eventsForCalibration = ui->evCalib->text().toUInt(&ok,10);
+
+                    sx << " --> Starting pulser with number of events: " << eventsForCalibration;
+                    msg()(sx); sx.str("");
+                    delay();
+
+                    #warning don't see how this case can happen
+                    if(QObject::sender() == ui->stopTriggerCnt)
+                        break;
+
+                    while(ui->triggerCntLabel->text().toUInt(&ok,10) - initialEvents <= eventsForCalibration){
+                        sx << " * Waiting for event collecting... * "; msg()(sx); sx.str("");
+                        delay();
+                        delay();
+                        delay();
+                        delay();
+                        delay();
+                        if(x>10) { x = 0; break; }
+                        x++;
+                        if(!ui->stopTriggerCnt->isEnabled())
+                            break;
+                    }
+
+                    emit ui->offACQ->click();
+                    delay();
+                    delay();
+                    delay();
+
+                    if(QObject::sender() == ui->stopTriggerCnt)
+                        break;
+
+                    sx << " ----------------------------------"; msg()(sx); sx.str("");
+
+                } //ch
+            } //p
+        } //thr
+    } //g
+    sx << " ---------------------------------- \n"
+       << "  Calibration finished \n"
+       << " ---------------------------------- ";
+    msg()(sx); sx.str("");
+    emit ui->stopTriggerCnt->click();
+
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::setS6clocks()
+{
+    ui->s6RB->setChecked(1);
+    runModule().s6clocks(ui->cktk_s6->currentIndex(),
+                         ui->ckbc_s6->currentIndex(),
+                         ui->ckbc_skew_s6->currentIndex());
+
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::configureTP()
+{
+    ui->s6RB->setChecked(1);
+    runModule().configTP(ui->tpSkew->currentIndex(),
+                         ui->tpWidth->currentIndex(),
+                         ui->tpPolarity->currentIndex());
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::delay()
+{
+    QTime dieTime = QTime::currentTime().addMSecs(200);
+    while(QTime::currentTime() < dieTime)
+        QCoreApplication::processEvents(QEventLoop::AllEvents,100);
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::delayMs()
+{
+    QTime dieTime = QTime::currentTime().addMSecs(10);
+    while( QTime::currentTime() < dieTime )
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
 

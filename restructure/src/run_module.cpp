@@ -811,7 +811,7 @@ void RunModule::checkLinkStatus()
 // ------------------------------------------------------------------------ //
 void RunModule::resetLinks()
 {
-    if(dbg()) msg()("Resetting linkes...","RunModule::resetLinks");
+    if(dbg()) msg()("Resetting links...","RunModule::resetLinks");
 
     bool ok;
     QByteArray datagram;
@@ -878,8 +878,118 @@ void RunModule::resetLinks()
     socket().closeAndDisconnect("fec", "RunModule::resetLinks");
 
 }
-            
+// ------------------------------------------------------------------------ //
+void RunModule::s6clocks(int cktk, int ckbc, int ckbc_skew)
+{
+    if(dbg()) msg()("Setting S6 clocks...","RunModule::s6clocks");
 
+    bool ok;
+    QByteArray datagram;
+
+    // send call to s6 port
+    int send_to_port = config().commSettings().s6_port;
+
+    QString cmd, msbCounter;
+    cmd = "AAAAFFFF";
+    msbCounter = "0x80000000";
+
+    for(const auto& ip : socket().ipList()) {
+        datagram.clear();
+        QDataStream out (&datagram, QIODevice::WriteOnly);
+        out.device()->seek(0); //rewind
+
+        socket().updateCommandCounter();
+
+        ////////////////////////////
+        // header
+        ////////////////////////////
+        out << (quint32)(socket().commandCounter() + msbCounter.toUInt(&ok,16)) //[0,3]
+            << (quint32) config().getHDMIChannelMap() //[4,7]
+            << (quint32) cmd.toUInt(&ok,16); //[8,11]
+
+        ////////////////////////////
+        // command
+        ////////////////////////////
+        out << (quint32) 0 //[12,15]
+            << (quint32) 6 //[16,19]
+            << (quint32) (cktk*16) //[20,23]
+            << (quint32) 7 //[24,27]
+            << (quint32) ( ckbc + (ckbc_skew*16) ); //[28,31]
+
+        socket().SendDatagram(datagram, ip, send_to_port, "fec",
+                                            "RunModule::s6clocks");
+
+        bool readOK = true;
+        readOK = socket().waitForReadyRead("fec");
+        if(readOK) {
+            if(dbg()) msg()("Processing replies...","RunModule::s6clocks");
+            socket().processReply("fec",ip);
+        } else {
+            msg()("Timout while waiting for replies from VMM",
+                    "RunModule::s6clocks", true);
+            socket().closeAndDisconnect("fec","RunModule::s6clocks");
+            exit(1);
+        }
+    } // ip
+
+    socket().closeAndDisconnect("fec","RunModule::s6clocks");
+
+}
+// ------------------------------------------------------------------------ //
+void RunModule::configTP(int tpskew, int tpwidth, int tppolarity)
+{
+    if(dbg()) msg()("Configuring the pulser...","RunModule::configTP");
+
+    bool ok;
+    QByteArray datagram;
+
+    // send call to s6 port
+    int send_to_port = config().commSettings().s6_port;
+
+    QString cmd, msbCounter;
+    cmd = "AAAAFFFF";
+    msbCounter = "0x80000000"; 
+
+    for(const auto& ip : socket().ipList()) {
+        datagram.clear();
+        QDataStream out (&datagram, QIODevice::WriteOnly);
+        out.device()->seek(0); //rewind
+
+        socket().updateCommandCounter();
+
+        ////////////////////////////
+        // header
+        ////////////////////////////
+        out << (quint32)(socket().commandCounter() + msbCounter.toUInt(&ok,16)) //[0,3]
+            << (quint32) config().getHDMIChannelMap() //[4,7]
+            << (quint32) cmd.toUInt(&ok,16); //[8,11]
+
+        ////////////////////////////
+        // command
+        ////////////////////////////
+        out << (quint32) 0 //[12,15]
+            << (quint32) 2 //[16,19]
+            << (quint32) (tpskew + (tpwidth*16) + (tppolarity*128)); //[20,23]
+
+        socket().SendDatagram(datagram, ip, send_to_port, "fec",
+                                                "RunModule::configTP");
+
+        bool readOK = true;
+        readOK = socket().waitForReadyRead("fec");
+        if(readOK) {
+            if(dbg()) msg()("Processing replies...","RunModule::configTP");
+            socket().processReply("fec",ip);
+        } else {
+            msg()("Timeout while waiting for replies from VMM",
+                    "RunModule::configTP", true);
+            socket().closeAndDisconnect("fec","RunModule::configTP");
+            exit(1);
+        }
+    } // ip
+
+    socket().closeAndDisconnect("fec","RunModule::configTP");
+
+}
 
 
 

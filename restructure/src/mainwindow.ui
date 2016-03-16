@@ -1671,7 +1671,7 @@
     <property name="title">
      <string>Test Pulse</string>
     </property>
-    <widget class="QComboBox" name="tpScew">
+    <widget class="QComboBox" name="tpSkew">
      <property name="geometry">
       <rect>
        <x>2</x>
@@ -1730,7 +1730,7 @@
       </property>
      </item>
     </widget>
-    <widget class="QLabel" name="tpScewLabel">
+    <widget class="QLabel" name="tpSkewLabel">
      <property name="geometry">
       <rect>
        <x>5</x>
@@ -3258,7 +3258,7 @@ p, li { white-space: pre-wrap; }
         <x>10</x>
         <y>50</y>
         <width>81</width>
-        <height>167</height>
+        <height>151</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_9" rowstretch="0,0,0,0,0,0,0,0" columnstretch="0,0,0" rowminimumheight="0,0,0,0,0,0,0,0" columnminimumwidth="0,0,0">
@@ -4112,7 +4112,7 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item>
-          <widget class="QRadioButton" name="manCalib_2">
+          <widget class="QRadioButton" name="manCalib">
            <property name="font">
             <font>
              <pointsize>9</pointsize>
@@ -4127,7 +4127,7 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item>
-          <widget class="QRadioButton" name="autoCalib_2">
+          <widget class="QRadioButton" name="autoCalib">
            <property name="font">
             <font>
              <pointsize>9</pointsize>
@@ -4143,7 +4143,7 @@ p, li { white-space: pre-wrap; }
        <item row="1" column="0" colspan="2">
         <layout class="QGridLayout" name="gridLayout_3" columnstretch="0,0,1,0,0">
          <item row="1" column="2">
-          <widget class="QComboBox" name="sg_cal_min_2">
+          <widget class="QComboBox" name="sg_cal_min">
            <property name="font">
             <font>
              <family>Arial</family>
@@ -4196,7 +4196,7 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item row="1" column="4">
-          <widget class="QComboBox" name="sg_cal_max_2">
+          <widget class="QComboBox" name="sg_cal_max">
            <property name="font">
             <font>
              <family>Arial</family>
@@ -4315,7 +4315,7 @@ p, li { white-space: pre-wrap; }
        <item row="2" column="0" colspan="2">
         <layout class="QGridLayout" name="gridLayout_5">
          <item row="1" column="1">
-          <widget class="QSpinBox" name="sdt_cal_min_2">
+          <widget class="QSpinBox" name="sdt_cal_min">
            <property name="font">
             <font>
              <family>Arial</family>
@@ -4331,7 +4331,7 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item row="1" column="2">
-          <widget class="QSpinBox" name="sdt_cal_max_2">
+          <widget class="QSpinBox" name="sdt_cal_max">
            <property name="font">
             <font>
              <family>Arial</family>
@@ -4347,7 +4347,7 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item row="1" column="3">
-          <widget class="QSpinBox" name="sdt_cal_step_2">
+          <widget class="QSpinBox" name="sdt_cal_step">
            <property name="font">
             <font>
              <family>Arial</family>
@@ -4427,7 +4427,7 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item>
-          <widget class="QSpinBox" name="evCalib_2">
+          <widget class="QSpinBox" name="evCalib">
            <property name="font">
             <font>
              <family>Arial</family>
@@ -4450,7 +4450,7 @@ p, li { white-space: pre-wrap; }
        <item row="3" column="0" colspan="2">
         <layout class="QGridLayout" name="gridLayout_6">
          <item row="1" column="2">
-          <widget class="QSpinBox" name="sdp_cal_max_2">
+          <widget class="QSpinBox" name="sdp_cal_max">
            <property name="font">
             <font>
              <family>Arial</family>
@@ -4478,7 +4478,7 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QSpinBox" name="sdp_cal_min_2">
+          <widget class="QSpinBox" name="sdp_cal_min">
            <property name="font">
             <font>
              <family>Arial</family>
@@ -4494,7 +4494,7 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item row="1" column="3">
-          <widget class="QSpinBox" name="sdp_cal_step_2">
+          <widget class="QSpinBox" name="sdp_cal_step">
            <property name="font">
             <font>
              <family>Arial</family>
@@ -4550,7 +4550,7 @@ p, li { white-space: pre-wrap; }
        <item row="4" column="0" colspan="2">
         <layout class="QGridLayout" name="gridLayout_7">
          <item row="1" column="1">
-          <widget class="QComboBox" name="chRange_calib_min_2">
+          <widget class="QComboBox" name="chRange_calib_min">
            <property name="font">
             <font>
              <family>Arial</family>
@@ -4880,7 +4880,7 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item row="1" column="2">
-          <widget class="QComboBox" name="chRange_calib_max_2">
+          <widget class="QComboBox" name="chRange_calib_max">
            <property name="font">
             <font>
              <family>Arial</family>
@@ -5210,7 +5210,7 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item row="1" column="3">
-          <widget class="QCheckBox" name="masking_calib_2">
+          <widget class="QCheckBox" name="masking_calib">
            <property name="font">
             <font>
              <pointsize>9</pointsize>
@@ -5350,7 +5350,7 @@ p, li { white-space: pre-wrap; }
          <x>10</x>
          <y>30</y>
          <width>601</width>
-         <height>361</height>
+         <height>341</height>
         </rect>
        </property>
        <property name="font">
@@ -5367,6 +5367,25 @@ p, li { white-space: pre-wrap; }
        </property>
        <property name="tabStopWidth">
         <number>0</number>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="logBottom">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>380</y>
+         <width>41</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Arial</family>
+         <pointsize>9</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Bottom</string>
        </property>
       </widget>
      </widget>

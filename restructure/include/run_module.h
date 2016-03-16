@@ -68,6 +68,8 @@ class RunModule : public QObject
         void setMask();
         void checkLinkStatus();
         void resetLinks();
+        void s6clocks(int cktk, int ckbc, int ckbc_skew);
+        void configTP(int tpskew, int tpwidth, int tppolarity);
 
     private :
         bool m_dbg;

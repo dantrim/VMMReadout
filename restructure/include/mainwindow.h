@@ -120,6 +120,18 @@ class MainWindow : public QMainWindow
         bool VMMSZ010bBoolAll2;
         bool VMMSZ08bBoolAll2;
         bool VMMSZ06bBoolAll2;
+
+        /////////////////////////////////
+        // calibration loop
+        /////////////////////////////////
+        void startCalibration();
+
+
+        /////////////////////////////////
+        // misc.
+        /////////////////////////////////
+        void delay();
+        void delayMs();
     
     private:
         Ui::MainWindow *ui;
@@ -198,6 +210,10 @@ class MainWindow : public QMainWindow
         void writeFECStatus();
         void resetLinks();
         void triggerHandler();
+        void setS6clocks();
+        void configureTP();
+        void updateLogScreen();
+        void toggleDebug();
 
         // channel fields
         void updateChannelState();
