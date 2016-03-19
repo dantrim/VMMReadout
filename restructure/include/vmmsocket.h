@@ -36,8 +36,9 @@ class VMMSocket : public QObject
         virtual quint64 readDatagram(char* databuffer, quint64 maxSize,
                 QHostAddress* address = 0, quint16* port = 0);
 
-        void bindSocket(quint16 port = 0,
+        bool bindSocket(quint16 port = 0,
             QAbstractSocket::BindMode mode = QAbstractSocket::DefaultForPlatform);
+        bool isBound();
         quint64 writeDatagram(const QByteArray& data, const QHostAddress& host,
                     quint16 port);
 
@@ -49,7 +50,7 @@ class VMMSocket : public QObject
 
         QUdpSocket& socket() { return *m_socket; }
         QByteArray buffer() { return m_buffer; }
-        void processReply(const QString &ip_sent_to, quint32 cmd_delay = 0,
+        QByteArray processReply(const QString &ip_sent_to, quint32 cmd_delay = 0,
                                 quint32 count = 0);
 
         void Print();

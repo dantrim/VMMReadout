@@ -22,11 +22,14 @@ SocketHandler::SocketHandler(QObject* parent) :
     m_msg(0),
     m_pinged(false),
     m_dryrun(false),
-    m_skipProcessing(true),
+    m_skipProcessing(false),
     n_globalCommandCounter(0),
     m_fecSocket(0),
+    m_fecSetup(false),
     m_vmmappSocket(0),
-    m_daqSocket(0)
+    m_vmmappSetup(false),
+    m_daqSocket(0),
+    m_daqSetup(false)
 {
 }
 // ---------------------------------------------------------------------- //
@@ -99,42 +102,48 @@ void SocketHandler::updateCommandCounter()
 void SocketHandler::addSocket(std::string name, quint16 bindingPort,
                                     QAbstractSocket::BindMode mode)
 {
-    msg()("Adding socket");
+    bool bind = true;
     QString lname = QString::fromStdString(name).toLower();
     if(lname=="fec") {
+        if(m_fecSetup) return;
         m_fecSocket = new VMMSocket();
         m_fecSocket->LoadMessageHandler(msg());
         m_fecSocket->setDebug(dbg());
         m_fecSocket->setName(name);
         m_fecSocket->setBindingPort(bindingPort);
         if(!dryrun())
-            m_fecSocket->bindSocket(bindingPort, mode);
+            bind = m_fecSocket->bindSocket(bindingPort, mode);
 
+        if(bind) m_fecSetup = true;
         msg()("VMMSocket added:","SocketHandler::addSocket");
         m_fecSocket->Print();
 
     } // fec
     else if(lname=="daq") {
+     //   if(m_daqSetup) return;
         m_daqSocket = new VMMSocket();
         m_daqSocket->LoadMessageHandler(msg());
         m_daqSocket->setDebug(dbg());
         m_daqSocket->setName(name);
         m_daqSocket->setBindingPort(bindingPort);
-        if(!dryrun())
-            m_daqSocket->bindSocket(bindingPort, mode);
+       // if(!dryrun())
+       //     m_daqSocket->bindSocket(bindingPort, mode);
         
+        m_daqSetup = true;
         msg()("VMMSocket added:","SocketHandler::addSocket");
         m_daqSocket->Print();
     } //daq
     else if(lname=="vmmapp") {
+        if(m_vmmappSetup) return;
         m_vmmappSocket = new VMMSocket();
         m_vmmappSocket->LoadMessageHandler(msg());
         m_vmmappSocket->setDebug(dbg());
         m_vmmappSocket->setName(name);
         m_vmmappSocket->setBindingPort(bindingPort);
         if(!dryrun())
-            m_vmmappSocket->bindSocket(bindingPort, mode);
+            bind = m_vmmappSocket->bindSocket(bindingPort, mode);
 
+        if(bind) m_vmmappSetup = true;
         msg()("VMMSocket added:","SocketHandler::addSocket");
         m_vmmappSocket->Print();
     } //vmmapp
@@ -145,6 +154,27 @@ void SocketHandler::addSocket(std::string name, quint16 bindingPort,
         msg()(sx,"SocketHandler::addSocket",true);
         exit(1);
     }
+}
+// ---------------------------------------------------------------------- //
+bool SocketHandler::fecSocketOK()
+{
+    bool status = true;
+    if(!m_fecSocket) status = false;
+    return status;
+}
+// ---------------------------------------------------------------------- //
+bool SocketHandler::vmmappSocketOK()
+{
+    bool status = true;
+    if(!m_vmmappSocket) status = false;
+    return status;
+}
+// ---------------------------------------------------------------------- //
+bool SocketHandler::daqSocketOK()
+{
+    bool status = true;
+    if(!m_daqSocket) status = false;
+    return status;
 }
 // ---------------------------------------------------------------------- //
 void SocketHandler::SendDatagram(const QByteArray& datagram, const QString& ip,
@@ -200,9 +230,10 @@ bool SocketHandler::waitForReadyRead(std::string name, int msec)
     return status;
 }
 // ---------------------------------------------------------------------- //
-void SocketHandler::processReply(std::string name, const QString& ip_to_check,
+QByteArray SocketHandler::processReply(std::string name, const QString& ip_to_check,
                     quint32 cmd_delay)
 {
+    QByteArray outbuffer;
     quint32 count = commandCounter();
     stringstream sx;
     sx << "HANDLER: delay = " << cmd_delay << " global: " << count;
@@ -210,11 +241,12 @@ void SocketHandler::processReply(std::string name, const QString& ip_to_check,
 
     if(dryrun() || m_skipProcessing) {
         msg()("NOT PROCESSING REPLIES!", "SocketHandler::processReply");
-        return;
+        return outbuffer;
     }
 
     VMMSocket& socket = getSocket(name);
-    socket.processReply(ip_to_check, cmd_delay, count);
+    outbuffer = socket.processReply(ip_to_check, cmd_delay, count);
+    return outbuffer;
 }
 // ---------------------------------------------------------------------- //
 void SocketHandler::closeAndDisconnect(std::string name, std::string callingFn)
@@ -276,8 +308,9 @@ VMMSocket& SocketHandler::getSocket(std::string whichSocket)
 void SocketHandler::Print()
 {
     if(!m_fecSocket && !m_daqSocket && !m_vmmappSocket) {
-        msg()("SocketHandler currently holds no sockets!",
-                "SocketHandler");
+        if(dbg())
+            msg()("SocketHandler currently holds no sockets!",
+                                                "SocketHandler::Print");
     }
     if(m_fecSocket)
         fecSocket().Print();

@@ -3,6 +3,8 @@
 
 // qt
 #include <QDir>
+#include <QFileInfoList>
+#include <QFileInfo>
 #include <QFileDialog>
 #include <QTime>
 #include <QScrollBar>
@@ -45,6 +47,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->setMinimumWidth(1200);
     Font.setFamily("Arial");
     ui->loggingScreen->setReadOnly(true);
+    ui->runStatusField->setReadOnly(true);
 
     ui->tabWidget->setStyleSheet("QTabBar::tab { height: 18px; width: 100px; }");
     ui->tabWidget->setTabText(0,"Channel Registers");
@@ -76,8 +79,8 @@ MainWindow::MainWindow(QWidget *parent) :
     vmmDataHandler   ->setDebug(false);
 
     // set dry run for testing
-    msg()(" !! SOCKETHANDLER SET FOR DRY RUN !! ");
-    vmmSocketHandler->setDryRun();
+    //msg()(" !! SOCKETHANDLER SET FOR DRY RUN !! ");
+    //vmmSocketHandler->setDryRun();
 
     // propagate command counter
     connect(vmmSocketHandler, SIGNAL(commandCounterUpdated()),
@@ -158,6 +161,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->offACQ, SIGNAL(clicked()),
                                     this, SLOT(setACQMode()));
 
+
     // start run
     connect(ui->checkTriggers, SIGNAL(clicked()),
                                     this, SLOT(triggerHandler()));
@@ -168,10 +172,17 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->clearTriggerCnt, SIGNAL(clicked()),
                                     this, SLOT(triggerHandler()));
 
+    // update trigger count
+    connect(vmmDataHandler, SIGNAL(checkDAQCount()),
+                                    this, SLOT(updateTriggerCount()));
 
     // ------------------------------------------------------ //
     // ------------- remaining buttons/widgets -------------- //
     // ------------------------------------------------------ //
+
+    // select the output directory for files
+    connect(ui->selectDir, SIGNAL(clicked()),
+                                    this, SLOT(selectOutputDirectory()));
 
     // load the board/global configuration from the XML
     connect(ui->loadConfigXMLFileButton, SIGNAL(clicked()),
@@ -258,6 +269,30 @@ MainWindow::~MainWindow()
     delete ui;
 }
 // ------------------------------------------------------------------------- //
+void MainWindow::selectOutputDirectory()
+{
+    stringstream sx;
+
+    QFileDialog getdir;
+    QString dirStr = QFileDialog::getExistingDirectory(this,
+                        tr("Select Output Directory"), ".",
+                        QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks); 
+    if(dirStr=="") return;
+
+    msg()("Setting output directory to:\n  " + dirStr.toStdString());
+    ui->runDirectoryField->setText(dirStr);
+    QString check = dirStr;
+    if(!ui->runDirectoryField->text().endsWith("/")) check = check + "/";
+
+    int run_number = dataHandle().checkForExistingFiles(dirStr.toStdString(),
+                                            ui->runNumber->value());
+    if( !(run_number == ui->runNumber->value()) ) {
+        sx << "WARNING Re-setting run number to: " << run_number;    
+        msg()(sx); sx.str("");
+    }
+    ui->runNumber->setValue(run_number);
+}
+// ------------------------------------------------------------------------- //
 void MainWindow::toggleDebug()
 {
     if(ui->enableDebugPB->isChecked()) {
@@ -307,26 +342,43 @@ void MainWindow::updateFSM()
         ui->SendConfiguration->setEnabled(true);
         ui->cmdlabel->setText("No\nConfig.");
 
+        ui->fec_WarmInit->setEnabled(true);
+        ui->fec_reset->setEnabled(true);
+
+        ui->setck_s6->setEnabled(true);
+        ui->setTp_s6->setEnabled(true);
+
         ui->asic_reset->setEnabled(true);
 
         ui->setMask->setEnabled(true);
         ui->linkPB->setEnabled(true);
         ui->resetLinks->setEnabled(true);
+
+        msg()("Waiting for configuration to be sent...");
     }
     else if(m_commOK && m_configOK && !m_tdaqOK && !m_runModeOK && m_acqMode=="") {
         ui->setTrgAcqConst->setEnabled(true);
         ui->setEvbld->setEnabled(true);
+
+        msg()("Waiting for T/DAQ constants to be sent...");
     }
     else if(m_commOK && m_configOK && m_tdaqOK && !m_runModeOK && m_acqMode=="") {
         ui->trgPulser->setEnabled(true);
         ui->trgExternal->setEnabled(true);
+
+        msg()("Waiting for trigger mode to be established...");
     }
     else if(m_commOK && m_configOK && m_tdaqOK && m_runModeOK && m_acqMode=="") {
         ui->onACQ->setEnabled(true);
+        ui->clearTriggerCnt->setEnabled(true);
+
+        msg()("Ready for DAQ...");
     }
     else if(m_commOK && m_configOK && m_tdaqOK && m_runModeOK &&
                 (m_acqMode=="ON")) {
         ui->offACQ->setEnabled(true);
+        ui->checkTriggers->setEnabled(true);
+        ui->clearTriggerCnt->setEnabled(true);
     }
 }
 // ------------------------------------------------------------------------- //
@@ -381,9 +433,11 @@ void MainWindow::Connect()
         // now that we know we are connected OK, add and bind
         // the sockets
         ///////////////////////////////////////////////////////
-        socketHandle().addSocket("FEC", FECPORT);
-        connect(&vmmSocketHandler->fecSocket(), SIGNAL(dataReady()),
-                                            this, SLOT(writeFECStatus()));
+        socketHandle().addSocket("FEC", FECPORT, QUdpSocket::ShareAddress);
+    #warning disconnecting FEC port fec status
+    // debug 
+    //    connect(&vmmSocketHandler->fecSocket(), SIGNAL(dataReady()),
+    //                                        this, SLOT(writeFECStatus()));
         socketHandle().addSocket("DAQ", DAQPORT); 
 
         
@@ -401,6 +455,7 @@ void MainWindow::Connect()
 // ------------------------------------------------------------------------- //
 void MainWindow::prepareAndSendBoardConfig()
 {
+    msg()("Sending configuration...");
 
     // ------------------------------------------------- //
     //  global settings
@@ -522,7 +577,6 @@ void MainWindow::prepareAndSendBoardConfig()
 
     // send the configuration to the FEC/boards
     //msg()(" !! NOT SENDING SPI CONFIG !! ");
-    socketHandle().updateCommandCounter();
     configModule().SendConfig();
 
     // toggle/status update
@@ -675,12 +729,25 @@ void MainWindow::SetInitialState()
     ui->SendConfiguration->setEnabled(false);
     ui->cmdlabel->setText("No\nComm.");
 
+    // disable reset of FEC
+    ui->fec_WarmInit->setEnabled(false);
+    ui->fec_reset->setEnabled(false);
+
     // disable sending of T/DAQ settings and constants
     ui->setTrgAcqConst->setEnabled(false);
     ui->trgPulser->setEnabled(false);
     ui->trgExternal->setEnabled(false);
     ui->onACQ->setEnabled(false);
     ui->offACQ->setEnabled(false);
+
+    // disable clock settings
+    ui->setck_s6->setEnabled(false);
+    ui->setTp_s6->setEnabled(false);
+
+    // disable start/stop run
+    //ui->clearTriggerCnt->setEnabled(false);
+    ui->checkTriggers->setEnabled(false);
+    ui->stopTriggerCnt->setEnabled(false);
 
     // misc DAQ buttons
     ui->setEvbld->setEnabled(false);
@@ -1722,14 +1789,33 @@ void MainWindow::resetLinks()
 void MainWindow::triggerHandler()
 
 {
-    dataHandle().LoadDAQSocket(socketHandle().daqSocket());
-    dataHandle().setWriteNtuple(ui->writeData->isChecked());
-    dataHandle().setIgnore16(ui->ignore16->isChecked());
-    dataHandle().setCalibrationRun(ui->calibration->isChecked());
+    stringstream sx;
+    //if(!(QObject::sender()==ui->stopTriggerCnt || QObject::sender()==ui->clearTriggerCnt))
+    //    socketHandle().addSocket("DAQ",DAQPORT);
+
+  //  if(!socketHandle().daqSocketOK() && (QObject::sender() != ui->clearTriggerCnt)) {
+  //      sx << "DAQ socket not setup. You cannot start a run unless this socket"
+  //         << " is initialized and bound properly.";
+  //      msg()(sx);
+  //      return;
+  //  }
+
+
+ //   dataHandle().LoadDAQSocket(socketHandle().daqSocket());
+ //   dataHandle().setWriteNtuple(ui->writeData->isChecked());
+ //   dataHandle().setIgnore16(ui->ignore16->isChecked());
+ //   dataHandle().setCalibrationRun(ui->calibration->isChecked());
     #warning channel map not implemented
     //dataHanlde().setUseChannelMap(...);
 
     if(QObject::sender() == ui->checkTriggers) {
+        sx << " * Starting DAQ run *";
+        msg()(sx); sx.str("");
+
+        //socketHandle().addSocket("DAQ", DAQPORT); 
+        dataHandle().setWriteNtuple(ui->writeData->isChecked());
+        dataHandle().setIgnore16(ui->ignore16->isChecked());
+        dataHandle().setCalibrationRun(ui->calibration->isChecked());
         bool ok;
         if(ui->writeData->isChecked()) {
 
@@ -1737,23 +1823,47 @@ void MainWindow::triggerHandler()
             QString rootFileDir = ui->runDirectoryField->text();
             if(!rootFileDir.endsWith("/")) rootFileDir = rootFileDir + "/";
             QString filename_init = "run_%04d.root";
+
+            // check for existing files, provide new tag if necessary
+            int run_number = dataHandle().checkForExistingFiles(rootFileDir.toStdString(),
+                                                    ui->runNumber->value());
+            if( !(run_number==ui->runNumber->value()) ) {
+                sx << "WARNING Re-setting run number to: " << run_number; 
+                msg()(sx);sx.str("");
+            }
+            ui->runNumber->setValue(run_number);
+                
             const char* filename_formed = Form(filename_init.toStdString().c_str(),
-                            ui->runNumber->text().toInt(&ok,10));
-            dataHandle().setupOutputFiles(configHandle().daqSettings(),
+                            run_number);
+                            //ui->runNumber->text().toInt(&ok,10));
+            bool filesOK = dataHandle().setupOutputFiles(configHandle().daqSettings(),
                                 rootFileDir, filename_formed);
+            if(!filesOK) { emit badRunDirectory(); return; }
 
             // setup and initialize the output trees
             dataHandle().setupOutputTrees();
 
             //now that files are setup, setup the header for the dump file
-            dataHandle().dataFileHeader(configHandle().commSettings(),
-                                        configHandle().globalSettings(),
-                                        configHandle().daqSettings());
+ //           dataHandle().dataFileHeader(configHandle().commSettings(),
+ //                                       configHandle().globalSettings(),
+ //                                       configHandle().daqSettings());
 
 
             //fill the run properties
             dataHandle().getRunProperties(configHandle().globalSettings(),
                         ui->runNumber->value(), ui->angle->value());
+
+            // start accepting the data
+            //dataHandle().connectDAQ();
+            //socketHandle().addSocket("DAQ",DAQPORT);
+            bool binding = socketHandle().daqSocket().bindSocket(DAQPORT);
+            if(binding)
+                dataHandle().LoadDAQSocket(socketHandle().daqSocket());
+            else {
+                sx << "ERROR binding DAQ socket. Unable to Load DAQ";
+                msg()(sx,"DataHandle::triggerHandler"); sx.str("");
+            }
+
 
             //reset DAQ count for this run
             dataHandle().resetDAQCount();
@@ -1776,9 +1886,12 @@ void MainWindow::triggerHandler()
 
         } // writeData
         else {
+            socketHandle().addSocket("DAQ", DAQPORT); 
             ui->checkTriggers->setEnabled(false);
             ui->stopTriggerCnt->setEnabled(true);
         } // not writing data
+
+        ui->runNumber->setEnabled(false);
 
     } // checkTriggers
 
@@ -1789,17 +1902,30 @@ void MainWindow::triggerHandler()
     } // clearTriggerCnt
 
     if(QObject::sender() == ui->stopTriggerCnt) {
+        sx << " * Ending DAQ run " << ui->runNumber->value() << " *";
+        msg()(sx); sx.str("");
+
         ui->runStatusField->setText("Run:"+ui->runNumber->text()+" finished");
         ui->runStatusField->setStyleSheet("background-color: lightGray");
         if(ui->writeData->isChecked()) {
             #warning make this a signal and slot
             emit EndRun();
         } // writeData
+
+        socketHandle().daqSocket().closeAndDisconnect("VMMDCS INFO");
+
         ui->runNumber->setValue(ui->runNumber->value()+1);
         ui->checkTriggers->setEnabled(true);
         ui->stopTriggerCnt->setEnabled(false);
+        ui->runNumber->setEnabled(true);
     } // stopTriggerCnt
 
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::updateTriggerCount()
+{
+    QString cnt_;
+    ui->triggerCntLabel->setText(cnt_.number(dataHandle().getDAQCount(),10));
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::startCalibration()
@@ -1931,6 +2057,20 @@ void MainWindow::startCalibration()
     msg()(sx); sx.str("");
     emit ui->stopTriggerCnt->click();
 
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::badRunDirectory()
+{
+    ui->runDirectoryField->setStyleSheet("QLineEdit { background: rgb(220, 0, 0); selection-background-color: rgb(233, 99, 0); }");
+    delay();
+    delay();
+    ui->runDirectoryField->setStyleSheet("QLineEdit { background: white; selection-background-color: rgb(233, 99, 0); }");
+    delay();
+    delay();
+    ui->runDirectoryField->setStyleSheet("QLineEdit { background: rgb(220, 0, 0); selection-background-color: rgb(233, 99, 0); }");
+    delay();
+    delay();
+    ui->runDirectoryField->setStyleSheet("QLineEdit { background: white; selection-background-color: rgb(233, 99, 0); }");
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::setS6clocks()

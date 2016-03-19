@@ -63,6 +63,7 @@ Configuration& Configuration::LoadSocket(SocketHandler& socket)
 // ------------------------------------------------------------------------ //
 void Configuration::SendConfig()
 {
+    stringstream sx;
 
     // NEED TO ADD SOCKET STATE CHECK
 
@@ -111,13 +112,19 @@ void Configuration::SendConfig()
     for(const auto& ip : socket().ipList()) {
         // update global command counter
         socket().updateCommandCounter();
+        //debug
+        sx << "sending command SPI at comamnd #: " << socket().commandCounter();
+        msg()(sx,"Configuration::SendConfig");sx.str("");
 
         datagram.clear();
         QDataStream out (&datagram, QIODevice::WriteOnly);
         out.device()->seek(0); //rewind
+    
+      //  out << (quint32)(1 + msbCounter.toUInt(&ok,16)) //debug
         out << (quint32)(socket().commandCounter() + msbCounter.toUInt(&ok,16)) //[0,3]
             << (quint32)config().getHDMIChannelMap() //[4,7]
-            << (quint32)cmd.toUInt(&ok,16) << (quint32) 0; //[8,11]
+            << (quint32)cmd.toUInt(&ok,16) //[8,11]
+            << (quint32) 0; //[12,15]
 
         //channel SPI
         for(unsigned int i = firstChRegSPI; i <= lastChRegSPI; ++i) {
@@ -137,8 +144,13 @@ void Configuration::SendConfig()
             << (quint32) 1; //[552,555]
 
         bool readOK = true;
+        //debug
+        sx.str("");
+        sx << "Send config to port: " << send_to_port;
+        msg()(sx);sx.str("");
         socket().SendDatagram(datagram, ip, send_to_port, "fec",
                                         "Configuration::SendConfig"); 
+        //sleep(2);
         readOK = socket().waitForReadyRead("fec");
         if(readOK) {
             if(dbg()) msg()("Processing replies...", "Configuration::SendConfig");
@@ -151,7 +163,8 @@ void Configuration::SendConfig()
         }
     } // ip
 
-    socket().closeAndDisconnect("fec","Configuration::SendConfig");
+    //send config
+   // socket().closeAndDisconnect("fec","Configuration::SendConfig");
 }
 // ------------------------------------------------------------------------ //
 void Configuration::fillGlobalRegisters(std::vector<QString>& global)

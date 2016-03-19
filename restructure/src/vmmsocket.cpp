@@ -34,28 +34,33 @@ void VMMSocket::LoadMessageHandler(MessageHandler& m)
     m_msg = &m;
 }
 // ----------------------------------------------------------------------- //
-void VMMSocket::bindSocket(quint16 port, QAbstractSocket::BindMode mode)
+bool VMMSocket::bindSocket(quint16 port, QAbstractSocket::BindMode mode)
 {
     #warning TODO check status and if already bound
-    bool bind;
+    bool bind = true;
     if(m_socket) {
         bind = m_socket->bind(port, mode);
     }
     else {
         msg()("Socket named " + getName() + " is null!",
                 "VMMSocket::bindSocket",true);
-        exit(1);
+        bind = false;
     }
     if(!bind) {
         msg()("Unable to bind socket named " + getName(),
                 "VMMSocket::bindSocket", true);
-        exit(1);
     }
     else {
         stringstream sx;
         sx << "Socket named " << getName() << " successfully bound to port " << port;
         msg()(sx, "VMMSocket::bindSocket");
     }
+    return bind;
+}
+// ----------------------------------------------------------------------- //
+bool VMMSocket::isBound()
+{
+    return socket().state() == 4;
 }
 // ----------------------------------------------------------------------- //
 bool VMMSocket::hasPendingDatagrams()
@@ -94,8 +99,9 @@ void VMMSocket::readyRead()
 
     if     (getName()=="fec" || getName()=="FEC")
         emit dataReady();
-    else if(getName()=="DAQ" || getName()=="daq")
+    else if(getName()=="DAQ" || getName()=="daq") {
         emit dataReady();
+    }
 }
 // ----------------------------------------------------------------------- //
 quint64 VMMSocket::writeDatagram(const QByteArray& datagram,
@@ -154,10 +160,13 @@ void VMMSocket::closeAndDisconnect(std::string callingFn)
     m_socket->disconnectFromHost();
 }
 // ----------------------------------------------------------------------- //
-void VMMSocket::processReply(const QString &ip_to_check, quint32 cmd_delay,
+QByteArray VMMSocket::processReply(const QString &ip_to_check, quint32 cmd_delay,
                                     quint32 globalCount)
 {
     stringstream sx;
+    //debug
+    sx << getName() << " socket processing replies for IP: " + ip_to_check.toStdString();
+    msg()(sx, "BLAH");sx.str("");
     if(dbg()) msg()("Processing datagram replies for IP: " + ip_to_check.toStdString(),
                         "VMMSocket::processReply");
 
@@ -168,22 +177,46 @@ void VMMSocket::processReply(const QString &ip_to_check, quint32 cmd_delay,
 
     QStringList replies; 
     replies.clear();
+    QByteArray datagram;
+    datagram.clear();
 
     while(socket().hasPendingDatagrams()) {
-        buffer().resize(socket().pendingDatagramSize());
-        socket().readDatagram(buffer().data(), buffer().size(), &vmmIP);
+
+        //debug
+        sx.str("");
+        sx << "socket " << getName() << " has datagrams";
+        msg()(sx,"VMMSocket::processReply");sx.str("");
+
+        //debug
+        datagram.resize(socket().pendingDatagramSize());
+        socket().readDatagram(datagram.data(), datagram.size(), &vmmIP);
+        qDebug() << "YEP : " << datagram.toHex();
+
+      //  buffer().resize(socket().pendingDatagramSize());
+      //  socket().readDatagram(buffer().data(), buffer().size(), &vmmIP);
+      //  qDebug() << "BLAH BLAHreceived datagram hex: " << buffer().toHex();
 
         if(dbg()) {
+            //debug
             sx.str("");
             sx << "Received datagram (hex): \n"
-               << buffer().toHex().toStdString() << "\n"
+               << datagram.toHex().toStdString() << "\n"
                << "from VMM with IP: " << vmmIP.toString().toStdString()
-               << " and message size is " << buffer().size();
-            msg()(sx, "VMMSocket::processReply");
+               << " and message size is " << datagram.size();
+            msg()(sx,"VMMSocket::processReply");sx.str("");
+
+          //  sx.str("");
+          //  sx << "Received datagram (hex): \n"
+          //     << buffer().toHex().toStdString() << "\n"
+          //     << "from VMM with IP: " << vmmIP.toString().toStdString()
+          //     << " and message size is " << buffer().size();
+          //  msg()(sx, "VMMSocket::processReply");
         }
 
         datagram_hex.clear();
-        datagram_hex = buffer().mid(0,4).toHex();
+        //debug
+        datagram_hex = datagram.mid(0,4).toHex();
+        //datagram_hex = buffer().mid(0,4).toHex();
         quint32 received = datagram_hex.toUInt(&ok,16);
         if(received != cmd_cnt_to_check) {
             sx.str("");
@@ -191,7 +224,8 @@ void VMMSocket::processReply(const QString &ip_to_check, quint32 cmd_delay,
                << "internal command counter expected (" << cmd_cnt_to_check
                << ")";
             msg()(sx, "VMMSocket::processReply",true);
-            exit(1);
+            //debug
+            //exit(1);
         }
 
         // fill our list of VMM replies
@@ -216,18 +250,25 @@ void VMMSocket::processReply(const QString &ip_to_check, quint32 cmd_delay,
                    << " at command " << cmd_cnt_to_check << " to a command not"
                    << " not sent to it! Out of sync.";
                 msg()(sx, "VMMSocket::processReply",true);
-                exit(1);
+                //debug
+                //exit(1);
             } // unexpected ip
         } // ip
     } // replies > 0
+    sx.str("");
+    sx << "replies size : " << replies.size() << endl;
+    msg()(sx);
 
     if(!replies.contains(ip_to_check)) {
         sx.str("");
         sx << "VMM with IP: " << ip_to_check.toStdString() << " did not"
            << " acknowledge command number: " << cmd_cnt_to_check;
         msg()(sx,"VMMSocket::processReply",true);
-        exit(1);
+        //debug
+        //exit(1);
     }
+
+    return datagram;
 
 }
 // ----------------------------------------------------------------------- //
@@ -237,5 +278,5 @@ void VMMSocket::Print()
     ss << "    Name          : " << getName() << "\n"
        << "    Bound to port : " << getBindingPort() << "\n"
        << "    Status        : " << m_socket->state();
-    msg()(ss,"VMMSocket");
+    msg()(ss,"VMMSocket::Print");
 }

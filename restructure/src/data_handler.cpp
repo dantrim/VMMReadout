@@ -9,6 +9,8 @@
 #include <QMap>
 #include <QList>
 #include <QStringList>
+#include <QFileInfo>
+#include <QFileInfoList>
 #include <QDir>
 
 using namespace std;
@@ -51,7 +53,8 @@ void DataHandler::LoadDAQSocket(VMMSocket& vmmsocket)
         connect(m_daqSocket, SIGNAL(dataReady()), this, SLOT(readEvent()));
     }
     else {
-        msg()("WARNING VMMSocket instance is already active (non-null). Will keep the first.",
+        if(dbg())
+            msg()("WARNING VMMSocket instance is already active (non-null). Will keep the first.",
                 "DataHandler::LoadDAQSocket");
         return;
     }
@@ -67,9 +70,19 @@ void DataHandler::LoadDAQSocket(VMMSocket& vmmsocket)
     return;
 }
 // ------------------------------------------------------------------------ //
-void DataHandler::setupOutputFiles(TriggerDAQ& daq, QString outdir,
+void DataHandler::connectDAQ()
+{
+    // add a separte method for this so that we can control exactly
+    // when we start reading in the data
+    connect(m_daqSocket, SIGNAL(dataReady()), this, SLOT(readEvent));
+}
+// ------------------------------------------------------------------------ //
+bool DataHandler::setupOutputFiles(TriggerDAQ& daq, QString outdir,
                                                                QString filename)
 {
+    stringstream sx;
+
+    bool status = true;
     //////////////////////////////////////////////////////////////////////
     // there are two methods here:
     //  1. if 'outdir' and 'filename' are provided we will use those
@@ -89,32 +102,35 @@ void DataHandler::setupOutputFiles(TriggerDAQ& daq, QString outdir,
         QDir outDir(m_outDir);
         if(!outDir.exists()) {
             msg()("ERROR Output directory from config XML does not exist!",
-                    "DataHandler::setupOutputFiles", true);
-            exit(1);
+                    "DataHandler::setupOutputFiles");
+            status = false;
         }
 
         //////////////////////////////////////////////////
         // binary dump file
         //////////////////////////////////////////////////
         fullfilename.append(daq.output_filename);
-        m_daqFile.setFileName(fullfilename);
-
-        msg()("Setting output data file to: " + fullfilename.toStdString(),
-                "DataHandler::setupOutputFiles");
+//        m_daqFile.setFileName(fullfilename);
+//
+//        if(dbg())
+//            msg()("Setting output data file to: " + fullfilename.toStdString(),
+//                    "DataHandler::setupOutputFiles");
         #warning implement test mode or increment of filename!!
-        if(m_daqFile.exists() /*&&testmode */) {
-            msg()("Output file exists. Erasing existing version.",
-                    "DataHandler::setupOutputFiles");
-            m_daqFile.remove();
-        }
-        bool ok = m_daqFile.open(QIODevice::ReadWrite);
-        if(!ok) {
-            msg()("Output data file unable to be opened!",
-                    "DataHandler::setupOutputFiles", true);
-            exit(1);
-        }
-        //m_daqFile.close();
-        m_fileOK = true;
+//        if(m_daqFile.exists() /*&&testmode */) {
+//            msg()("Output file exists. Erasing existing version.",
+//                    "DataHandler::setupOutputFiles");
+//            m_daqFile.remove();
+//        }
+//        bool fileOK = checkQFileOK(m_daqFile.fileName().toStdString());
+//        if(fileOK) {
+//            m_daqFile.open(QIODevice::ReadWrite);
+//        } 
+//        else if(!fileOK) {
+//            sx << "WARNING QFile (" << m_daqFile.fileName().toStdString()
+//               << ") unable to be opened.\nWARNING Try a new directory/name.";
+//            msg()(sx,"DataHandler::setupOutputFiles");sx.str("");
+//            status = false;
+//        }
 
         //////////////////////////////////////////////////
         // output root file
@@ -126,6 +142,12 @@ void DataHandler::setupOutputFiles(TriggerDAQ& daq, QString outdir,
                                     "DataHandler::setupOutputFiles");
 
             m_daqRootFile = new TFile(fullfilename.toStdString().c_str(), "UPDATE");
+            if(m_daqRootFile->IsZombie()) {
+                sx << "WARNING ROOT file (" << fullfilename.toStdString() << ") unable"
+                   << " to be opened.\nWARNING Try a new directory/name.";
+                msg()(sx,"DataHandler::setupOutputFiles"); sx.str(""); 
+                status = false;
+            } 
             m_rootFileOK = true;
         } // writeNtuple
     } // xml
@@ -140,9 +162,9 @@ void DataHandler::setupOutputFiles(TriggerDAQ& daq, QString outdir,
 
         QDir outdir(m_outDir);
         if(!outdir.exists()) {
-            msg()("ERROR Output directory from config XML does not exist.",
-                    "DataHandler::setupOutputFiles", true);
-            exit(1);
+            msg()("ERROR Provided output directory does not exist.",
+                    "DataHandler::setupOutputFiles");
+            status = false;
         }
         QString spacer = "";
         QString filename_dump = "";
@@ -151,27 +173,28 @@ void DataHandler::setupOutputFiles(TriggerDAQ& daq, QString outdir,
             filename_dump = filename.remove(".root");
             filename_dump = filename_dump + ".txt";
         }
-    
         fullfilename = m_outDir + spacer + "dump_" + filename_dump;
 
-        m_daqFile.setFileName(fullfilename);
-        msg()("Setting output data file to: " + fullfilename.toStdString(),
-                "DataHandler::setupOutputFiles");
-        #warning implement test mode or increment of filename!!
-        if(m_daqFile.exists() /*&&testmode*/) {
-            msg()("Output file exists. Erasing existing version.",
-                    "DataHandler::setupOutputFiles");
-            m_daqFile.remove();
-        }
-        bool ok = m_daqFile.open(QIODevice::ReadWrite);
-        if(!ok) {
-            msg()("Output data file unable to be opened",
-                    "DataHandler::setupOutputFiles", true);
-            exit(1);
-        }
-        //m_daqFile.close();
-        m_fileOK = true;
-
+//        m_daqFile.setFileName(fullfilename);
+//        if(dbg())
+//            msg()("Setting output data file to: " + fullfilename.toStdString(),
+//                    "DataHandler::setupOutputFiles");
+//        #warning implement test mode or increment of filename!!
+//        if(m_daqFile.exists() /*&&testmode*/) {
+//            msg()("Output file exists. Erasing existing version.",
+//                    "DataHandler::setupOutputFiles");
+//            m_daqFile.remove();
+//        }
+//        bool fileOK = checkQFileOK(m_daqFile.fileName().toStdString());
+//        if(fileOK) {
+//            m_daqFile.open(QIODevice::ReadWrite);
+//        } 
+//        else if(!fileOK) {
+//            sx << "WARNING QFile (" << m_daqFile.fileName().toStdString()
+//               << ") unable to be opened.\nWARNING Try a new directory/name.";
+//            msg()(sx,"DataHandler::setupOutputFiles");sx.str("");
+//            status = false;
+//        }
         //////////////////////////////////////////////////
         // output root file
         //////////////////////////////////////////////////
@@ -182,9 +205,65 @@ void DataHandler::setupOutputFiles(TriggerDAQ& daq, QString outdir,
                 msg()("Setting output ROOT file to: " + fullfilename.toStdString(),
                         "DataHandler::setupOutputFiles");
             m_daqRootFile = new TFile(fullfilename.toStdString().c_str(), "UPDATE");
+            if(m_daqRootFile->IsZombie()) {
+                sx << "WARNING ROOT file (" << fullfilename.toStdString() << ") unable"
+                   << " to be opened.\nWARNING Try a new directory/name.";
+                msg()(sx,"DataHandler::setupOutputFiles"); sx.str(""); 
+                status = false;
+            } 
             m_rootFileOK = true;
         }
     } // user-provided
+
+    m_fileOK = status;
+    m_rootFileOK = status;
+    return status;
+}
+// ------------------------------------------------------------------------ //
+int DataHandler::checkForExistingFiles(std::string dirname, int expectedNumber)
+{
+
+    // Here we expect that the output ntuple files are formatted as:
+    //  run_XXXX.root
+    // and that the ~binary dump files are formatted as:
+    //  dump_run_XXXX.txt
+    // TODO - we should store files as actual binary, no?
+
+    QStringList filters;
+    filters << "run_*.root";
+    filters << "dump_run_*.txt";
+    QDir dir(QString::fromStdString(dirname)); 
+    dir.setNameFilters(filters);
+    int max_run = -1;
+    QFileInfoList listOfFiles = dir.entryInfoList();
+
+    bool ok;
+    if(listOfFiles.size()>0) {
+        // get max run number of there are existing files
+        for(int i = 0; i < listOfFiles.size(); i++) {
+            QFileInfo fileInfo = listOfFiles.at(i);
+            // avoid directory structure if needed
+            QString fname = fileInfo.fileName().split("/").last();
+            // get the run number part
+            QString number = fname.split("_").last();
+            number.replace(".root","");
+            number.replace(".txt","");
+            int other_run = number.toInt(&ok,10);
+            if(other_run > max_run) max_run = other_run;
+        } 
+    }
+    if( (max_run > expectedNumber) && max_run>=0)
+        return max_run+1;
+    else {
+        return expectedNumber;
+    }
+}
+// ------------------------------------------------------------------------ //
+bool DataHandler::checkQFileOK(std::string name)
+{
+    QFile ftest;
+    ftest.setFileName(QString::fromStdString(name));
+    return ftest.open(QIODevice::ReadWrite);
 }
 // ------------------------------------------------------------------------ //
 QString DataHandler::getRootFileName(const QString& dir)
@@ -385,10 +464,12 @@ void DataHandler::writeAndCloseDataFile()
                 "DataHandler::writeAndCloseDataFile", true);
         exit(1);
     }
-
+    stringstream sx;
+//    sx << "Save dump: " << m_daqFile.fileName().toStdString();
+//    msg()(sx,"DataHandler::writeAndCloseDataFile()"); sx.str("");
 
     //close the dump file
-    m_daqFile.close();
+//    m_daqFile.close();
 
     // ensure that we are writing to file OK
     if(writeNtuple()){
@@ -401,6 +482,8 @@ void DataHandler::writeAndCloseDataFile()
             msg()("ERROR Unable to successfully write output DAQ ROOT file!",
                         "DataHandler::writeAndCloseDataFile");
         }
+        sx << "Save root: " << m_daqRootFile->GetName();
+        msg()(sx,"DataHandler::writeAndCloseDataFile"); sx.str("");
         m_daqRootFile->Close();
     }//writeNtuple
 }
@@ -449,12 +532,21 @@ void DataHandler::EndRun()
 // ------------------------------------------------------------------------ //
 void DataHandler::readEvent()
 {
-    if(dbg()) msg()("Receiving event packet...", "DataHandler::readEvent");
     stringstream sx;
+   // sx << "file ok: " << (m_fileOK ? "yes" : "no") << "\n"
+   //    << "root ok: " << (m_rootFileOK ? "yes" : "no");
+   // msg()(sx,"DataHandler::readEvent");
+    bool ok_to_read = true;
+ 
+    if(!m_fileOK) ok_to_read = false;
+    if(m_write && !m_rootFileOK) ok_to_read = false;
+    if(!ok_to_read) return;
+
+    //if(dbg()) msg()("Receiving event packet...", "DataHandler::readEvent");
 
     QHostAddress vmmip;
     QByteArray datagram;
-    datagram.clear();
+    //datagram.clear();
 
 /*
     // dummy testing
@@ -471,46 +563,46 @@ void DataHandler::readEvent()
     } // while
 */
 
-    QMap<QString, QList<QByteArray> > datamap; // [IP : packets received]
-    datamap.clear();
-    QTextStream out(&m_daqFile);
+ //   QMap<QString, QList<QByteArray> > datamap; // [IP : packets received]
+ //   datamap.clear();
+ //   QTextStream out(&m_daqFile);
 
     while(daqSocket().hasPendingDatagrams()){
         datagram.resize(daqSocket().socket().pendingDatagramSize());
         daqSocket().socket().readDatagram(datagram.data(), datagram.size(), &vmmip);
 
-        if(dbg()){
-            sx.str("");
-            sx << "DAQ datagram read: " << datagram.toHex().toStdString()
-               << " from VMM with IP: " << vmmip.toString().toStdString();
-            msg()(sx, "DataHandler::readEvent");
-        }
+     //   if(dbg()){
+     //       sx.str("");
+     //       sx << "DAQ datagram read: " << datagram.toHex().toStdString()
+     //          << " from VMM with IP: " << vmmip.toString().toStdString();
+     //       msg()(sx, "DataHandler::readEvent");
+     //   }
 
-        QString ip = vmmip.toString();
-        QList<QByteArray> arr = datamap.value(ip); // datamap[ip] = arr 
-        arr.append(datagram);
-        datamap.insert(ip, arr); // fill the value at datamap[ip] = arr
+//        QString ip = vmmip.toString();
+//        QList<QByteArray> arr = datamap.value(ip); // datamap[ip] = arr 
+//        arr.append(datagram);
+//        datamap.insert(ip, arr); // fill the value at datamap[ip] = arr
 
-        #warning TODO IMPLEMENT NTUPLE FILLING AND DATA DECODING
+        // here is where we write the ntuple
         if(writeNtuple())
             decodeAndWriteData(datagram);
 
     } // while loop
 
-    QMap<QString, QList<QByteArray> >::iterator it;
-    for(it = datamap.begin(); it!=datamap.end(); it++) {
-        if(dbg()) {
-            sx.str("");
-            sx << "Reading data from address: " << it.key().toStdString();
-            msg()(sx, "DataHandler::readEvent");
-        }
-        QList<QByteArray> arr = datamap.value(it.key());
-        QList<QByteArray>::iterator bit;
-        for(bit = arr.begin(); bit != arr.end(); bit++) {
-            #warning should put this in as HEX
-            out << QString::fromStdString((*bit).toStdString()) << "\n";
-        } // bit
-    } // it
+//    QMap<QString, QList<QByteArray> >::iterator it;
+//    for(it = datamap.begin(); it!=datamap.end(); it++) {
+//      //  if(dbg()) {
+//      //      sx.str("");
+//      //      sx << "Reading data from address: " << it.key().toStdString();
+//      //      msg()(sx, "DataHandler::readEvent");
+//      //  }
+//        QList<QByteArray> arr = datamap.value(it.key());
+//        QList<QByteArray>::iterator bit;
+//        for(bit = arr.begin(); bit != arr.end(); bit++) {
+//            #warning should put this in as HEX
+//            out << (*bit).toHex() << "\n";
+//        } // bit
+//    } // it
 
     return;
 }
@@ -519,6 +611,8 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
 {
     bool ok;
     stringstream sx;
+
+    bool verbose = false;
 
     QString frameCounterStr = datagram.mid(0,4).toHex(); //Frame Counter
 
@@ -534,20 +628,22 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
         trigCountStr     = datagram.mid(8,2).toHex();
         trigTimeStampStr = datagram.mid(10,2).toHex();
 
-        if(dbg()) {
+        if(dbg()){// && verbose) {
             sx.str("");
             sx << "*****************************************************\n"
-               << " Data from chip # : " << chipNumberStr.toStdString() << "\n"
+               << " Data from chip # : " << chipNumberStr.toInt(&ok,16) << "\n" //toStdString() << "\n"
                << "  > Header        : " << headerStr.toStdString() << "\n"
                << "  > Data          : " << fullEventDataStr.toStdString() << "\n"
                << "*****************************************************"; 
-            msg()(sx,"DataHandler::decodeAndWriteData");
+            cout << sx.str() << endl;
+            //msg()(sx,"DataHandler::decodeAndWriteData");
         } //dbg
 
-        if(datagram.size()==12) {
+        if(datagram.size()==12 && dbg() && verbose) {
             sx.str("");
             sx << "Empty event from chip #: " << chipNumberStr.toInt(&ok,16);
-            msg()(sx,"DataHandler::decodeAndWriteData");
+            cout << sx.str() << endl;
+            //msg()(sx,"DataHandler::decodeAndWriteData");
         }
 
         // data containers for this chip
@@ -625,7 +721,7 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
             uint gray = DataHandler::grayToBinary(outBCID_);
             _gray.push_back(gray);
 
-            if(dbg()) {
+            if(dbg() && verbose) {
                 sx.str("");
                 sx << "channel          : " << channel_no << "\n"
                    << "flag             : " << flag << "\n"
@@ -636,8 +732,9 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                    << "q_final          : " << q_final.toStdString() << "\n"
                    << "tac              : " << outTac_ << "\n"
                    << "bcid             : " << outBCID_;
-                msg()(sx,"DataHandler::decodeAndWriteData");
-                msg()(" "," ");
+                cout << sx.str() << endl;
+                //msg()(sx,"DataHandler::decodeAndWriteData");
+                //msg()(" "," ");
             } // dbg
 
             // move to next channel (8 bytes forward)
@@ -665,7 +762,10 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
     ///////////////////////////////////////
     else if(frameCounterStr == "fafafafa") {
 
-        if(getDAQCount()%100==0) {
+        //if(n_daqCnt%100==0){
+        if((int)getDAQCount()%100==0) {
+          //  sx << "DAQ COUNT DH : " << getDAQCount();
+          //  msg()(sx);sx.str("");
             emit checkDAQCount();
         }
 
@@ -676,6 +776,7 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
         }
 
         updateDAQCount();
+        //n_daqCnt++;
         if(writeNtuple())
             fillEventData();
 

@@ -50,9 +50,12 @@ class DataHandler : public QObject
         bool writeNtuple() { return m_write; }
 
         void LoadDAQSocket(VMMSocket& socket); 
+        void connectDAQ();
 
-        void setupOutputFiles(TriggerDAQ& daq, QString outdir = "",
+        bool setupOutputFiles(TriggerDAQ& daq, QString outdir = "",
                                             QString filename = "");
+        int checkForExistingFiles(std::string dirname="", int expectedRunNumber=0);
+        bool checkQFileOK(std::string fname="");
 
         void dataFileHeader(CommInfo& comm, GlobalSetting& global,
                                 TriggerDAQ& daq);
@@ -89,13 +92,13 @@ class DataHandler : public QObject
         void fillEventData();
         
 
+        int n_daqCnt;
 
 
     private :
         bool m_dbg;
         bool m_calibRun;
         bool m_write;
-        int n_daqCnt;
         bool m_ignore16;
 
         VMMSocket *m_daqSocket;

@@ -60,13 +60,16 @@ class SocketHandler : public QObject
                             const QString& callingFn = "");
 
         virtual bool waitForReadyRead(std::string socketName="", int msec=1000);
-        void processReply(std::string name="", const QString& ip_sent_to="",
+        QByteArray processReply(std::string name="", const QString& ip_sent_to="",
                         quint32 cmd_delay=0);
         void closeAndDisconnect(std::string name="", std::string callingFn="");
 
         // retrieve sockets
+        bool fecSocketOK();
         VMMSocket& fecSocket()    { return *m_fecSocket; }
+        bool vmmappSocketOK();
         VMMSocket& vmmappSocket() { return *m_vmmappSocket; }
+        bool daqSocketOK();
         VMMSocket& daqSocket()    { return *m_daqSocket; }
         QByteArray buffer(std::string name="");
 
@@ -81,8 +84,11 @@ class SocketHandler : public QObject
         bool m_skipProcessing;
         quint32 n_globalCommandCounter;
         VMMSocket *m_fecSocket;
+        bool m_fecSetup;
         VMMSocket *m_vmmappSocket;
+        bool m_vmmappSetup;
         VMMSocket *m_daqSocket;
+        bool m_daqSetup;
 
         QStringList m_idlist;
         QStringList m_iplist;

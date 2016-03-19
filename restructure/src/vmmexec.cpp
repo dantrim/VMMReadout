@@ -163,7 +163,8 @@ int main(int argc, char *argv[])
         // pass the configuration
         runModule.LoadConfig(conf_handler).LoadSocket(socketHandler);
 
-        dataHandle.LoadDAQSocket(socketHandler.daqSocket());
+    #warning not loading daq socket!
+   //     dataHandle.LoadDAQSocket(socketHandler.daqSocket());
 
         QObject::connect(&runModule, SIGNAL(EndRun()),
                 &dataHandle, SLOT(writeAndCloseDataFile()));

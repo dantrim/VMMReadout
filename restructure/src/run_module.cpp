@@ -445,6 +445,10 @@ void RunModule::ACQoff()
         cmdLength   = "FFFF";
         msbCounter  = "0x80000000";
 
+        stringstream sx;
+        sx << "AQCOFF command counter = " << socket().commandCounter();
+        msg()(sx);sx.str("");
+
         out << (quint32)(socket().commandCounter() + msbCounter.toUInt(&ok,16)) //[0,3]
             << (quint16) 0 //[4,5]
             << (quint16) config().getHDMIChannelMap() //[6,7]
@@ -465,9 +469,11 @@ void RunModule::ACQoff()
         readOK = socket().waitForReadyRead("fec");
         if(readOK) {
             if(dbg()) msg()("Processing replies...","RunModule::ACQoff");
-            socket().processReply("fec", ip);
+            QByteArray buffer;
+            buffer = socket().fecSocket().processReply(ip, 0, socket().commandCounter()); //.processReply("fec", ip);
 
-            QByteArray buffer = socket().buffer("fec");
+            //QByteArray buffer = socket().buffer("fec");
+            qDebug() << "CRAP : " << buffer.toHex() << " size : " << buffer.size();
 
             QString bin, hex;
             QDataStream out (&buffer, QIODevice::WriteOnly);

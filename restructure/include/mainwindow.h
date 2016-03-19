@@ -191,6 +191,9 @@ class MainWindow : public QMainWindow
         // set the acquisition mode
         void setACQMode();
 
+        // select the output directory
+        void selectOutputDirectory();
+
         // load a configuration from an XML
         void loadConfigurationFromFile();
 
@@ -215,10 +218,16 @@ class MainWindow : public QMainWindow
         void updateLogScreen();
         void toggleDebug();
 
+        // bad directory name
+        void badRunDirectory();
+
         // channel fields
         void updateChannelState();
         void updateChannelVoltages(int);
         void updateChannelADCs(int);
+
+        // trigger count
+        void updateTriggerCount();
 
         // connect to IP
         void Connect();
