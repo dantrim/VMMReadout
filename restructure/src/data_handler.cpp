@@ -533,9 +533,7 @@ void DataHandler::EndRun()
 void DataHandler::readEvent()
 {
     stringstream sx;
-   // sx << "file ok: " << (m_fileOK ? "yes" : "no") << "\n"
-   //    << "root ok: " << (m_rootFileOK ? "yes" : "no");
-   // msg()(sx,"DataHandler::readEvent");
+
     bool ok_to_read = true;
  
     if(!m_fileOK) ok_to_read = false;
