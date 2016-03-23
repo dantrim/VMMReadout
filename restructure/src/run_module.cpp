@@ -153,6 +153,7 @@ void RunModule::sendPulse()
             << (quint32) 1  //[8,11]
             << (quint32) 32; //[12,15]
 
+
         socket().SendDatagram(datagram, ip, send_to_port, "fec",
                                             "RunModule::SendPulse");
 
@@ -175,6 +176,7 @@ void RunModule::sendPulse()
             msg()("Timout [2] while waiting for replies from VMM. Pulse lost.",
                     "RunModule::sendPulse");
     } // ip loop
+
 
     socket().closeAndDisconnect("fec","RunModule::SendPulse");
 
