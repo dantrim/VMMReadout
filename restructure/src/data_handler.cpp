@@ -647,14 +647,14 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
         }
 
         // data containers for this chip
-        vector<int>     _pdo;           _pdo.clear();
-        vector<int>     _tdo;           _tdo.clear();
-        vector<int>     _bcid;          _bcid.clear();
-        vector<int>     _gray;          _gray.clear();
-        vector<int>     _channelNo;     _channelNo.clear();
-        vector<int>     _flag;          _flag.clear();
-        vector<int>     _thresh;        _thresh.clear();
-        vector<int>     _neighbor;      _neighbor.clear();
+        /*vector<int>     _pdo;        */   _pdo.clear();
+        /*vector<int>     _tdo;        */   _tdo.clear();
+        /*vector<int>     _bcid;       */   _bcid.clear();
+        /*vector<int>     _gray;       */   _gray.clear();
+        /*vector<int>     _channelNo;  */   _channelNo.clear();
+        /*vector<int>     _flag;       */   _flag.clear();
+        /*vector<int>     _thresh;     */   _thresh.clear();
+        /*vector<int>     _neighbor;   */   _neighbor.clear();
 
         // -------------- begin loop over chip's channels ---------------- // 
         for(int i = 12; i < datagram.size(); ) {
@@ -877,7 +877,7 @@ QBitArray DataHandler::bytesToBits(QByteArray bytes)
 QString DataHandler::QBitArrayToString(const QBitArray& array)
 {
     uint value = 0;
-    for(uint i = 0; i < array.size(); i++)
+    for(int i = 0; i < (int)array.size(); i++)
     {
         value <<= 1;
         value += (int)array.at(i);
@@ -925,4 +925,3 @@ uint DataHandler::grayToBinary(uint num)
     }
     return num;
 }
-

@@ -123,6 +123,16 @@ class DataHandler : public QObject
         int m_angle;
 
         // event data
+        std::vector<int> _pdo;
+        std::vector<int> _tdo;
+        std::vector<int> _bcid;
+        std::vector<int> _gray;
+        std::vector<int> _channelNo;
+        std::vector<int> _flag;
+        std::vector<int> _thresh;
+        std::vector<int> _neighbor;
+
+
         int m_eventNumberFAFA;
         int m_daqCnt;
         std::vector<int> m_triggerTimeStamp;
