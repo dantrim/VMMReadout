@@ -434,10 +434,7 @@ void MainWindow::Connect()
         // the sockets
         ///////////////////////////////////////////////////////
         socketHandle().addSocket("FEC", FECPORT, QUdpSocket::ShareAddress);
-    #warning disconnecting FEC port fec status
-    // debug 
-    //    connect(&vmmSocketHandler->fecSocket(), SIGNAL(dataReady()),
-    //                                        this, SLOT(writeFECStatus()));
+        connect(vmmRunModule, SIGNAL(checkLinks()), this, SLOT(writeFECStatus()));
         socketHandle().addSocket("DAQ", DAQPORT); 
 
         
@@ -1747,6 +1744,7 @@ void MainWindow::checkLinkStatus()
 // ------------------------------------------------------------------------- //
 void MainWindow::writeFECStatus()
 {
+
     QByteArray buff;
     buff.clear();
     buff.resize(socketHandle().fecSocket().pendingDatagramSize());

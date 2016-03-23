@@ -801,6 +801,7 @@ void RunModule::checkLinkStatus()
         bool readOK = true;
         readOK = socket().waitForReadyRead("fec");
         if(readOK) {
+            emit checkLinks();
             //if(dbg()) msg()("Processing replies...","RunModule::checkLinkStatus");
             //socket().processReply("fec", ip);
         } else {

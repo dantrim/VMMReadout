@@ -84,6 +84,7 @@ class RunModule : public QObject
 
     signals :
         void EndRun();
+        void checkLinks();
 
     public slots :
         void Run();
