@@ -4016,8 +4016,8 @@
      <rect>
       <x>590</x>
       <y>10</y>
-      <width>831</width>
-      <height>681</height>
+      <width>635</width>
+      <height>682</height>
      </rect>
     </property>
     <property name="font">
@@ -4029,7 +4029,7 @@
      <enum>QTabWidget::North</enum>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>0</number>
     </property>
     <property name="iconSize">
      <size>
@@ -4055,9 +4055,18 @@
        <rect>
         <x>10</x>
         <y>10</y>
-        <width>811</width>
-        <height>641</height>
+        <width>570</width>
+        <height>600</height>
        </rect>
+      </property>
+      <property name="lineWidth">
+       <number>3</number>
+      </property>
+      <property name="verticalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOn</enum>
+      </property>
+      <property name="sizeAdjustPolicy">
+       <enum>QAbstractScrollArea::AdjustToContentsOnFirstShow</enum>
       </property>
       <property name="widgetResizable">
        <bool>true</bool>
@@ -4067,21 +4076,10 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>809</width>
-         <height>639</height>
+         <width>552</width>
+         <height>598</height>
         </rect>
        </property>
-       <widget class="QWidget" name="horizontalLayoutWidget_3">
-        <property name="geometry">
-         <rect>
-          <x>0</x>
-          <y>0</y>
-          <width>811</width>
-          <height>641</height>
-         </rect>
-        </property>
-        <layout class="QHBoxLayout" name="channlReg_HLayout"/>
-       </widget>
       </widget>
      </widget>
     </widget>

@@ -32,6 +32,7 @@ class MainWindow : public QMainWindow
     
         QFont Font;
         QGridLayout *channelGridLayout;
+        QWidget* dummy;
         void CreateChannelsFields();
         void SetInitialState();
 

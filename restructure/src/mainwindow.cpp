@@ -96,6 +96,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(EndRun()), vmmDataHandler, SLOT(writeAndCloseDataFile()));
 
     channelGridLayout = new QGridLayout(this);
+    dummy = new QWidget(this);
     CreateChannelsFields();
 
     /////////////////////////////////////////////////////////////////////
@@ -767,10 +768,10 @@ void MainWindow::SetInitialState()
 void MainWindow::CreateChannelsFields()
 {
     Font.setPointSize(8);
-    int margin = 10;
-    channelGridLayout->setContentsMargins(margin, margin, margin, margin);
+    int margin = 8;
+    channelGridLayout->setContentsMargins(margin*0.75, margin, margin*2, margin);
     channelGridLayout->setHorizontalSpacing(1);
-    channelGridLayout->setVerticalSpacing(2);
+    channelGridLayout->setVerticalSpacing(1);
     QString initialValueRadio = "";
     QString counter;
 
@@ -878,6 +879,7 @@ void MainWindow::CreateChannelsFields()
 
     for (int i = 0; i<64; i++){
         VMMChannel[i] = new QLineEdit(counter.setNum(i+1),ui->tab_3);
+        VMMChannel[i]->setAlignment(Qt::AlignHCenter);
         
         VMMSC[i] = new QPushButton(initialValueRadio,ui->tab_3);
         VMMSL[i] = new QPushButton(initialValueRadio,ui->tab_3);
@@ -952,8 +954,36 @@ void MainWindow::CreateChannelsFields()
         VMMChannel[i]->setFixedSize(20,18);
         VMMNegativeButton[i]->setFixedSize(40,18);
         VMMNegativeButton[i]->setFont(Font);
-        QLabel *spacer = new QLabel(" ");
+        QLabel *spacer = new QLabel("");
 
+        if(i==0) {
+                channelGridLayout->addWidget(SPLabel,     i,2, Qt::AlignCenter);
+                channelGridLayout->addWidget(SCLabel,     i,3, Qt::AlignCenter);
+                channelGridLayout->addWidget(SLLabel,     i,4, Qt::AlignCenter);
+                channelGridLayout->addWidget(STLabel,     i,5, Qt::AlignCenter);
+                channelGridLayout->addWidget(SMLabel,     i,6, Qt::AlignCenter);
+                channelGridLayout->addWidget(SDLabel,     i,7, Qt::AlignCenter);
+                channelGridLayout->addWidget(SMXLabel,    i,8, Qt::AlignCenter);
+                channelGridLayout->addWidget(SZ010bLabel, i,9, Qt::AlignCenter);
+                channelGridLayout->addWidget(SZ08bLabel,  i,10, Qt::AlignCenter);
+                channelGridLayout->addWidget(SZ06bLabel,  i,11, Qt::AlignCenter);
+        }
+        channelGridLayout->addWidget(VMMChannel[i],         i+1,1, Qt::AlignCenter);
+        channelGridLayout->addWidget(VMMNegativeButton[i],  i+1,2, Qt::AlignCenter);
+        channelGridLayout->addWidget(VMMSC[i],              i+1,3, Qt::AlignCenter);
+        channelGridLayout->addWidget(VMMSL[i],              i+1,4, Qt::AlignCenter);
+        channelGridLayout->addWidget(VMMST[i],              i+1,5, Qt::AlignCenter);
+        channelGridLayout->addWidget(VMMSM[i],              i+1,6, Qt::AlignCenter);
+        channelGridLayout->addWidget(VMMSDVoltage[i],       i+1,7, Qt::AlignCenter);
+        channelGridLayout->addWidget(VMMSMX[i],             i+1,8, Qt::AlignCenter);
+        channelGridLayout->addWidget(VMMSZ010bCBox[i],      i+1,9, Qt::AlignCenter);
+        VMMSZ010bCBox[i]->setFocusPolicy(Qt::StrongFocus);
+        channelGridLayout->addWidget(VMMSZ08bCBox[i],       i+1,10, Qt::AlignCenter);
+        channelGridLayout->addWidget(VMMSZ06bCBox[i],       i+1,11, Qt::AlignCenter);
+
+        
+
+/*
         if(i<32){
             if(i==0){
                 channelGridLayout->addWidget(SPLabel,     i,2, Qt::AlignCenter);
@@ -989,7 +1019,7 @@ void MainWindow::CreateChannelsFields()
             channelGridLayout->addWidget(VMMSZ010bCBox[i],      i+1,9, Qt::AlignCenter);
             channelGridLayout->addWidget(VMMSZ08bCBox[i],       i+1,10, Qt::AlignCenter);
             channelGridLayout->addWidget(VMMSZ06bCBox[i],       i+1,11, Qt::AlignCenter);
-            channelGridLayout->addWidget(spacer,                 i+1,12, Qt::AlignCenter);
+            channelGridLayout->addWidget(spacer,                 i+1,12, Qt::AlignLeft);
         }
         else{
             channelGridLayout->addWidget(VMMChannel[i],         i-32+1,13, Qt::AlignCenter);
@@ -1004,10 +1034,21 @@ void MainWindow::CreateChannelsFields()
             channelGridLayout->addWidget(VMMSZ08bCBox[i],       i-32+1,22, Qt::AlignCenter);
             channelGridLayout->addWidget(VMMSZ06bCBox[i],       i-32+1,23, Qt::AlignCenter);
         }
+
+*/
     } // i
 
-    ui->tab_3->setGeometry(QRect(620,12,730,700));
-    ui->tab_3->setLayout(channelGridLayout);
+    //channelGridLayout->setGeometry(QRect(620,12,50,50));
+    channelGridLayout->setSpacing(1);
+    channelGridLayout->setGeometry(QRect(620,12,380,2000));
+    dummy->setLayout(channelGridLayout);
+    //ui->scrollArea->setLayout(channelGridLayout);
+    ui->scrollArea->setWidget(dummy);
+    ui->scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+
+    //ui->tab_3->setGeometry(QRect(620,12,50,50));
+    //ui->tab_3->setGeometry(QRect(620,12,730,700));
+    //ui->tab_3->setLayout(channelGridLayout);
 
     //////////////////////////////////////////////////////////////////////////
     // -------------------------------------------------------------------- //
@@ -1093,185 +1134,197 @@ void MainWindow::updateChannelState()
     // ***********************  SC  ********************************* //
     if(SCLabel == QObject::sender()){
         if(VMMSCBoolAll==0){
-            for(int j=0;j<32;j++){
+            for(int j=0;j<64;j++){
+            //for(int j=0;j<32;j++){
                 VMMSC[j]->setStyleSheet("background-color: green");
                 VMMSCBool[j]=true;
             }
             VMMSCBoolAll=1;
         }else{
-            for(int j=0;j<32;j++){
+            for(int j=0;j<64;j++){
+            //for(int j=0;j<32;j++){
                 VMMSC[j]->setStyleSheet("background-color: lightGray");
                 VMMSCBool[j]=0;
             }
             VMMSCBoolAll=0;
         }
-    }else if(SCLabel2 == QObject::sender()){
-        if(VMMSCBoolAll2==0){
-            for(int j=32;j<64;j++){
-                VMMSC[j]->setStyleSheet("background-color: green");
-                VMMSCBool[j]=true;
-            }
-            VMMSCBoolAll2=1;
-        }else{
-            for(int j=32;j<64;j++){
-                VMMSC[j]->setStyleSheet("background-color: lightGray");
-                VMMSCBool[j]=0;
-            }
-            VMMSCBoolAll2=0;
-        }
-    }
+    }//else if(SCLabel2 == QObject::sender()){
+//        if(VMMSCBoolAll2==0){
+//            for(int j=32;j<64;j++){
+//                VMMSC[j]->setStyleSheet("background-color: green");
+//                VMMSCBool[j]=true;
+//            }
+//            VMMSCBoolAll2=1;
+//        }else{
+//            for(int j=32;j<64;j++){
+//                VMMSC[j]->setStyleSheet("background-color: lightGray");
+//                VMMSCBool[j]=0;
+//            }
+//            VMMSCBoolAll2=0;
+//        }
+//    }
 
     // ***********************  SL  ********************************* //
     if(SLLabel == QObject::sender()){
         if(VMMSLBoolAll==0){
-            for(int j=0;j<32;j++){
+            for(int j=0;j<64;j++){
+            //for(int j=0;j<32;j++){
                 VMMSL[j]->setStyleSheet("background-color: green");
                 VMMSLBool[j]=true;
             }
             VMMSLBoolAll=1;
         }else{
-            for(int j=0;j<32;j++){
+            for(int j=0;j<64;j++){
+            //for(int j=0;j<32;j++){
                 VMMSL[j]->setStyleSheet("background-color: lightGray");
                 VMMSLBool[j]=0;
             }
             VMMSLBoolAll=0;
         }
-    }else if(SLLabel2 == QObject::sender()){
-        if(VMMSLBoolAll2==0){
-            for(int j=32;j<64;j++){
-                VMMSL[j]->setStyleSheet("background-color: green");
-                VMMSLBool[j]=true;
-            }
-            VMMSLBoolAll2=1;
-        }else{
-            for(int j=32;j<64;j++){
-                VMMSL[j]->setStyleSheet("background-color: lightGray");
-                VMMSLBool[j]=0;
-            }
-            VMMSLBoolAll2=0;
-        }
-    }
+    }//else if(SLLabel2 == QObject::sender()){
+ //       if(VMMSLBoolAll2==0){
+ //           for(int j=32;j<64;j++){
+ //               VMMSL[j]->setStyleSheet("background-color: green");
+ //               VMMSLBool[j]=true;
+ //           }
+ //           VMMSLBoolAll2=1;
+ //       }else{
+ //           for(int j=32;j<64;j++){
+ //               VMMSL[j]->setStyleSheet("background-color: lightGray");
+ //               VMMSLBool[j]=0;
+ //           }
+ //           VMMSLBoolAll2=0;
+ //       }
+ //   }
     // ***********************  ST  ********************************* //
     if(STLabel == QObject::sender()){
         if(VMMSTBoolAll==0){
-            for(int j=0;j<32;j++){
+            for(int j=0;j<64;j++){
+            //for(int j=0;j<32;j++){
                 VMMST[j]->setStyleSheet("background-color: green");
                 VMMSTBool[j]=true;
             }
             VMMSTBoolAll=1;
         }else{
-            for(int j=0;j<32;j++){
+            for(int j=0;j<64;j++){
+            //for(int j=0;j<32;j++){
                 VMMST[j]->setStyleSheet("background-color: lightGray");
                 VMMSTBool[j]=0;
             }
             VMMSTBoolAll=0;
         }
-    }else if(STLabel2 == QObject::sender()){
-        if(VMMSTBoolAll2==0){
-            for(int j=32;j<64;j++){
-                VMMST[j]->setStyleSheet("background-color: green");
-                VMMSTBool[j]=true;
-            }
-            VMMSTBoolAll2=1;
-        }else{
-            for(int j=32;j<64;j++){
-                VMMST[j]->setStyleSheet("background-color: lightGray");
-                VMMSTBool[j]=0;
-            }
-            VMMSTBoolAll2=0;
-        }
-    }
+    }//else if(STLabel2 == QObject::sender()){
+ //       if(VMMSTBoolAll2==0){
+ //           for(int j=32;j<64;j++){
+ //               VMMST[j]->setStyleSheet("background-color: green");
+ //               VMMSTBool[j]=true;
+ //           }
+ //           VMMSTBoolAll2=1;
+ //       }else{
+ //           for(int j=32;j<64;j++){
+ //               VMMST[j]->setStyleSheet("background-color: lightGray");
+ //               VMMSTBool[j]=0;
+ //           }
+ //           VMMSTBoolAll2=0;
+ //       }
+ //   }
     // ***********************  SM  ********************************* //
     if(SMLabel == QObject::sender()){
         if(VMMSMBoolAll==0){
-            for(int j=0;j<32;j++){
+            for(int j=0;j<64;j++){
+            //for(int j=0;j<32;j++){
                 VMMSM[j]->setStyleSheet("background-color: green");
                 VMMSMBool[j]=true;
             }
             VMMSMBoolAll=1;
         }else{
-            for(int j=0;j<32;j++){
+            for(int j=0;j<64;j++){
+            //for(int j=0;j<32;j++){
                 VMMSM[j]->setStyleSheet("background-color: lightGray");
                 VMMSMBool[j]=0;
             }
             VMMSMBoolAll=0;
         }
-    }else if(SMLabel2 == QObject::sender()){
-        if(VMMSMBoolAll2==0){
-            for(int j=32;j<64;j++){
-                VMMSM[j]->setStyleSheet("background-color: green");
-                VMMSMBool[j]=true;
-            }
-            VMMSMBoolAll2=1;
-        }else{
-            for(int j=32;j<64;j++){
-                VMMSM[j]->setStyleSheet("background-color: lightGray");
-                VMMSMBool[j]=0;
-            }
-            VMMSMBoolAll2=0;
-        }
-    }
+    }//else if(SMLabel2 == QObject::sender()){
+ //       if(VMMSMBoolAll2==0){
+ //           for(int j=32;j<64;j++){
+ //               VMMSM[j]->setStyleSheet("background-color: green");
+ //               VMMSMBool[j]=true;
+ //           }
+ //           VMMSMBoolAll2=1;
+ //       }else{
+ //           for(int j=32;j<64;j++){
+ //               VMMSM[j]->setStyleSheet("background-color: lightGray");
+ //               VMMSMBool[j]=0;
+ //           }
+ //           VMMSMBoolAll2=0;
+ //       }
+ //   }
     // ***********************  SMX  ********************************* //
     if(SMXLabel == QObject::sender()){
         if(VMMSMXBoolAll==0){
-            for(int j=0;j<32;j++){
+            for(int j=0;j<64;j++){
+            //for(int j=0;j<32;j++){
                 VMMSMX[j]->setStyleSheet("background-color: green");
                 VMMSMXBool[j]=true;
             }
             VMMSMXBoolAll=1;
         }else{
-            for(int j=0;j<32;j++){
+            for(int j=0;j<64;j++){
+            //for(int j=0;j<32;j++){
                 VMMSMX[j]->setStyleSheet("background-color: lightGray");
                 VMMSMXBool[j]=0;
             }
             VMMSMXBoolAll=0;
         }
-    }else if(SMXLabel2 == QObject::sender()){
-        if(VMMSMXBoolAll2==0){
-            for(int j=32;j<64;j++){
-                VMMSMX[j]->setStyleSheet("background-color: green");
-                VMMSMXBool[j]=true;
-            }
-            VMMSMXBoolAll2=1;
-        }else{
-            for(int j=32;j<64;j++){
-                VMMSMX[j]->setStyleSheet("background-color: lightGray");
-                VMMSMXBool[j]=0;
-            }
-            VMMSMXBoolAll2=0;
-        }
-    }
+    }//else if(SMXLabel2 == QObject::sender()){
+ //       if(VMMSMXBoolAll2==0){
+ //           for(int j=32;j<64;j++){
+ //               VMMSMX[j]->setStyleSheet("background-color: green");
+ //               VMMSMXBool[j]=true;
+ //           }
+ //           VMMSMXBoolAll2=1;
+ //       }else{
+ //           for(int j=32;j<64;j++){
+ //               VMMSMX[j]->setStyleSheet("background-color: lightGray");
+ //               VMMSMXBool[j]=0;
+ //           }
+ //           VMMSMXBoolAll2=0;
+ //       }
+ //   }
 
     // ******************  SMP (negative buttons) *********************** //
     if(SPLabel == QObject::sender()){
         if(VMMSPBoolAll==0){
-            for(int j=0;j<32;j++){
+            for(int j=0;j<64;j++){
+            //for(int j=0;j<32;j++){
                 VMMNegativeButton[j]->setStyleSheet("background-color: green");
                 VMMSPBool[j]=true;
             }
             VMMSPBoolAll=1;
         }else{
-            for(int j=0;j<32;j++){
+            for(int j=0;j<64;j++){
+            //for(int j=0;j<32;j++){
                 VMMNegativeButton[j]->setStyleSheet("background-color: light");
                 VMMSPBool[j]=0;
             }
             VMMSPBoolAll=0;
         }
-    }else if(SPLabel2 == QObject::sender()){
-        if(VMMSPBoolAll2==0){
-            for(int j=32;j<64;j++){
-                VMMNegativeButton[j]->setStyleSheet("background-color: green");
-                VMMSPBool[j]=true;
-            }
-            VMMSPBoolAll2=1;
-        }else{
-            for(int j=32;j<64;j++){
-                VMMNegativeButton[j]->setStyleSheet("background-color: light");
-                VMMSPBool[j]=0;
-            }
-            VMMSPBoolAll2=0;
-        }
-    }
+    }//else if(SPLabel2 == QObject::sender()){
+ //       if(VMMSPBoolAll2==0){
+ //           for(int j=32;j<64;j++){
+ //               VMMNegativeButton[j]->setStyleSheet("background-color: green");
+ //               VMMSPBool[j]=true;
+ //           }
+ //           VMMSPBoolAll2=1;
+ //       }else{
+ //           for(int j=32;j<64;j++){
+ //               VMMNegativeButton[j]->setStyleSheet("background-color: light");
+ //               VMMSPBool[j]=0;
+ //           }
+ //           VMMSPBoolAll2=0;
+ //       }
+ //   }
     // *********************  Loop Individually  ********************** //
     for(int i=0;i<64;i++){
         if(VMMSC[i] == QObject::sender()){
@@ -1333,17 +1386,18 @@ void MainWindow::updateChannelState()
 void MainWindow::updateChannelVoltages(int index){
     // ***********************  SD  ******************************** //
     if(SDLabel == QObject::sender()){
-        for(int j=0;j<32;j++){
+        for(int j=0;j<64;j++){
+        //for(int j=0;j<32;j++){
             VMMSDVoltage[j]->setCurrentIndex(index);
             VMMSDValue[j]=index;
         }
     }
-    if(SDLabel2 == QObject::sender()){
-        for(int j=32;j<64;j++){
-            VMMSDVoltage[j]->setCurrentIndex(index);
-            VMMSDValue[j]=index;
-        }
-    }
+  //  if(SDLabel2 == QObject::sender()){
+  //      for(int j=32;j<64;j++){
+  //          VMMSDVoltage[j]->setCurrentIndex(index);
+  //          VMMSDValue[j]=index;
+  //      }
+  //  }
     for(int i=0;i<64;i++){
         if(VMMSDVoltage[i] == QObject::sender()){
             VMMSDValue[i]=index;
@@ -1354,7 +1408,8 @@ void MainWindow::updateChannelVoltages(int index){
 void MainWindow::updateChannelADCs(int index)
 {
     // ***********************  SD  ******************************* //
-    for(int j=0;j<32;j++){
+    for(int j=0;j<64;j++){
+    //for(int j=0;j<32;j++){
         if(SZ010bLabel == QObject::sender()){
             VMMSZ010bCBox[j]->setCurrentIndex(index);
             VMMSZ010bValue[j]=index;
@@ -1369,20 +1424,20 @@ void MainWindow::updateChannelADCs(int index)
         }
     }
 
-    for(int j=32;j<64;j++){
-        if(SZ010bLabel2 == QObject::sender()){
-            VMMSZ010bCBox[j]->setCurrentIndex(index);
-            VMMSZ010bValue[j]=index;
-        }
-        if(SZ08bLabel2 == QObject::sender()){
-            VMMSZ08bCBox[j]->setCurrentIndex(index);
-            VMMSZ08bValue[j]=index;
-        }
-        if(SZ06bLabel2 == QObject::sender()){
-            VMMSZ06bCBox[j]->setCurrentIndex(index);
-            VMMSZ06bValue[j]=index;
-        }
-    }
+  //  for(int j=32;j<64;j++){
+  //      if(SZ010bLabel2 == QObject::sender()){
+  //          VMMSZ010bCBox[j]->setCurrentIndex(index);
+  //          VMMSZ010bValue[j]=index;
+  //      }
+  //      if(SZ08bLabel2 == QObject::sender()){
+  //          VMMSZ08bCBox[j]->setCurrentIndex(index);
+  //          VMMSZ08bValue[j]=index;
+  //      }
+  //      if(SZ06bLabel2 == QObject::sender()){
+  //          VMMSZ06bCBox[j]->setCurrentIndex(index);
+  //          VMMSZ06bValue[j]=index;
+  //      }
+  //  }
     for(int i=0;i<64;i++){
         if(VMMSZ010bCBox[i] == QObject::sender()){
             VMMSZ010bValue[i]=index;
