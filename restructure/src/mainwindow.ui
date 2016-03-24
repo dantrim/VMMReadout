@@ -4056,7 +4056,7 @@
         <x>10</x>
         <y>10</y>
         <width>570</width>
-        <height>600</height>
+        <height>645</height>
        </rect>
       </property>
       <property name="lineWidth">
@@ -4077,7 +4077,7 @@
          <x>0</x>
          <y>0</y>
          <width>552</width>
-         <height>598</height>
+         <height>643</height>
         </rect>
        </property>
       </widget>
