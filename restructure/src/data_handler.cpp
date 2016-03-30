@@ -618,141 +618,188 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
     //event data incoming from chip
     ///////////////////////////////////////
     if(frameCounterStr != "fafafafa") {
+        QString headerID = datagram.mid(4,3).toHex();
 
-        QString fullEventDataStr, headerStr, chipNumberStr, trigCountStr, trigTimeStampStr;
-        fullEventDataStr = datagram.mid(12, datagram.size()).toHex();
-        headerStr        = datagram.mid(4,4).toHex();
-        chipNumberStr    = datagram.mid(7,1).toHex();
-        trigCountStr     = datagram.mid(8,2).toHex();
-        trigTimeStampStr = datagram.mid(10,2).toHex();
-
-        if(dbg()){// && verbose) {
-            sx.str("");
-            sx << "*****************************************************\n"
-               << " Data from chip # : " << chipNumberStr.toInt(&ok,16) << "\n" //toStdString() << "\n"
-               << "  > Header        : " << headerStr.toStdString() << "\n"
-               << "  > Data          : " << fullEventDataStr.toStdString() << "\n"
-               << "*****************************************************"; 
-            cout << sx.str() << endl;
-            //msg()(sx,"DataHandler::decodeAndWriteData");
-        } //dbg
-
-        if(datagram.size()==12 && dbg() && verbose) {
-            sx.str("");
-            sx << "Empty event from chip #: " << chipNumberStr.toInt(&ok,16);
-            cout << sx.str() << endl;
-            //msg()(sx,"DataHandler::decodeAndWriteData");
-        }
-
-        // data containers for this chip
-        /*vector<int>     _pdo;        */   _pdo.clear();
-        /*vector<int>     _tdo;        */   _tdo.clear();
-        /*vector<int>     _bcid;       */   _bcid.clear();
-        /*vector<int>     _gray;       */   _gray.clear();
-        /*vector<int>     _channelNo;  */   _channelNo.clear();
-        /*vector<int>     _flag;       */   _flag.clear();
-        /*vector<int>     _thresh;     */   _thresh.clear();
-        /*vector<int>     _neighbor;   */   _neighbor.clear();
-
-        // -------------- begin loop over chip's channels ---------------- // 
-        for(int i = 12; i < datagram.size(); ) {
-            quint32 bytes1 = reverse32(datagram.mid(i, 4).toHex());
-            quint32 bytes2 = reverse32(datagram.mid(i+4, 4).toHex());
-
-            // --- flag --- //
-            uint flag = (bytes2 & 0x1);
-            _flag.push_back(flag);
-
-            // --- threshold --- //
-            uint threshold = (bytes2 & 0x2) >> 1;
-            _thresh.push_back(threshold);
-
-            // --- channel number --- //
-            uint channel_no = (bytes2 & 0xfc) >> 2; // 0xfc = 0000 0000 1111 1100
-            #warning IMPLEMENT CHANNEL MAP
-            //if(useChannelMap()) {...}
-            _channelNo.push_back(channel_no);
-
-            // use QString methods instead of using bytes1 (for now)
-            QString bytes1_str = "00000000000000000000000000000000"; // 32bit 
-            QString tmpStr     = "00000000000000000000000000000000"; // 32bit 
-            quint32 bytes1_ex  = datagram.mid(i, 4).toHex().toUInt(&ok,16);
-            tmpStr = tmpStr.number(bytes1_ex,2);
-            for(int j = 0; j < tmpStr.size(); j++) {
-                QString tmp = tmpStr.at(tmpStr.size()-1-j);
-                bytes1_str.replace(j,1,tmp); // bytes1_str is now QString of bytes1
-            } // j
-
-            // --- amplitude / pdo --- //
-            QString q_1 = bytes1_str.left(8);
-            QString q_2 = bytes1_str.mid(14,2);
-            QString q_final;
-            q_final.append(q_2);
-            q_final.append(q_1);
-            uint outCharge_ = 0;
-            if(q_final.right(4)=="0000" && ignore16()) {
-                outCharge_ = 1025;
-            } else {
-                outCharge_ = q_final.toUInt(&ok,2);
-            }
-            _pdo.push_back(outCharge_);
-
-            // --- TAC / tdo --- //
-            QString tac_1 = bytes1_str.mid(8,6);
-            QString tac_2 = bytes1_str.mid(22,2);
-            QString tac_final;
-            tac_final.append(tac_2);
-            tac_final.append(tac_1);
-            uint outTac_ = tac_final.toUInt(&ok,2);
-            _tdo.push_back(outTac_);
-
-            // --- bcid --- //
-            QString bcid_1 = bytes1_str.mid(16,6);
-            QString bcid_2 = bytes1_str.mid(26,6);
-            QString bcid_final;
-            bcid_final.append(bcid_2);
-            bcid_final.append(bcid_1);
-            uint outBCID_ = bcid_final.toUInt(&ok,2);
-            _bcid.push_back(outBCID_);
-
-            // --- gray --- //
-            uint gray = DataHandler::grayToBinary(outBCID_);
-            _gray.push_back(gray);
+        ///////////////////////////////////////////////
+        // readout the VMM2 event data [begin]
+        ///////////////////////////////////////////////
+        if(headerID == "564D32") {
+            QString fullEventDataStr, headerStr, chipNumberStr, trigCountStr, trigTimeStampStr;
+            chipNumberStr    = datagram.mid(7,1).toHex();
+            trigCountStr     = datagram.mid(8,2).toHex();
+            trigTimeStampStr = datagram.mid(10,2).toHex();
 
             if(dbg() && verbose) {
                 sx.str("");
-                sx << "channel          : " << channel_no << "\n"
-                   << "flag             : " << flag << "\n"
-                   << "threshold        : " << threshold << "\n"
-                   << "charge           : " << outCharge_ << "\n"
-                   << "q_1              : " << q_1.toStdString() << "\n"
-                   << "q_2              : " << q_2.toStdString() << "\n"
-                   << "q_final          : " << q_final.toStdString() << "\n"
-                   << "tac              : " << outTac_ << "\n"
-                   << "bcid             : " << outBCID_;
+                headerStr        = datagram.mid(4,4).toHex();
+                fullEventDataStr = datagram.mid(12, datagram.size()).toHex();
+                sx << "*****************************************************\n"
+                   << " Data from chip # : " << chipNumberStr.toInt(&ok,16) << "\n" //toStdString() << "\n"
+                   << "  > Header        : " << headerStr.toStdString() << "\n"
+                   << "  > Data          : " << fullEventDataStr.toStdString() << "\n"
+                   << "*****************************************************"; 
                 cout << sx.str() << endl;
                 //msg()(sx,"DataHandler::decodeAndWriteData");
-                //msg()(" "," ");
-            } // dbg
+            } //dbg
 
-            // move to next channel (8 bytes forward)
-            i += 8;
-        } // i
+            if(datagram.size()==12 && dbg()) {
+                sx.str("");
+                sx << "Empty event from chip #: " << chipNumberStr.toInt(&ok,16);
+                cout << sx.str() << endl;
+                //msg()(sx,"DataHandler::decodeAndWriteData");
+            }
 
-        if(writeNtuple()) {
-            m_triggerTimeStamp.push_back(trigTimeStampStr.toInt(&ok,16));
-            m_triggerCounter.push_back(trigCountStr.toInt(&ok,16));
-            m_chipId.push_back(chipNumberStr.toInt(&ok,16));
-            m_eventSize.push_back(datagram.size()-12);
+            // data containers for this chip
+            _pdo.clear();
+            _tdo.clear();
+            _bcid.clear();
+            _gray.clear();
+            _channelNo.clear();
+            _flag.clear();
+            _thresh.clear();
+            _neighbor.clear();
 
-            m_tdo.push_back(_tdo);
-            m_pdo.push_back(_pdo);
-            m_flag.push_back(_flag);
-            m_threshold.push_back(_thresh);
-            m_bcid.push_back(_bcid);
-            m_channelId.push_back(_channelNo);
-            m_grayDecoded.push_back(_gray);
-        } //writeNutple
+            // -------------- begin loop over chip's channels ---------------- // 
+            for(int i = 12; i < datagram.size(); ) {
+                quint32 bytes1 = reverse32(datagram.mid(i, 4).toHex());
+                quint32 bytes2 = reverse32(datagram.mid(i+4, 4).toHex());
+
+                // --- flag --- //
+                uint flag = (bytes2 & 0x1);
+                _flag.push_back(flag);
+
+                // --- threshold --- //
+                uint threshold = (bytes2 & 0x2) >> 1;
+                _thresh.push_back(threshold);
+
+                // --- channel number --- //
+                uint channel_no = (bytes2 & 0xfc) >> 2; // 0xfc = 0000 0000 1111 1100
+                #warning IMPLEMENT CHANNEL MAP
+                //if(useChannelMap()) {...}
+                _channelNo.push_back(channel_no);
+
+                // use QString methods instead of using bytes1 (for now)
+                QString bytes1_str = "00000000000000000000000000000000"; // 32bit 
+                QString tmpStr     = "00000000000000000000000000000000"; // 32bit 
+                quint32 bytes1_ex  = datagram.mid(i, 4).toHex().toUInt(&ok,16);
+                tmpStr = tmpStr.number(bytes1_ex,2);
+                for(int j = 0; j < tmpStr.size(); j++) {
+                    QString tmp = tmpStr.at(tmpStr.size()-1-j);
+                    bytes1_str.replace(j,1,tmp); // bytes1_str is now QString of bytes1
+                } // j
+
+                // --- amplitude / pdo --- //
+                QString q_1 = bytes1_str.left(8);
+                QString q_2 = bytes1_str.mid(14,2);
+                QString q_final;
+                q_final.append(q_2);
+                q_final.append(q_1);
+                uint outCharge_ = 0;
+                if(q_final.right(4)=="0000" && ignore16()) {
+                    outCharge_ = 1025;
+                } else {
+                    outCharge_ = q_final.toUInt(&ok,2);
+                }
+                _pdo.push_back(outCharge_);
+
+                // --- TAC / tdo --- //
+                QString tac_1 = bytes1_str.mid(8,6);
+                QString tac_2 = bytes1_str.mid(22,2);
+                QString tac_final;
+                tac_final.append(tac_2);
+                tac_final.append(tac_1);
+                uint outTac_ = tac_final.toUInt(&ok,2);
+                _tdo.push_back(outTac_);
+
+                // --- bcid --- //
+                QString bcid_1 = bytes1_str.mid(16,6);
+                QString bcid_2 = bytes1_str.mid(26,6);
+                QString bcid_final;
+                bcid_final.append(bcid_2);
+                bcid_final.append(bcid_1);
+                uint outBCID_ = bcid_final.toUInt(&ok,2);
+                _bcid.push_back(outBCID_);
+
+                // --- gray --- //
+                uint gray = DataHandler::grayToBinary(outBCID_);
+                _gray.push_back(gray);
+
+                if(dbg() && verbose) {
+                    sx.str("");
+                    sx << "channel          : " << channel_no << "\n"
+                       << "flag             : " << flag << "\n"
+                       << "threshold        : " << threshold << "\n"
+                       << "charge           : " << outCharge_ << "\n"
+                       << "q_1              : " << q_1.toStdString() << "\n"
+                       << "q_2              : " << q_2.toStdString() << "\n"
+                       << "q_final          : " << q_final.toStdString() << "\n"
+                       << "tac              : " << outTac_ << "\n"
+                       << "bcid             : " << outBCID_;
+                    cout << sx.str() << endl;
+                    //msg()(sx,"DataHandler::decodeAndWriteData");
+                    //msg()(" "," ");
+                } // dbg
+
+                // move to next channel (8 bytes forward)
+                i += 8;
+            } // i
+
+            if(writeNtuple()) {
+                m_triggerTimeStamp.push_back(trigTimeStampStr.toInt(&ok,16));
+                m_triggerCounter.push_back(trigCountStr.toInt(&ok,16));
+                m_chipId.push_back(chipNumberStr.toInt(&ok,16));
+                m_eventSize.push_back(datagram.size()-12);
+
+                m_tdo.push_back(_tdo);
+                m_pdo.push_back(_pdo);
+                m_flag.push_back(_flag);
+                m_threshold.push_back(_thresh);
+                m_bcid.push_back(_bcid);
+                m_channelId.push_back(_channelNo);
+                m_grayDecoded.push_back(_gray);
+            } //writeNutple
+
+        } // VMM2 event data
+        ///////////////////////////////////////////////
+        // readout the VMM2 event data [end]
+        ///////////////////////////////////////////////
+
+        ///////////////////////////////////////////////
+        // readout the ART data [begin]
+        ///////////////////////////////////////////////
+        else if(headerID=="564132") {
+
+            bool test_art = true;
+
+            QString art_channel = datagram.mid(7,1).toHex();
+            for(int i = 12; i < (int)datagram.size(); ) {
+                quint32 art_timestamp = datagram.mid(i,2).toHex().toUInt(&ok,16);
+                quint32 art_data = datagram.mid(i+2,2).toHex().toUInt(&ok,16);
+
+                uint art1 = (art_data & 0x3f00) >> 8; // 0x3f000 = 0011 1111 0000 0000
+                uint art2 = (art_data & 0x3f); // 0x3f = 0000 0000 0011 1111
+
+                uint art1_flag = (art_data & 0x8000) >> 15; // 0x8000 = 1000 0000 0000 0000
+                uint art2_flag = (art_data & 0x80) >> 7; // 0x80 = 0000 0000 1000 0000
+
+                if(dbg() && test_art) {
+                    QString art_timestamp_test = datagram.mid(i,2).toHex();
+                    QString art1_test = datagram.mid(i+2,1);
+                    QString art2_test = datagram.mid(i+3,1);
+                    cout << "ART timestamp: " << art_timestamp_test.toStdString()
+                         << ", art1_test: " << art1_test.toStdString()
+                         << ", art2_test: " << art2_test.toStdString()
+                         << ", art1: " << art1 << " (flag: " << art1_flag << ")"
+                         << ", art2: " << art2 << " (flag: " << art2_flag << ")" << endl;
+                } // test art
+
+                i += 4;
+
+            } // i
+        } // ART data
+        ///////////////////////////////////////////////
+        // readout the ART data [end]
+        ///////////////////////////////////////////////
     } // != fafafafa
 
     ///////////////////////////////////////
@@ -760,12 +807,10 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
     ///////////////////////////////////////
     else if(frameCounterStr == "fafafafa") {
 
-        //if(n_daqCnt%100==0){
         if((int)getDAQCount()%100==0) {
-          //  sx << "DAQ COUNT DH : " << getDAQCount();
-          //  msg()(sx);sx.str("");
             emit checkDAQCount();
         }
+        m_eventNumberFAFA = getDAQCount() - 1;
 
         if(calibRun()) {
             #warning IMPLEMENT STORAGE OF CALIB INFO
@@ -774,7 +819,6 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
         }
 
         updateDAQCount();
-        //n_daqCnt++;
         if(writeNtuple())
             fillEventData();
 
