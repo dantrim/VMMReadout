@@ -350,7 +350,6 @@ void RunModule::ACQon()
         QDataStream out (&datagram, QIODevice::WriteOnly);
         out.device()->seek(0); //rewind
 
-    #warning IMPLMEENT CORRECT UPDATE OF COMMAND COUNTER
         socket().updateCommandCounter();
 
         ///////////////////////////
@@ -383,33 +382,6 @@ void RunModule::ACQon()
         if(readOK) {
             if(dbg()) msg()("Processing replies...", "RunModule::ACQon");
             socket().processReply("fec", ip);
-
-            #warning DO WE NEED SECOND WORD SENT FOR ACQon?
-            /*
-            QByteArray buffer = socket().buffer("fec");
-
-            QString binary, hex;
-            QDataStream out (&buffer, QIODevice::WriteOnly);
-            hex = buffer.mid(12,4).toHex();
-            QByteArray hex = datagram.mid(12,4).toHex(); // 32 bit chunk
-
-          //  quint32 yep = hex.toUInt(&ok,16);
-          //  QString yepstr;
-          //  yepstr.setNum(yep,2);
-          //  cout << "BEFORE REPLACE : " << yepstr.toStdString() << endl;
-            
-            #warning CHECK THAT THIS ACTUALLY SENDS THE 'CORRECT' DATAGRAM
-            quint32 tmp32 = DataHandler::ValueToReplaceHEX32(hex, 0, true);
-            out.device()->seek(12);
-            out << tmp32;
-            out.device()->seek(6);
-            out << (quint16) 2;
-            hex = datagram.mid(12,4).toHex();
-
-            socket().SendDatagram(datagram, ip, send_to_port, "fec",
-                                    "RunModule::ACQon");
-            */
-
         } // readOK
         else {
             msg()("Timeout while waiting for replies from VMM","RunModule::ACQon",true);
@@ -435,7 +407,6 @@ void RunModule::ACQoff()
         QDataStream out (&datagram, QIODevice::WriteOnly);
         out.device()->seek(0); //rewind
 
-    #warning IMPLMEENT CORRECT UPDATE OF COMMAND COUNTER
         socket().updateCommandCounter();
 
         ///////////////////////////
@@ -534,7 +505,6 @@ void RunModule::setEventHeaders(const int bld_info, const int bld_mode)
         QDataStream out (&datagram, QIODevice::WriteOnly);
         out.device()->seek(0); //rewind
 
-    #warning IMPLMEENT CORRECT UPDATE OF COMMAND COUNTER
         socket().updateCommandCounter();
 
         ///////////////////////////
@@ -594,7 +564,6 @@ void RunModule::resetASICs()
         QDataStream out (&datagram, QIODevice::WriteOnly);
         out.device()->seek(0); //rewind
 
-    #warning IMPLMEENT CORRECT UPDATE OF COMMAND COUNTER
         socket().updateCommandCounter();
 
         ///////////////////////////
