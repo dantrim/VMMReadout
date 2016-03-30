@@ -673,7 +673,7 @@ void RunModule::resetFEC(bool do_reset)
 // ------------------------------------------------------------------------ //
 void RunModule::setMask()
 {
-    if(dbg()) msg()("Setting mask...","RunModule::setMask");
+    if(dbg()) msg()("Setting HDMI mask and ART...","RunModule::setMask");
 
     bool ok;
     QByteArray datagram;
@@ -710,7 +710,8 @@ void RunModule::setMask()
         ////////////////////////////
         out << (quint32) 0 //[12,15]
             << (quint32) 8 //[16,19]
-            << (quint32) config().getHDMIChannelMap(); //[20,23]
+            << (quint32) config().getHDMIChannelMapART(); //[20,23]
+            //<< (quint32) config().getHDMIChannelMap(); //[20,23]
 
         socket().SendDatagram(datagram, ip, send_to_port, "fec",
                                                 "RunModule::setMask");
@@ -729,6 +730,63 @@ void RunModule::setMask()
     } // ip
 
     socket().closeAndDisconnect("fec", "RunModule::setMask");
+
+}
+// ------------------------------------------------------------------------ //
+void RunModule::enableART()
+{
+    if(dbg()) msg()("Enabling ART...","RunModule::enableART");
+
+    bool ok;
+    QByteArray datagram;
+
+    // send call to vmmapp port
+    int send_to_port = config().commSettings().s6_port;
+
+    // header
+    QString cmd, msbCounter;
+    cmd = "AAAAFFFF";
+    msbCounter = "0x80000000"; 
+
+    for(const auto& ip : socket().ipList()) {
+        datagram.clear();
+        QDataStream out (&datagram, QIODevice::WriteOnly);
+        out.device()->seek(0); //rewind
+
+        socket().updateCommandCounter();
+
+        ////////////////////////////
+        // header
+        ////////////////////////////
+        out << (quint32) (socket().commandCounter() + msbCounter.toUInt(&ok,16)) //[0,3]
+            << (quint32) config().getHDMIChannelMap() //[4,7]
+            << (quint32) cmd.toUInt(&ok,16); //[8,11]
+          
+        ////////////////////////////
+        // command
+        ////////////////////////////
+        out << (quint32) 0 //[12,15]
+            << (quint32) 1 //[19,19]
+            << (quint32) 233; //[20,23]
+
+
+        socket().SendDatagram(datagram, ip, send_to_port, "fec",
+                                                "RunModule::enableART");
+
+        bool readOK = true;
+        readOK = socket().waitForReadyRead("fec");
+        if(readOK) {
+            if(dbg()) msg()("Processing replies...","RunModule::enableART");
+            socket().processReply("fec",ip);
+        } else {
+            msg()("Timeout while waiting for replies from VMM",
+                        "RunModule::enableART", true);
+            socket().closeAndDisconnect("fec","RunModule::enableART");
+            exit(1);
+        }
+    } // ip
+
+    socket().closeAndDisconnect("fec","RunModule::enableART");
 
 }
 // ------------------------------------------------------------------------ //
@@ -913,6 +971,70 @@ void RunModule::s6clocks(int cktk, int ckbc, int ckbc_skew)
     socket().closeAndDisconnect("fec","RunModule::s6clocks");
 
 }
+// ------------------------------------------------------------------------ //
+void RunModule::setS6Resets(int s6_tk_pulses, bool set_s6_autoReset, bool set_s6_fecReset)
+{
+    if(dbg()) msg()("Setting s6 reset settings...","RunModule::setS6Resets");
+
+    bool ok;
+    QByteArray datagram;
+
+    // send call to s6 port
+    int send_to_port = config().commSettings().s6_port;
+
+    // header
+    QString cmd, msbCounter;
+    cmd = "AAAAFFFF";
+    msbCounter = "0x80000000"; 
+
+    for(const auto& ip : socket().ipList()) {
+        datagram.clear();
+        QDataStream out (&datagram, QIODevice::WriteOnly);
+        out.device()->seek(0); //rewind
+
+        socket().updateCommandCounter();
+
+        ////////////////////////////
+        // header
+        ////////////////////////////
+        out << (quint32)(socket().commandCounter() + msbCounter.toUInt(&ok,16)) //[0,3]
+            << (quint32) config().getHDMIChannelMap() //[4,7]
+            << (quint32) cmd.toUInt(&ok,16); //[8,11]
+
+        ////////////////////////////
+        // command
+        ////////////////////////////
+        out << (quint32) 0; //[12,15]
+
+        int s6_auto = 0;
+        int s6_fec = 0;
+        if(set_s6_autoReset) s6_auto = 8;
+        if(set_s6_fecReset) s6_fec = 16;
+
+        out << (quint32) 9 //[16,19]
+            << (quint32)( s6_tk_pulses + s6_auto + s6_fec); //[20,23]
+
+        socket().SendDatagram(datagram, ip, send_to_port, "fec",
+                                                "RunModule::setS6Resets");
+
+        bool readOK = true;
+        readOK = socket().waitForReadyRead("fec");
+        if(readOK) {
+            if(dbg()) msg()("Processing replies...", "RunModule::setS6Resets");
+            socket().processReply("fec", ip);
+        } else {
+            msg()("Timeout while waiting for replies from VMM",
+                                    "RunModule::setS6Resets", true);
+            socket().closeAndDisconnect("fec","RunModule::setS6Resets");
+            exit(1);
+        }
+    } // ip
+
+    socket().closeAndDisconnect("fec","RunModule::setS6Resets");
+
+}
+
+
 // ------------------------------------------------------------------------ //
 void RunModule::configTP(int tpskew, int tpwidth, int tppolarity)
 {
