@@ -221,28 +221,32 @@ void RunModule::setTriggerAcqConstants()
         cmdLength   = "FFFF";
         msbCounter  = "0x80000000"; 
         out << (quint32)(socket().commandCounter() + msbCounter.toUInt(&ok,16)) //[0,3]
-            << (quint32) 0 //[4,7]
-            << (quint32) config().getHDMIChannelMap() //[8,11]
-            << (quint8)  cmd.toUInt(&ok,16) //[12]
-            << (quint8)  cmdType.toUInt(&ok,16) //[13]
-            << (quint16) cmdLength.toUInt(&ok, 16); //[14,15]
+            << (quint16) 0 //[4,5]
+            << (quint16) config().getHDMIChannelMap() //[6,7]
+            //<< (quint32) config().getHDMIChannelMap() //[8,11]
+            << (quint8)  cmd.toUInt(&ok,16) //[8]
+            << (quint8)  cmdType.toUInt(&ok,16) //[9]
+            << (quint16) cmdLength.toUInt(&ok, 16); //[10,11]
 
         ///////////////////////////
         // trigger constants
         ///////////////////////////
-        out << (quint32) 0 //[16,19]
+        out << (quint32) 0 //[12,15]
             //trigger period
-            << (quint32) 2 //[20,23]
-            << (quint32) config().daqSettings().trigger_period.toInt(&ok,16) //[24,27]
+            << (quint32) 2 //[16,19]
+            << (quint32) config().daqSettings().trigger_period.toInt(&ok,16) //[20,23]
             //pulser delay
-            << (quint32) 4 //[28,31]
-            << (quint32) config().daqSettings().tp_delay //[32,35]
+            << (quint32) 4 //[24,27]
+            << (quint32) config().daqSettings().tp_delay //[28,31]
             //acq. sync
-            << (quint32) 5 //[36,39]
-            << (quint32) config().daqSettings().acq_sync //[40,43]
+            << (quint32) 5 //[32,35]
+            << (quint32) config().daqSettings().acq_sync //[36,39]
             //acq. window
-            << (quint32) 6 //[44,47]
-            << (quint32) config().daqSettings().acq_window; //[48,51]
+            << (quint32) 6 //[40,43]
+            << (quint32) config().daqSettings().acq_window //[44,47]
+            //bcid reset
+            << (quint32) 9 //[48,51]
+            << (quint32) config().daqSettings().bcid_reset; //[52,55]
 
         socket().SendDatagram(datagram, ip, send_to_port, "fec",
                                 "RunModule::setTriggerAcqConstants"); 
