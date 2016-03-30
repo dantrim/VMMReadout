@@ -20,6 +20,7 @@
 		<trigger_period>3FFFE</trigger_period>
 		<acq_sync>100</acq_sync>
 		<acq_window>4096</acq_window>
+        <bcid_reset>0</bcid_reset>
 		<run_mode>external</run_mode>
 		<run_count>20</run_count>
         <ignore16>off</ignore16>
@@ -31,41 +32,49 @@
 			<switch>on</switch>
 			<first>1</first>
 			<second>1</second>
+            <art>0</art>
 		</hdmi_1>
 		<hdmi_2>
 			<switch>off</switch>
 			<first>0</first>
 			<second>0</second>
+            <art>0</art>
 		</hdmi_2>
 		<hdmi_3>
 			<switch>off</switch>
 			<first>0</first>
 			<second>0</second>
+            <art>0</art>
 		</hdmi_3>
 		<hdmi_4>
 			<switch>off</switch>
 			<first>0</first>
 			<second>0</second>
+            <art>0</art>
 		</hdmi_4>
 		<hdmi_5>
 			<switch>off</switch>
 			<first>0</first>
 			<second>0</second>
+            <art>0</art>
 		</hdmi_5>
 		<hdmi_6>
 			<switch>off</switch>
 			<first>0</first>
 			<second>0</second>
+            <art>0</art>
 		</hdmi_6>
 		<hdmi_7>
 			<switch>off</switch>
 			<first>0</first>
 			<second>0</second>
+            <art>0</art>
 		</hdmi_7>
 		<hdmi_8>
 			<switch>off</switch>
 			<first>0</first>
 			<second>0</second>
+            <art>0</art>
 		</hdmi_8>
 	</channel_map>
 	<global_settings>
