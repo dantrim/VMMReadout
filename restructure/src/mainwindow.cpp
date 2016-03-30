@@ -769,9 +769,16 @@ void MainWindow::CreateChannelsFields()
 {
     Font.setPointSize(8);
     int margin = 8;
-    channelGridLayout->setContentsMargins(margin*0.75, margin, margin*2, margin);
+    channelGridLayout->setContentsMargins(margin*0.75, margin, margin*2*10, margin);
     channelGridLayout->setHorizontalSpacing(1);
     channelGridLayout->setVerticalSpacing(1);
+
+    ui->gridLayout_channels->setContentsMargins(margin*0.75, margin, margin*4.4*5, margin);
+    ui->gridLayout_channels->setHorizontalSpacing(1);
+    ui->gridLayout_channels->setVerticalSpacing(1);
+    ui->gridLayout_channels->setGeometry(QRect(620,10,380, 12));
+//    ui->gridLayout_channels->setSpacing(1);
+
     QString initialValueRadio = "";
     QString counter;
 
@@ -839,10 +846,10 @@ void MainWindow::CreateChannelsFields()
     SLLabel->setFixedSize(20,15);
     STLabel->setFixedSize(20,15);
     SMLabel->setFixedSize(20,15);
-    SDLabel->setFixedSize(50,20);
-    SZ010bLabel->setFixedSize(50,20);
-    SZ08bLabel->setFixedSize(50,20);
-    SZ06bLabel->setFixedSize(50,20);
+    SDLabel->setFixedSize    (50,19);
+    SZ010bLabel->setFixedSize(50,19);
+    SZ08bLabel->setFixedSize (50,19);
+    SZ06bLabel->setFixedSize (50,19);
     SMXLabel->setFixedSize(30,15);
     SPLabel2->setFixedSize(20,15);
     SCLabel2->setFixedSize(20,15);
@@ -854,6 +861,11 @@ void MainWindow::CreateChannelsFields()
     SZ08bLabel2->setFixedSize(50,20);
     SZ06bLabel2->setFixedSize(50,20);
     SMXLabel2->setFixedSize(30,15);
+
+    SDLabel     ->installEventFilter(this);
+    SZ010bLabel ->installEventFilter(this);
+    SZ08bLabel  ->installEventFilter(this);
+    SZ06bLabel  ->installEventFilter(this);
 
     SPLabel->setFont(Font);
     SCLabel->setFont(Font);
@@ -876,6 +888,19 @@ void MainWindow::CreateChannelsFields()
     SZ06bLabel2->setFont(Font);
     SMXLabel2->setFont(Font);
 
+    int col = 5;
+        QLabel *spacer = new QLabel("");
+    ui->gridLayout_channels->addWidget(spacer);
+    ui->gridLayout_channels->addWidget(SPLabel,     0, col, Qt::AlignCenter); col++;
+    ui->gridLayout_channels->addWidget(SCLabel,     0, col, Qt::AlignCenter); col++;
+    ui->gridLayout_channels->addWidget(SLLabel,     0, col, Qt::AlignCenter); col++;
+    ui->gridLayout_channels->addWidget(STLabel,     0, col, Qt::AlignCenter); col++;
+    ui->gridLayout_channels->addWidget(SMLabel,     0, col, Qt::AlignCenter); col++;
+    ui->gridLayout_channels->addWidget(SDLabel,     0, col, Qt::AlignCenter); col++;
+    ui->gridLayout_channels->addWidget(SMXLabel,    0, col, Qt::AlignCenter); col++;
+    ui->gridLayout_channels->addWidget(SZ010bLabel, 0, col, Qt::AlignCenter); col++;
+    ui->gridLayout_channels->addWidget(SZ08bLabel,  0, col, Qt::AlignCenter); col++;
+    ui->gridLayout_channels->addWidget(SZ06bLabel,  0, col, Qt::AlignCenter);
 
     for (int i = 0; i<64; i++){
         VMMChannel[i] = new QLineEdit(counter.setNum(i+1),ui->tab_3);
@@ -888,10 +913,10 @@ void MainWindow::CreateChannelsFields()
         VMMSMX[i] = new QPushButton(initialValueRadio,ui->tab_3);
         
         
-        VMMSC[i]->setFixedSize(15,15);
-        VMMST[i]->setFixedSize(15,15);
-        VMMSL[i]->setFixedSize(15,15);
-        VMMSM[i]->setFixedSize(15,15);
+        VMMSC[i]->setFixedSize (15,15);
+        VMMST[i]->setFixedSize (15,15);
+        VMMSL[i]->setFixedSize (15,15);
+        VMMSM[i]->setFixedSize (15,15);
         VMMSMX[i]->setFixedSize(15,15);
 
         VMMSC[i]->setStyleSheet("background-color: lightGray");
@@ -957,16 +982,16 @@ void MainWindow::CreateChannelsFields()
         QLabel *spacer = new QLabel("");
 
         if(i==0) {
-                channelGridLayout->addWidget(SPLabel,     i,2, Qt::AlignCenter);
-                channelGridLayout->addWidget(SCLabel,     i,3, Qt::AlignCenter);
-                channelGridLayout->addWidget(SLLabel,     i,4, Qt::AlignCenter);
-                channelGridLayout->addWidget(STLabel,     i,5, Qt::AlignCenter);
-                channelGridLayout->addWidget(SMLabel,     i,6, Qt::AlignCenter);
-                channelGridLayout->addWidget(SDLabel,     i,7, Qt::AlignCenter);
-                channelGridLayout->addWidget(SMXLabel,    i,8, Qt::AlignCenter);
-                channelGridLayout->addWidget(SZ010bLabel, i,9, Qt::AlignCenter);
-                channelGridLayout->addWidget(SZ08bLabel,  i,10, Qt::AlignCenter);
-                channelGridLayout->addWidget(SZ06bLabel,  i,11, Qt::AlignCenter);
+      //          ui->gridLayout_channels->addWidget(SPLabel,     i,2, Qt::AlignCenter);
+      //          ui->gridLayout_channels->addWidget(SCLabel,     i,3, Qt::AlignCenter);
+      //          ui->gridLayout_channels->addWidget(SLLabel,     i,4, Qt::AlignCenter);
+      //          ui->gridLayout_channels->addWidget(STLabel,     i,5, Qt::AlignCenter);
+      //          ui->gridLayout_channels->addWidget(SMLabel,     i,6, Qt::AlignCenter);
+      //          ui->gridLayout_channels->addWidget(SDLabel,     i,7, Qt::AlignCenter);
+      //          ui->gridLayout_channels->addWidget(SMXLabel,    i,8, Qt::AlignCenter);
+      //          ui->gridLayout_channels->addWidget(SZ010bLabel, i,9, Qt::AlignCenter);
+      //          ui->gridLayout_channels->addWidget(SZ08bLabel,  i,10, Qt::AlignCenter);
+      //          ui->gridLayout_channels->addWidget(SZ06bLabel,  i,11, Qt::AlignCenter);
         }
         channelGridLayout->addWidget(VMMChannel[i],         i+1,1, Qt::AlignCenter);
         channelGridLayout->addWidget(VMMNegativeButton[i],  i+1,2, Qt::AlignCenter);
@@ -981,6 +1006,11 @@ void MainWindow::CreateChannelsFields()
         channelGridLayout->addWidget(VMMSZ08bCBox[i],       i+1,10, Qt::AlignCenter);
         channelGridLayout->addWidget(VMMSZ06bCBox[i],       i+1,11, Qt::AlignCenter);
 
+        VMMSDVoltage[i]         ->installEventFilter(this);
+        VMMSDVoltage[i]->setFocusPolicy(Qt::ClickFocus);
+        VMMSZ010bCBox[i]        ->installEventFilter(this);
+        VMMSZ08bCBox[i]         ->installEventFilter(this);
+        VMMSZ06bCBox[i]         ->installEventFilter(this);
         
 
 /*
@@ -2157,4 +2187,16 @@ void MainWindow::delayMs()
         QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
-
+bool MainWindow::eventFilter(QObject *obj, QEvent *event)
+{
+    if(event->type() == QEvent::Wheel)
+    {
+        //if(obj->hasFocus()) {
+//            ui->scrollArea->setFocus();
+        event->ignore();
+        //}
+    //    qDebug() << "Wheel event blocked";
+        return true;
+    }
+    return false;
+}

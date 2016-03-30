@@ -29,7 +29,12 @@ class MainWindow : public QMainWindow
     public:
         explicit MainWindow(QWidget *parent = 0);
         ~MainWindow();
-    
+
+        bool eventFilter(QObject *obj, QEvent *event);
+
+
+
+
         QFont Font;
         QGridLayout *channelGridLayout;
         QWidget* dummy;
