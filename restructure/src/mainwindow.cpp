@@ -116,6 +116,9 @@ MainWindow::MainWindow(QWidget *parent) :
     //hdmi mask
     ui->setMask->setCheckable(true);
 
+    //enable art
+    ui->enableART->setCheckable(true);
+
     // DAQ XML
     ui->loadDAQXMLFile->setEnabled(false);
     ui->writeDAQXMLFile->setEnabled(false);
@@ -209,6 +212,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->setMask, SIGNAL(clicked()),
                                     this, SLOT(setHDMIMask()));
 
+    // include the ART bits in the channel mask
+    connect(ui->enableART, SIGNAL(clicked()),
+                                    this, SLOT(setART()));
+
     // link status
     connect(ui->linkPB, SIGNAL(clicked()),
                                     this, SLOT(checkLinkStatus()));
@@ -216,6 +223,10 @@ MainWindow::MainWindow(QWidget *parent) :
     // reset links
     connect(ui->resetLinks, SIGNAL(clicked()),
                                     this, SLOT(resetLinks()));
+
+    // s6 reset configuration
+    connect(ui->setck_s6_resets, SIGNAL(clicked()),
+                                    this, SLOT(setS6Resets()));
 
     // daq ~conversion to mV
     connect(ui->sdt, SIGNAL(valueChanged(int)),
@@ -352,31 +363,32 @@ void MainWindow::updateFSM()
         ui->asic_reset->setEnabled(true);
 
         ui->setMask->setEnabled(true);
+        ui->enableART->setEnabled(true);
         ui->linkPB->setEnabled(true);
         ui->resetLinks->setEnabled(true);
 
-        msg()("Waiting for configuration to be sent...");
-    }
-    else if(m_commOK && m_configOK && !m_tdaqOK && !m_runModeOK && m_acqMode=="") {
+ //       msg()("Waiting for configuration to be sent...");
+ //   }
+ //   else if(m_commOK && m_configOK && !m_tdaqOK && !m_runModeOK && m_acqMode=="") {
         ui->setTrgAcqConst->setEnabled(true);
         ui->setEvbld->setEnabled(true);
 
-        msg()("Waiting for T/DAQ constants to be sent...");
-    }
-    else if(m_commOK && m_configOK && m_tdaqOK && !m_runModeOK && m_acqMode=="") {
+ //       msg()("Waiting for T/DAQ constants to be sent...");
+ //   }
+ //   else if(m_commOK && m_configOK && m_tdaqOK && !m_runModeOK && m_acqMode=="") {
         ui->trgPulser->setEnabled(true);
         ui->trgExternal->setEnabled(true);
 
-        msg()("Waiting for trigger mode to be established...");
-    }
-    else if(m_commOK && m_configOK && m_tdaqOK && m_runModeOK && m_acqMode=="") {
+ //       msg()("Waiting for trigger mode to be established...");
+ //   }
+ //   else if(m_commOK && m_configOK && m_tdaqOK && m_runModeOK && m_acqMode=="") {
         ui->onACQ->setEnabled(true);
         ui->clearTriggerCnt->setEnabled(true);
 
-        msg()("Ready for DAQ...");
-    }
-    else if(m_commOK && m_configOK && m_tdaqOK && m_runModeOK &&
-                (m_acqMode=="ON")) {
+ //       msg()("Ready for DAQ...");
+ //   }
+ //   else if(m_commOK && m_configOK && m_tdaqOK && m_runModeOK &&
+ //               (m_acqMode=="ON")) {
         ui->offACQ->setEnabled(true);
         ui->checkTriggers->setEnabled(true);
         ui->clearTriggerCnt->setEnabled(true);
@@ -508,42 +520,50 @@ void MainWindow::prepareAndSendBoardConfig()
     //  HDMI channel map
     // ------------------------------------------------- //
     vector<ChannelMap> chMap;
-    ChannelMap chm;
     // do this by hand
     for(int i = 0; i < 8; i++) {
+        ChannelMap chm;
         chm.hdmi_no = i;
         if       (i==0) {
             chm.on     = (ui->hdmi1->isChecked() ? true : false);
             chm.first  = (ui->hdmi1_1->isChecked() ? true : false);
             chm.second = (ui->hdmi1_2->isChecked() ? true : false);
+            chm.art    = (ui->hdmi1_art->isChecked() ? true : false);
         } else if(i==1) {
             chm.on     = (ui->hdmi2->isChecked() ? true : false);
             chm.first  = (ui->hdmi2_1->isChecked() ? true : false);
             chm.second = (ui->hdmi2_2->isChecked() ? true : false);
+            chm.art    = (ui->hdmi2_art->isChecked() ? true : false);
         } else if(i==2) {
             chm.on     = (ui->hdmi3->isChecked() ? true : false);
             chm.first  = (ui->hdmi3_1->isChecked() ? true : false);
             chm.second = (ui->hdmi3_2->isChecked() ? true : false);
+            chm.art    = (ui->hdmi3_art->isChecked() ? true : false);
         } else if(i==3) {
             chm.on     = (ui->hdmi4->isChecked() ? true : false);
             chm.first  = (ui->hdmi4_1->isChecked() ? true : false);
             chm.second = (ui->hdmi4_2->isChecked() ? true : false);
+            chm.art    = (ui->hdmi4_art->isChecked() ? true : false);
         } else if(i==4) {
             chm.on     = (ui->hdmi5->isChecked() ? true : false);
             chm.first  = (ui->hdmi5_1->isChecked() ? true : false);
             chm.second = (ui->hdmi5_2->isChecked() ? true : false);
+            chm.art    = (ui->hdmi5_art->isChecked() ? true : false);
         } else if(i==5) {
             chm.on     = (ui->hdmi6->isChecked() ? true : false);
             chm.first  = (ui->hdmi6_1->isChecked() ? true : false);
             chm.second = (ui->hdmi6_2->isChecked() ? true : false);
+            chm.art    = (ui->hdmi6_art->isChecked() ? true : false);
         } else if(i==6) {
             chm.on     = (ui->hdmi7->isChecked() ? true : false);
             chm.first  = (ui->hdmi7_1->isChecked() ? true : false);
             chm.second = (ui->hdmi7_2->isChecked() ? true : false);
+            chm.art    = (ui->hdmi7_art->isChecked() ? true : false);
         } else if(i==7) {
             chm.on     = (ui->hdmi8->isChecked() ? true : false);
             chm.first  = (ui->hdmi8_1->isChecked() ? true : false);
             chm.second = (ui->hdmi8_2->isChecked() ? true : false);
+            chm.art    = (ui->hdmi8_art->isChecked() ? true : false);
         }
         chMap.push_back(chm);
     } //i
@@ -595,6 +615,7 @@ void MainWindow::prepareAndSendTDAQConfig()
     daq.run_count       = 20; // dummy here
     daq.ignore16        = ui->ignore16->isChecked();
     daq.output_path     = ui->runDirectoryField->text();
+    daq.bcid_reset      = ui->bcid_reset->value();
 
     configHandle().LoadTDAQConfiguration(daq);
     // configModule().LoadConfig(configHandle());
@@ -754,6 +775,7 @@ void MainWindow::SetInitialState()
     // hdmi mask
     ui->setMask->setChecked(false);
     ui->setMask->setEnabled(false);
+    ui->enableART->setEnabled(false);
     ui->linkPB->setEnabled(false);
     ui->resetLinks->setEnabled(false);
 
@@ -1821,6 +1843,12 @@ void MainWindow::setHDMIMask()
 
 }
 // ------------------------------------------------------------------------- //
+void MainWindow::setART()
+{
+    runModule().enableART();
+    ui->s6RB->setChecked(true);
+}
+// ------------------------------------------------------------------------- //
 void MainWindow::checkLinkStatus()
 {
     ui->appRB->setChecked(true);
@@ -1867,6 +1895,14 @@ void MainWindow::resetLinks()
 {
     ui->appRB->setChecked(true);
     runModule().resetLinks();
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::setS6Resets()
+{
+    ui->s6RB->setChecked(true);
+    runModule().setS6Resets(ui->s6_tkPulses->value(),
+                            ui->s6_autoReset->isChecked(),
+                            ui->s6_FECReset->isChecked());
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::triggerHandler()

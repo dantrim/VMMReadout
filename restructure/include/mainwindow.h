@@ -215,11 +215,13 @@ class MainWindow : public QMainWindow
         void resetASICs();
         void resetFEC();
         void setHDMIMask();
+        void setART();
         void checkLinkStatus();
         void writeFECStatus();
         void resetLinks();
         void triggerHandler();
         void setS6clocks();
+        void setS6Resets();
         void configureTP();
         void updateLogScreen();
         void toggleDebug();
@@ -237,8 +239,6 @@ class MainWindow : public QMainWindow
 
         // connect to IP
         void Connect();
-
-
 
 };
 
