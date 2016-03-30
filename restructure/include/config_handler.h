@@ -72,6 +72,7 @@ struct TriggerDAQ {
     int ignore16;
     QString output_path;
     QString output_filename;
+    int bcid_reset;
 
     void Print();
 }; 
@@ -142,6 +143,7 @@ struct ChannelMap {
     bool on;
     bool first;
     bool second;
+    bool art;
 
     void Print();
 };
@@ -200,6 +202,7 @@ class ConfigHandler : public QObject
         std::vector<ChannelMap> LoadHDMIChannels(const boost::property_tree::ptree& p);
         void setHDMIChannelMap();
         quint16 getHDMIChannelMap() { return m_channelMap; }
+        quint32 getHDMIChannelMapART() { return m_channelMapART; }
         std::vector<Channel> LoadVMMChannelConfig(const boost::property_tree::ptree& p);
 
         // methods for GUI interaction
@@ -241,6 +244,7 @@ class ConfigHandler : public QObject
         GlobalSetting m_globalSettings;
         std::vector<ChannelMap> m_channelmap;
         quint16 m_channelMap; 
+        quint32 m_channelMapART;
         std::vector<Channel> m_channels;
 
         MessageHandler* m_msg;

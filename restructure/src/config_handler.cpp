@@ -82,9 +82,10 @@ void ConfigHandler::LoadConfig(const QString &filename)
 
     stringstream sx;
     bool ok;
-    sx << "ChannelMap size    : " << m_channelmap.size () << "\n"
-       << "HDMI channel map   : " << getHDMIChannelMap()  << "\n"
-       << "VMM channels size  : " << m_channels.size();
+    sx << "ChannelMap size        : " << m_channelmap.size () << "\n"
+       << "HDMI channel map       : " << getHDMIChannelMap()  << "\n"
+       << "HDMI channel map (ART) : " << getHDMIChannelMapART() << "\n"
+       << "VMM channels size      : " << m_channels.size();
     msg()(sx,"ConfigHandler::LoadConfig");
 
 }
@@ -140,6 +141,7 @@ void ConfigHandler::WriteConfig(QString filename)
     out_tdaq.put("trigger_period", daqSettings().trigger_period.toStdString());
     out_tdaq.put("acq_sync", daqSettings().acq_sync);
     out_tdaq.put("acq_window", daqSettings().acq_window);
+    out_tdaq.put("bcid_reset", daqSettings().bcid_reset);
     out_tdaq.put("run_mode", daqSettings().run_mode.toStdString());
     out_tdaq.put("run_count", def_tdaq.run_count);
     out_tdaq.put("ignore16", daqSettings().ignore16);
@@ -174,6 +176,10 @@ void ConfigHandler::WriteConfig(QString filename)
         val.str("");
         val << ss.str() << ".second";
         out_hdmi.put(val.str(), (int)hdmiChannelSettings(iHDMI-1).second);
+        //art
+        val.str("");
+        val << ss.str() << ".art";
+        out_hdmi.put(val.str(), (int)hdmiChannelSettings(iHDMI-1).art);
     } // iHDMI
 
     // ----------------------------------------------- //
@@ -687,6 +693,8 @@ TriggerDAQ ConfigHandler::LoadDAQConfig(const boost::property_tree::ptree& pt)
             daq.acq_sync = conf.second.get<int>("acq_sync");
             // acq window
             daq.acq_window = conf.second.get<int>("acq_window");
+            // bcid reset
+            daq.bcid_reset = conf.second.get<int>("bcid_reset");
             // run mode
             string rmode = conf.second.get<string>("run_mode");
             daq.run_mode = QString::fromStdString(rmode);
@@ -751,8 +759,12 @@ std::vector<ChannelMap> ConfigHandler::LoadHDMIChannels(const boost::property_tr
                 val.str("");
                 val << ss.str() << ".second";
                 chMap.second = bool(conf.second.get<int>(val.str()));
+                // art on/off
+                val.str("");
+                val << ss.str() << ".art";
+                chMap.second = bool(conf.second.get<int>(val.str()));
 
-                //chMap.Print();
+                chMap.Print();
                 outmap.push_back(chMap);
 
             } // iHDMI
@@ -787,17 +799,23 @@ void ConfigHandler::setHDMIChannelMap()
         exit(1);
     }
     bool ok;
-    QString chMapString = "0000000000000000"; 
+    QString chMapString = "000000000000000000000000"; //24bit (16 vmm + 8 art)
     for(int i = 0; i < (int)m_channelmap.size(); ++i) {
-        QString first, second;
+        QString first, second, art;
         first  = m_channelmap[i].first ? "1" : "0";
         second = m_channelmap[i].second ? "1" : "0";
+        art    = m_channelmap[i].art ? "1" : "0";
         if(m_channelmap[i].on) {
-            chMapString.replace(15-2*i, 1, first);
-            chMapString.replace(14-2*i, 1, second);
+            chMapString.replace(23-2*i, 1, first);
+            chMapString.replace(22-2*i, 1, second);
+            chMapString.replace(7-i, 1, art);
+
+//            chMapString.replace(15-2*i, 1, first);
+//            chMapString.replace(14-2*i, 1, second);
         }
-        m_channelMap = (quint16)chMapString.toInt(&ok,2);
-    }
+    } // i
+    m_channelMap =    (quint16)chMapString.toInt(&ok,2);
+    m_channelMapART = (quint32)chMapString.toInt(&ok,2); 
 }
 //// ------------------------------------------------------------------------ //
 std::vector<Channel> ConfigHandler::LoadVMMChannelConfig(const boost::property_tree::ptree& pt)
@@ -908,6 +926,7 @@ void ConfigHandler::LoadBoardConfiguration(GlobalSetting& global,
     m_channelmap.clear();
     for(int i = 0; i < (int)chMap.size(); i++) {
         m_channelmap.push_back(chMap[i]);
+        m_channelmap[i].Print();
     }
     // build the HDMI channel map bit word
     setHDMIChannelMap();
@@ -923,7 +942,7 @@ void ConfigHandler::LoadBoardConfiguration(GlobalSetting& global,
 void ConfigHandler::LoadTDAQConfiguration(TriggerDAQ& daq)
 {
     m_daqSettings = daq; 
-   // m_daqSettings.Print();
+    m_daqSettings.Print();
 }
 //// ------------------------------------------------------------------------ //
 int ConfigHandler::isOn(std::string onOrOff, std::string where)
@@ -1049,7 +1068,7 @@ TriggerDAQ::TriggerDAQ()
     ignore16 = false;
     output_path = "";
     output_filename = "binary_dump.txt";
-
+    bcid_reset = 0;
 }
 void TriggerDAQ::Print()
 {
@@ -1065,6 +1084,8 @@ void TriggerDAQ::Print()
         << acq_sync << endl;
     ss << "     > acq window            : "
         << acq_window << endl;
+    ss << "     >> bcid reset           : "
+        << bcid_reset << endl;
     ss << "     > run mode              : "
         << run_mode.toStdString() << endl;
     ss << "     > run count             : "
@@ -1283,6 +1304,7 @@ ChannelMap::ChannelMap()
     on = false;
     first = false;
     second = false;
+    art = false;
 }
 void ChannelMap::Print()
 {
@@ -1290,6 +1312,7 @@ void ChannelMap::Print()
     ss << "HDMI " << hdmi_no << endl;
     ss << "    > switch          : " << ( on ? "on" : "off") << endl;
     ss << "    > (first, second) : (" << first << ", " << second << ")" << endl;
+    ss << "    > art             : " << art << endl;
     cout << ss.str() << endl;
 }
 
