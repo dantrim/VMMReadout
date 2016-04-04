@@ -715,7 +715,7 @@ void RunModule::setMask()
         out << (quint32) 0 //[12,15]
             << (quint32) 8 //[16,19]
             << (quint32) config().getHDMIChannelMapART(); //[20,23]
-            //<< (quint32) config().getHDMIChannelMap(); //[20,23]
+          //  << (quint32) config().getHDMIChannelMap(); //[20,23]
 
         socket().SendDatagram(datagram, ip, send_to_port, "fec",
                                                 "RunModule::setMask");

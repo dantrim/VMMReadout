@@ -6,7 +6,6 @@
 #include <QByteArray>
 #include <QBitArray>
 #include <QUdpSocket>
-#include <QMap>
 #include <QList>
 #include <QStringList>
 #include <QFileInfo>
@@ -28,6 +27,8 @@ DataHandler::DataHandler(QObject *parent) :
     m_write(false),
     n_daqCnt(0),
     m_ignore16(false),
+    m_use_channelmap(false),
+    m_mapping_file(""),
     m_daqSocket(0),
     m_msg(0),
     m_fileOK(false),
@@ -37,7 +38,8 @@ DataHandler::DataHandler(QObject *parent) :
     m_treesSetup(false),
     m_runPropertiesFilled(false),
     m_vmm2(NULL),
-    m_runProperties(NULL)
+    m_runProperties(NULL),
+    m_artTree(NULL)
 {
 }
 // ------------------------------------------------------------------------ //
@@ -48,6 +50,7 @@ void DataHandler::LoadMessageHandler(MessageHandler& m)
 // ------------------------------------------------------------------------ //
 void DataHandler::LoadDAQSocket(VMMSocket& vmmsocket)
 {
+
     if(!m_daqSocket) {
         m_daqSocket = &vmmsocket;
         connect(m_daqSocket, SIGNAL(dataReady()), this, SLOT(readEvent()));
@@ -68,6 +71,102 @@ void DataHandler::LoadDAQSocket(VMMSocket& vmmsocket)
         exit(1);
     }
     return;
+}
+// ------------------------------------------------------------------------ //
+bool DataHandler::LoadELxChannelMap(QString mapname)
+{
+    stringstream sx;
+
+    bool mapOK = true;
+
+    if(mapname=="") {
+        msg()("ERROR ELx channel map filename provided is empty",
+                            "DataHandler::LoadELxChannelMap");
+        mapOK = false;
+    }
+
+    // assume for now that use provides only the name, expecting
+    // to be stored in /configs/
+    #warning make env variable for VMMDIR
+    string fullname = "../configs/" + mapname.toStdString();
+    if(!checkQFileFound(fullname)) {
+        sx << "ERROR Map file (" << fullname << ") not found";
+        msg()(sx,"DataHandler::LoadELxChannelMap"); sx.str(""); 
+        mapOK = false;
+    }
+
+    if(!checkQFileOK(fullname)) {
+        sx << "ERROR Map file (" << fullname << ") unable to be opened";
+        msg()(sx,"DataHandler::LoadELxChannelMap"); sx.str("");
+        mapOK = false;
+    }
+
+    if(mapOK && dbg()) {
+        sx << "VMM channel map file opened: " << fullname;
+        msg()(sx,"DataHandler::LoadELxChannelMap"); sx.str("");
+    }
+
+    //cases
+    if(mapname=="mini2_map.txt") { m_mapping = "mini2"; m_map_mini2.clear(); }
+    else {
+        sx << "ERROR Unhandled ELx map loaded: " << fullname;
+        msg()(sx,"DataHandler::LoadELxChannelMap"); sx.str("");
+        mapOK = false;
+    }
+
+    QFile mapfile(QString::fromStdString(fullname));
+    mapfile.open(QIODevice::ReadOnly);
+    QTextStream in(&mapfile);
+    while(!in.atEnd()) {
+        QString line = in.readLine();
+        if(line.left(1)!="#") {
+
+            ////////////////// mini2 [begin] /////////////////
+            if(m_mapping=="mini2") {
+
+                QStringList line_list = line.split("  ", QString::SkipEmptyParts);
+                if(line_list.size()) {
+                    std::vector<int> chip_list;
+                    chip_list.push_back(line_list.at(1).toInt());
+                    chip_list.push_back(line_list.at(2).toInt());
+                    m_map_mini2.insert(line_list.at(0).toInt(), chip_list);
+                } // non-empty line
+            } // mini2
+            ////////////////// mini2 [end] ///////////////////
+        } // not a comment line
+    } //while
+
+
+    return mapOK;
+    
+}
+// ------------------------------------------------------------------------ //
+int DataHandler::channelToStrip(int chipNumber, int channelNumber)
+{
+    stringstream sx;
+
+    int out_strip_number = -1;
+    bool ok = true;
+
+    if(m_mapping=="mini2") {
+        if(m_map_mini2.size()==0) {
+            sx << "Channel map for mini2 is empty";
+            msg()(sx,"DataHandler::channelToStrip");sx.str("");
+            ok = false; 
+        }
+        if(ok) {
+            if(chipNumber%2==0) { out_strip_number = m_map_mini2[channelNumber].at(0); }
+            else { out_strip_number = m_map_mini2[channelNumber].at(1); }
+        }
+    } // mini2 map
+    else {
+        sx << "ERROR Unhandled ELx map loaded: " << m_mapping;
+        msg()(sx,"DataHandler::channelToStrip"); sx.str("");
+        ok = false;
+    }
+
+    return out_strip_number;
+
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::connectDAQ()
@@ -259,6 +358,13 @@ int DataHandler::checkForExistingFiles(std::string dirname, int expectedNumber)
     }
 }
 // ------------------------------------------------------------------------ //
+bool DataHandler::checkQFileFound(std::string name)
+{
+    QFile ftest;
+    ftest.setFileName(QString::fromStdString(name));
+    return ftest.exists();
+}
+// ------------------------------------------------------------------------ //
 bool DataHandler::checkQFileOK(std::string name)
 {
     QFile ftest;
@@ -440,6 +546,13 @@ void DataHandler::setupOutputTrees()
                                 "std::vector< vector<int> >", &m_neighbor_calib);
     } //calib
 
+    // ART data
+    m_artTree = new TTree("ART", "ART");
+    br_art                  = m_artTree->Branch("art",
+                                "std::vector<int>", &m_art);
+    br_artFlag             = m_artTree->Branch("artFlag",
+                                "std::vector<int>", &m_artFlag);
+
     m_treesSetup = true;
 
 }
@@ -451,6 +564,11 @@ void DataHandler::writeAndCloseDataFile()
                 "DataHandler::writeAndCloseDataFile");
     if(!m_vmm2 || !m_treesSetup) {
         msg()("Event data tree is null!",
+                    "DataHandler::writeAndCloseDataFile", true);
+        exit(1);
+    }
+    if(!m_artTree || !m_treesSetup) {
+        msg()("ART data tree is null!",
                     "DataHandler::writeAndCloseDataFile", true);
         exit(1);
     }
@@ -476,6 +594,10 @@ void DataHandler::writeAndCloseDataFile()
         m_daqRootFile->cd();
         if(!(m_vmm2->Write("", TObject::kOverwrite))) {
             msg()("ERROR writing event data to file!",
+                        "DataHandler::writeAndCloseDataFile");
+        }
+        if(!(m_artTree->Write("", TObject::kOverwrite))) {
+            msg()("ERROR writing ART data to file!",
                         "DataHandler::writeAndCloseDataFile");
         }
         if(!(m_daqRootFile->Write())) {
@@ -519,6 +641,10 @@ void DataHandler::clearData()
 //    m_peakTime_calib       = -999;
 //    m_daqCounts_calib      = -999;
     m_neighbor_calib.clear();
+
+    // ART
+    m_art.clear();
+    m_artFlag.clear();
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::EndRun()
@@ -532,6 +658,7 @@ void DataHandler::EndRun()
 // ------------------------------------------------------------------------ //
 void DataHandler::readEvent()
 {
+
     stringstream sx;
 
     bool ok_to_read = true;
@@ -568,6 +695,10 @@ void DataHandler::readEvent()
     while(daqSocket().hasPendingDatagrams()){
         datagram.resize(daqSocket().socket().pendingDatagramSize());
         daqSocket().socket().readDatagram(datagram.data(), datagram.size(), &vmmip);
+
+
+        //qDebug() << datagram.toHex();
+        // cout << daqSocket().socket().state() << endl;
 
      //   if(dbg()){
      //       sx.str("");
@@ -623,7 +754,8 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
         ///////////////////////////////////////////////
         // readout the VMM2 event data [begin]
         ///////////////////////////////////////////////
-        if(headerID == "564D32") {
+        if(headerID == "564d32") {
+
             QString fullEventDataStr, headerStr, chipNumberStr, trigCountStr, trigTimeStampStr;
             chipNumberStr    = datagram.mid(7,1).toHex();
             trigCountStr     = datagram.mid(8,2).toHex();
@@ -646,7 +778,7 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                 sx.str("");
                 sx << "Empty event from chip #: " << chipNumberStr.toInt(&ok,16);
                 cout << sx.str() << endl;
-                //msg()(sx,"DataHandler::decodeAndWriteData");
+                msg()(sx,"DataHandler::decodeAndWriteData");
             }
 
             // data containers for this chip
@@ -673,9 +805,15 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                 _thresh.push_back(threshold);
 
                 // --- channel number --- //
-                uint channel_no = (bytes2 & 0xfc) >> 2; // 0xfc = 0000 0000 1111 1100
-                #warning IMPLEMENT CHANNEL MAP
-                //if(useChannelMap()) {...}
+                int channel_no = (bytes2 & 0xfc) >> 2; // 0xfc = 0000 0000 1111 1100
+                if(useChannelMap()) {
+                    int chan_test = channelToStrip(chipNumberStr.toInt(&ok,16),
+                                channel_no);
+                    if(chan_test>0) channel_no = chan_test;
+                    else {
+                        msg()("Not using channel map");
+                    }
+                }
                 _channelNo.push_back(channel_no);
 
                 // use QString methods instead of using bytes1 (for now)
@@ -724,7 +862,8 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                 uint gray = DataHandler::grayToBinary(outBCID_);
                 _gray.push_back(gray);
 
-                if(dbg() && verbose) {
+              //  if(dbg() && verbose) {
+                if(true) {
                     sx.str("");
                     sx << "channel          : " << channel_no << "\n"
                        << "flag             : " << flag << "\n"
@@ -770,8 +909,16 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
         else if(headerID=="564132") {
 
             bool test_art = true;
+         //   qDebug() << "art: " << datagram.toHex();
+
+            // clear the ART data containers
+            m_art.clear();
+            m_artFlag.clear();
 
             QString art_channel = datagram.mid(7,1).toHex();
+          //  cout << "ART CHANNEL = " << art_channel.toStdString() << endl;
+          //  qDebug() << "ARTGRAM : " << datagram.toHex();
+            qDebug() << " > art size : " << datagram.size();
             for(int i = 12; i < (int)datagram.size(); ) {
                 quint32 art_timestamp = datagram.mid(i,2).toHex().toUInt(&ok,16);
                 quint32 art_data = datagram.mid(i+2,2).toHex().toUInt(&ok,16);
@@ -782,7 +929,20 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                 uint art1_flag = (art_data & 0x8000) >> 15; // 0x8000 = 1000 0000 0000 0000
                 uint art2_flag = (art_data & 0x80) >> 7; // 0x80 = 0000 0000 1000 0000
 
-                if(dbg() && test_art) {
+                // push back to store later
+                if(writeNtuple()) {
+                    m_art.push_back(art1);
+                    m_artFlag.push_back(art1_flag);
+                    m_art.push_back(art2);
+                    m_artFlag.push_back(art2_flag);
+
+                    if(m_art.size()>2 || m_artFlag.size()>2) {
+                        cout << "storing more than 2 ART data" << endl;
+                    }
+                }
+
+               // if(dbg() && test_art) {
+                if(test_art) {
                     QString art_timestamp_test = datagram.mid(i,2).toHex();
                     QString art1_test = datagram.mid(i+2,1);
                     QString art2_test = datagram.mid(i+3,1);
@@ -842,7 +1002,7 @@ void DataHandler::fillEventData()
         return;
     }
 
-    if(!m_treesSetup || !m_vmm2 || !m_rootFileOK) {
+    if(!m_treesSetup || !m_vmm2 || !m_artTree || !m_rootFileOK) {
         msg()("Event data tree unable to be filled!",
                 "DataHandler::fillEventData",true);
         if(dbg()) {
@@ -850,6 +1010,7 @@ void DataHandler::fillEventData()
             sx << "---------------------------------------------\n"
                << "  trees setup OK ? : " << (m_treesSetup ? "yes" : "no") << "\n"
                << "  vmm2 tree OK   ? : " << (m_vmm2 ? "yes" : "no") << "\n"
+               << "  ART tree OK    ? : " << (m_artTree ? "yes":"no") << "\n"
                << "  root file OK   ? : " << (m_rootFileOK ? "yes" : "no") << "\n"
                << "---------------------------------------------";
             msg()(sx,"DataHandler::fillEventData");
@@ -859,6 +1020,7 @@ void DataHandler::fillEventData()
 
     m_daqRootFile->cd();
     m_vmm2->Fill();
+    m_artTree->Fill();
 }
 
 //////////////////////////////////////////////////////////////////////////////

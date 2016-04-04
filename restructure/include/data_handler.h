@@ -5,6 +5,7 @@
 // qt
 #include <QObject>
 #include <QFile>
+#include <QMap>
 class QByteArray;
 class QBitArray;
 class QUdpSocket;
@@ -46,6 +47,10 @@ class DataHandler : public QObject
         bool calibRun() { return m_calibRun; }
         void setIgnore16(bool doit) { m_ignore16 = doit; }
         bool ignore16() { return m_ignore16; }
+        void setUseChannelMap(bool doit) { m_use_channelmap = doit; }
+        bool useChannelMap() { return m_use_channelmap; }
+        bool LoadELxChannelMap(QString mapfilename="");
+        int channelToStrip(int chipNumber, int channelNumber);
         void setWriteNtuple(bool doit) { m_write = doit; }
         bool writeNtuple() { return m_write; }
 
@@ -56,6 +61,7 @@ class DataHandler : public QObject
                                             QString filename = "");
         int checkForExistingFiles(std::string dirname="", int expectedRunNumber=0);
         bool checkQFileOK(std::string fname="");
+        bool checkQFileFound(std::string fname="");
 
         void dataFileHeader(CommInfo& comm, GlobalSetting& global,
                                 TriggerDAQ& daq);
@@ -100,6 +106,11 @@ class DataHandler : public QObject
         bool m_calibRun;
         bool m_write;
         bool m_ignore16;
+        bool m_use_channelmap;
+
+        QString m_mapping_file; ///wait... is this needed?
+        std::string m_mapping; //type of mapping file/ELx
+        QMap<int, std::vector<int> > m_map_mini2;
 
         VMMSocket *m_daqSocket;
         MessageHandler *m_msg;
@@ -122,7 +133,7 @@ class DataHandler : public QObject
         int m_pulserCounts;
         int m_angle;
 
-        // event data
+        // event data OTF
         std::vector<int> _pdo;
         std::vector<int> _tdo;
         std::vector<int> _bcid;
@@ -132,13 +143,14 @@ class DataHandler : public QObject
         std::vector<int> _thresh;
         std::vector<int> _neighbor;
 
-
         int m_eventNumberFAFA;
         int m_daqCnt;
         std::vector<int> m_triggerTimeStamp;
         std::vector<int> m_triggerCounter;
         std::vector<int> m_chipId;
         std::vector<int> m_eventSize;
+        std::vector<int> m_art;
+        std::vector<int> m_artFlag;
         std::vector< std::vector<int> > m_tdo;
         std::vector< std::vector<int> > m_pdo;
         std::vector< std::vector<int> > m_flag;
@@ -195,6 +207,9 @@ class DataHandler : public QObject
         TBranch *br_angle;
         TBranch *br_calibrationRun;
 
+        TTree*  m_artTree;
+        TBranch *br_art;
+        TBranch *br_artFlag;
         
 
     signals :

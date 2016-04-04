@@ -33,8 +33,10 @@ MainWindow::MainWindow(QWidget *parent) :
     m_tdaqOK(false),
     m_runModeOK(false),
     m_acqMode(""),
+    m_daqInProgress(false),
     m_hdmiMaskON(false)
 {
+
 
     vmmMessageHandler = new MessageHandler();
     vmmMessageHandler->setMessageSize(75);
@@ -42,9 +44,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(vmmMessageHandler, SIGNAL(logReady()), this, SLOT(readLog()));
 
     ui->setupUi(this);
+    this->setFixedSize(1200*1.03,720); // 1400, 725
     //this->setFixedSize(1200,720); // 1400, 725
-    this->setMinimumHeight(720);
-    this->setMinimumWidth(1200);
+    //this->setMinimumHeight(720);
+    //this->setMinimumWidth(1200);
     Font.setFamily("Arial");
     ui->loggingScreen->setReadOnly(true);
     ui->runStatusField->setReadOnly(true);
@@ -165,7 +168,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->offACQ, SIGNAL(clicked()),
                                     this, SLOT(setACQMode()));
 
-
     // start run
     connect(ui->checkTriggers, SIGNAL(clicked()),
                                     this, SLOT(triggerHandler()));
@@ -258,6 +260,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //-----------------------------------------------------------------//
     /////////////////////////////////////////////////////////////////////
     SetInitialState();
+
 }
 
 // ------------------------------------------------------------------------- //
@@ -1924,12 +1927,23 @@ void MainWindow::triggerHandler()
  //   dataHandle().setWriteNtuple(ui->writeData->isChecked());
  //   dataHandle().setIgnore16(ui->ignore16->isChecked());
  //   dataHandle().setCalibrationRun(ui->calibration->isChecked());
-    #warning channel map not implemented
-    //dataHanlde().setUseChannelMap(...);
+    if(ui->useMapping->isChecked()) {
+        dataHandle().setUseChannelMap(true);
+        bool mapOK = dataHandle().LoadELxChannelMap(configHandle().daqSettings().mapping_file);
+        if(!mapOK) {
+            dataHandle().setUseChannelMap(false);
+            msg()("Unable to load ELx channel mapping. Will use VMM channels for run");
+        }
+    }
+    else {
+        dataHandle().setUseChannelMap(false);
+    }
 
     if(QObject::sender() == ui->checkTriggers) {
         sx << " * Starting DAQ run *";
         msg()(sx); sx.str("");
+        m_daqInProgress = true;
+        ui->useMapping->setEnabled(false);
 
         //socketHandle().addSocket("DAQ", DAQPORT); 
         dataHandle().setWriteNtuple(ui->writeData->isChecked());
@@ -2023,6 +2037,8 @@ void MainWindow::triggerHandler()
     if(QObject::sender() == ui->stopTriggerCnt) {
         sx << " * Ending DAQ run " << ui->runNumber->value() << " *";
         msg()(sx); sx.str("");
+        m_daqInProgress = false;
+        ui->useMapping->setEnabled(true);
 
         ui->runStatusField->setText("Run:"+ui->runNumber->text()+" finished");
         ui->runStatusField->setStyleSheet("background-color: lightGray");

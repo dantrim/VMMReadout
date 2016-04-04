@@ -126,8 +126,8 @@ void SocketHandler::addSocket(std::string name, quint16 bindingPort,
         m_daqSocket->setDebug(dbg());
         m_daqSocket->setName(name);
         m_daqSocket->setBindingPort(bindingPort);
-       // if(!dryrun())
-       //     m_daqSocket->bindSocket(bindingPort, mode);
+     //   if(!dryrun())
+     //       m_daqSocket->bindSocket(bindingPort, mode);
         
         m_daqSetup = true;
         msg()("VMMSocket added:","SocketHandler::addSocket");

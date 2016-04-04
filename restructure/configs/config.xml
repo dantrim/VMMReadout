@@ -24,6 +24,7 @@
 		<run_mode>external</run_mode>
 		<run_count>20</run_count>
         <ignore16>off</ignore16>
+        <mapping_file>mini2_map.txt</mapping_file>
         <output_path>/Users/dantrim/workarea/NSW/VMMReadout/restructure/</output_path>
 		<output_filename>tmp.txt</output_filename>
 	</trigger_daq>

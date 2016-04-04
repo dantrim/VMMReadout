@@ -70,6 +70,7 @@ struct TriggerDAQ {
     QString run_mode;
     int run_count;
     int ignore16;
+    QString mapping_file;
     QString output_path;
     QString output_filename;
     int bcid_reset;

@@ -145,6 +145,7 @@ void ConfigHandler::WriteConfig(QString filename)
     out_tdaq.put("run_mode", daqSettings().run_mode.toStdString());
     out_tdaq.put("run_count", def_tdaq.run_count);
     out_tdaq.put("ignore16", daqSettings().ignore16);
+    out_tdaq.put("mapping_file", daqSettings().mapping_file.toStdString());
     string outpath = (daqSettings().output_path != "" ? daqSettings().output_path.toStdString() :
                                 def_tdaq.output_path.toStdString());
     out_tdaq.put("output_path", outpath);
@@ -702,6 +703,9 @@ TriggerDAQ ConfigHandler::LoadDAQConfig(const boost::property_tree::ptree& pt)
             daq.run_count = conf.second.get<int>("run_count");
             // ignore16 flag
             daq.ignore16 = isOn(conf.second.get<string>("ignore16"));
+            // channel-to-strip map
+            string mapfile = conf.second.get<string>("mapping_file");
+            daq.mapping_file = QString::fromStdString(mapfile);
             // output path
             string opath = conf.second.get<string>("output_path");
             daq.output_path = QString::fromStdString(opath);
@@ -1066,6 +1070,7 @@ TriggerDAQ::TriggerDAQ()
     run_mode = "pulser";
     run_count = 20;
     ignore16 = false;
+    mapping_file = "mini2_map.txt";
     output_path = "";
     output_filename = "binary_dump.txt";
     bcid_reset = 0;
@@ -1092,6 +1097,8 @@ void TriggerDAQ::Print()
         << run_count << endl;
     ss << "     > ignore16              : "
         << ignore16 << endl;
+    ss << "     > mapping file          : "
+        << mapping_file.toStdString() << endl;
     ss << "     > output path           : "
         << output_path.toStdString() << endl;
     ss << "     > output name           : "
