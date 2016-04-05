@@ -8,6 +8,7 @@
 #include <QPushButton>
 #include <QComboBox>
 #include <QFont>
+#include <QThread>
 //#include <constants.h>
 
 // vmm
@@ -159,17 +160,39 @@ class MainWindow : public QMainWindow
         DataHandler   *vmmDataHandler;
         MessageHandler *vmmMessageHandler;
 
+        //thread
+        QThread *daqThread;
+
 
         bool m_commOK;
         bool m_configOK;
         bool m_tdaqOK;
         bool m_runModeOK;
         QString m_acqMode;
+        bool m_daqInProgress;
         bool m_hdmiMaskON;
+        bool m_runDirectoryOK;
+        bool m_readyToRead;
 
     signals :
         void checkFSM();
         void EndRun();
+
+        // DataHandler related
+        void setUseChannelMap(bool);
+        void loadELxChannelMapping(QString);
+        void setWriteNtuple(bool);
+        void setIgnore16(bool);
+        void setCalibrationRun(bool);
+        void setupOutputFiles(QString, QString);
+        void setupOutputTrees();
+        void checkReadyToRead();
+        void startDAQSocket();
+
+        //thread
+        void testThread(QString);
+        void testFunction2();
+        void testMultiARG(QString,QString,QString);
 
     public slots:
         // dac-to-mV
@@ -228,6 +251,7 @@ class MainWindow : public QMainWindow
 
         // bad directory name
         void badRunDirectory();
+        void setRunDirOK(bool);
 
         // channel fields
         void updateChannelState();

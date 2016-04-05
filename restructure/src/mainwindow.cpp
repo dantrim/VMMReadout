@@ -28,15 +28,24 @@ MainWindow::MainWindow(QWidget *parent) :
     vmmSocketHandler(0),
     vmmConfigModule(0),
     vmmRunModule(0),
+    vmmMessageHandler(0),
+    //thread
+    daqThread(0),
     m_commOK(false),
     m_configOK(false),
     m_tdaqOK(false),
     m_runModeOK(false),
     m_acqMode(""),
     m_daqInProgress(false),
-    m_hdmiMaskON(false)
+    m_hdmiMaskON(false),
+    m_runDirectoryOK(true),
+    m_readyToRead(false)
 {
 
+
+    //thread
+    daqThread = new QThread();
+    qDebug() << "MAINWINDOW THREAD: " << QThread::currentThreadId();
 
     vmmMessageHandler = new MessageHandler();
     vmmMessageHandler->setMessageSize(75);
@@ -95,6 +104,26 @@ MainWindow::MainWindow(QWidget *parent) :
 
     vmmRunModule->LoadConfig(*vmmConfigHandler);
     vmmRunModule->LoadSocket(*vmmSocketHandler);
+
+
+    //////////////////////////////////////////////////////////////////////
+    //------------------------------------------------------------------//
+    // connect DataHandler functions
+    //------------------------------------------------------------------//
+    //////////////////////////////////////////////////////////////////////
+    connect(this, SIGNAL(setUseChannelMap(bool)), vmmDataHandler, SLOT(setUseChannelMap(bool)));
+    connect(this, SIGNAL(loadELxChannelMapping(QString)), vmmDataHandler, SLOT(loadELxChannelMapping(QString)));
+    connect(this, SIGNAL(setWriteNtuple(bool)), vmmDataHandler, SLOT(setWriteNtuple(bool)));
+    connect(this, SIGNAL(setIgnore16(bool)), vmmDataHandler, SLOT(setIgnore16(bool)));
+    connect(this, SIGNAL(setCalibrationRun(bool)), vmmDataHandler, SLOT(setCalibrationRun(bool)));
+    connect(this, SIGNAL(setupOutputFiles(QString,QString)),
+                    vmmDataHandler, SLOT(setupOutputFiles(QString,QString)));
+    connect(vmmDataHandler, SIGNAL(setRunDirOK(bool)), this, SLOT(setRunDirOK(bool)));
+
+    connect(this, SIGNAL(setupOutputTrees()), vmmDataHandler, SLOT(setupOutputTrees()));
+    connect(this, SIGNAL(resetDAQCount()), vmmDataHandler, SLOT(resetDAQCount()));
+    connect(this, SIGNAL(startDAQSocket()), vmmDataHandler,
+                                SLOT(connectDAQSocket()));
 
     connect(this, SIGNAL(EndRun()), vmmDataHandler, SLOT(writeAndCloseDataFile()));
 
@@ -261,6 +290,37 @@ MainWindow::MainWindow(QWidget *parent) :
     /////////////////////////////////////////////////////////////////////
     SetInitialState();
 
+
+    //thread
+    vmmDataHandler->moveToThread(daqThread);
+    daqThread->start();
+
+    QString fname = "dummy_filename.txt";
+    connect(this, SIGNAL(testThread(QString)), vmmDataHandler, SLOT(daqThreadWhere(QString)));
+    emit testThread(fname);
+    QUdpSocket* dummySocket = new QUdpSocket();
+    dummySocket->bind(QHostAddress::LocalHost, 1234);
+
+    QByteArray datatest;
+    datatest.append(" >>>> THIS IS A TEST DATAGRAM <<<< ");
+    dummySocket->writeDatagram(datatest, QHostAddress("10.0.0.2"), 6006);
+    //dummySocket->writeDatagram(datatest, QHostAddress::LocalHost, 1235);
+
+    dataHandle().testFunction();
+    connect(this, SIGNAL(testFunction2()), vmmDataHandler, SLOT(testFunction2()));
+    emit testFunction2();
+
+    QString one = "ONE";
+    QString two = "TWO";
+    QString three = "THREE";
+
+    connect(this, SIGNAL(testMultiARG(QString,QString,QString)),
+                            vmmDataHandler, SLOT(testMultiARG(QString,QString,QString)));
+    emit testMultiARG(one, two, three);
+
+
+    delete dummySocket;
+
 }
 
 // ------------------------------------------------------------------------- //
@@ -299,7 +359,9 @@ void MainWindow::selectOutputDirectory()
     QString check = dirStr;
     if(!ui->runDirectoryField->text().endsWith("/")) check = check + "/";
 
-    int run_number = dataHandle().checkForExistingFiles(dirStr.toStdString(),
+    //int run_number = dataHandle().checkForExistingFiles(dirStr.toStdString(),
+    //                                        ui->runNumber->value());
+    int run_number = DataHandler::checkForExistingFiles(dirStr.toStdString(),
                                             ui->runNumber->value());
     if( !(run_number == ui->runNumber->value()) ) {
         sx << "WARNING Re-setting run number to: " << run_number;    
@@ -451,7 +513,7 @@ void MainWindow::Connect()
         ///////////////////////////////////////////////////////
         socketHandle().addSocket("FEC", FECPORT, QUdpSocket::ShareAddress);
         connect(vmmRunModule, SIGNAL(checkLinks()), this, SLOT(writeFECStatus()));
-        socketHandle().addSocket("DAQ", DAQPORT); 
+        //socketHandle().addSocket("DAQ", DAQPORT); 
 
         
 
@@ -1908,47 +1970,26 @@ void MainWindow::setS6Resets()
                             ui->s6_FECReset->isChecked());
 }
 // ------------------------------------------------------------------------- //
+// ------------------------------------------------------------------------- //
 void MainWindow::triggerHandler()
 
 {
     stringstream sx;
-    //if(!(QObject::sender()==ui->stopTriggerCnt || QObject::sender()==ui->clearTriggerCnt))
-    //    socketHandle().addSocket("DAQ",DAQPORT);
-
-  //  if(!socketHandle().daqSocketOK() && (QObject::sender() != ui->clearTriggerCnt)) {
-  //      sx << "DAQ socket not setup. You cannot start a run unless this socket"
-  //         << " is initialized and bound properly.";
-  //      msg()(sx);
-  //      return;
-  //  }
-
-
- //   dataHandle().LoadDAQSocket(socketHandle().daqSocket());
- //   dataHandle().setWriteNtuple(ui->writeData->isChecked());
- //   dataHandle().setIgnore16(ui->ignore16->isChecked());
- //   dataHandle().setCalibrationRun(ui->calibration->isChecked());
     if(ui->useMapping->isChecked()) {
-        dataHandle().setUseChannelMap(true);
-        bool mapOK = dataHandle().LoadELxChannelMap(configHandle().daqSettings().mapping_file);
-        if(!mapOK) {
-            dataHandle().setUseChannelMap(false);
-            msg()("Unable to load ELx channel mapping. Will use VMM channels for run");
-        }
+        emit setUseChannelMap(true);
+        QString mapFileName = configHandle().daqSettings().mapping_file;
+        emit loadELxChannelMapping(mapFileName);
     }
     else {
-        dataHandle().setUseChannelMap(false);
+        emit setUseChannelMap(false);
     }
 
     if(QObject::sender() == ui->checkTriggers) {
-        sx << " * Starting DAQ run *";
-        msg()(sx); sx.str("");
-        m_daqInProgress = true;
         ui->useMapping->setEnabled(false);
 
-        //socketHandle().addSocket("DAQ", DAQPORT); 
-        dataHandle().setWriteNtuple(ui->writeData->isChecked());
-        dataHandle().setIgnore16(ui->ignore16->isChecked());
-        dataHandle().setCalibrationRun(ui->calibration->isChecked());
+        emit setWriteNtuple(ui->writeData->isChecked());
+        emit setIgnore16(ui->ignore16->isChecked());
+        emit setCalibrationRun(ui->calibration->isChecked());
         bool ok;
         if(ui->writeData->isChecked()) {
 
@@ -1958,7 +1999,7 @@ void MainWindow::triggerHandler()
             QString filename_init = "run_%04d.root";
 
             // check for existing files, provide new tag if necessary
-            int run_number = dataHandle().checkForExistingFiles(rootFileDir.toStdString(),
+            int run_number = DataHandler::checkForExistingFiles(rootFileDir.toStdString(),
                                                     ui->runNumber->value());
             if( !(run_number==ui->runNumber->value()) ) {
                 sx << "WARNING Re-setting run number to: " << run_number; 
@@ -1968,15 +2009,12 @@ void MainWindow::triggerHandler()
                 
             const char* filename_formed = Form(filename_init.toStdString().c_str(),
                             run_number);
-                            //ui->runNumber->text().toInt(&ok,10));
-            bool filesOK = dataHandle().setupOutputFiles(configHandle().daqSettings(),
-                                rootFileDir, filename_formed);
+            bool filesOK = dataHandle().setupOutputFiles(rootFileDir, filename_formed);
             if(!filesOK) { emit badRunDirectory(); return; }
 
-            // setup and initialize the output trees
+            // not all things need to be signal/slot
             dataHandle().setupOutputTrees();
 
-            //now that files are setup, setup the header for the dump file
  //           dataHandle().dataFileHeader(configHandle().commSettings(),
  //                                       configHandle().globalSettings(),
  //                                       configHandle().daqSettings());
@@ -1984,18 +2022,17 @@ void MainWindow::triggerHandler()
 
             //fill the run properties
             dataHandle().getRunProperties(configHandle().globalSettings(),
-                        ui->runNumber->value(), ui->angle->value());
+                         ui->runNumber->value(), ui->angle->value());
 
-            // start accepting the data
-            //dataHandle().connectDAQ();
-            //socketHandle().addSocket("DAQ",DAQPORT);
-            bool binding = socketHandle().daqSocket().bindSocket(DAQPORT);
-            if(binding)
-                dataHandle().LoadDAQSocket(socketHandle().daqSocket());
-            else {
-                sx << "ERROR binding DAQ socket. Unable to Load DAQ";
-                msg()(sx,"DataHandle::triggerHandler"); sx.str("");
-            }
+            // things should be OK by now
+            sx << " * Starting DAQ run *";
+            msg()(sx); sx.str("");
+            m_daqInProgress = true;
+
+            //thread
+            msg()("startDAQSocket");
+            delay(); delay();
+            emit startDAQSocket();
 
 
             //reset DAQ count for this run
@@ -2019,7 +2056,6 @@ void MainWindow::triggerHandler()
 
         } // writeData
         else {
-            socketHandle().addSocket("DAQ", DAQPORT); 
             ui->checkTriggers->setEnabled(false);
             ui->stopTriggerCnt->setEnabled(true);
         } // not writing data
@@ -2043,11 +2079,8 @@ void MainWindow::triggerHandler()
         ui->runStatusField->setText("Run:"+ui->runNumber->text()+" finished");
         ui->runStatusField->setStyleSheet("background-color: lightGray");
         if(ui->writeData->isChecked()) {
-            #warning make this a signal and slot
             emit EndRun();
         } // writeData
-
-        socketHandle().daqSocket().closeAndDisconnect("VMMDCS INFO");
 
         ui->runNumber->setValue(ui->runNumber->value()+1);
         ui->checkTriggers->setEnabled(true);
@@ -2060,7 +2093,17 @@ void MainWindow::triggerHandler()
 void MainWindow::updateTriggerCount()
 {
     QString cnt_;
-    ui->triggerCntLabel->setText(cnt_.number(dataHandle().getDAQCount(),10));
+    int count = dataHandle().getDAQCount();
+
+    // as the DAQ is on a different thread, the 
+    // call here can be behind the DAQ count at the
+    // time at which the counter was incremented
+    // just round it down to the nearest mult. of 100
+    // (be sure to adjust this if you begin changing
+    // the increment of the counter update)
+
+    count = (count + 50) / 100 * 100;
+    ui->triggerCntLabel->setText(cnt_.number(count,10));
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::startCalibration()
@@ -2194,8 +2237,15 @@ void MainWindow::startCalibration()
 
 }
 // ------------------------------------------------------------------------- //
+void MainWindow::setRunDirOK(bool dirStatus)
+{
+    m_runDirectoryOK = dirStatus;
+}
+// ------------------------------------------------------------------------- //
 void MainWindow::badRunDirectory()
 {
+    m_runDirectoryOK = false;
+
     ui->runDirectoryField->setStyleSheet("QLineEdit { background: rgb(220, 0, 0); selection-background-color: rgb(233, 99, 0); }");
     delay();
     delay();

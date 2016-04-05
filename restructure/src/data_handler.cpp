@@ -11,6 +11,7 @@
 #include <QFileInfo>
 #include <QFileInfoList>
 #include <QDir>
+#include <QThread>
 
 using namespace std;
 
@@ -28,6 +29,8 @@ DataHandler::DataHandler(QObject *parent) :
     n_daqCnt(0),
     m_ignore16(false),
     m_use_channelmap(false),
+    //thread
+    testDAQSocket(0), 
     m_mapping_file(""),
     m_daqSocket(0),
     m_msg(0),
@@ -41,11 +44,94 @@ DataHandler::DataHandler(QObject *parent) :
     m_runProperties(NULL),
     m_artTree(NULL)
 {
+    qDebug() << "DATAHANDLE THREAD (CONSTRUCTOR) : " << QThread::currentThreadId();
+    //thread
+    testDAQSocket = new QUdpSocket();
+   // bool bind = testDAQSocket->bind(6006, QAbstractSocket::DefaultForPlatform); 
+   // if(bind) {
+   //     msg()("DAQ SOCKET SUCCESSFULLY BOUND");
+   // } else {
+   //     msg()("DAQ SOCKET NOT BOUND");
+   // }
+   // //testDAQSocket->bind(QHostAddress::LocalHost, 1235);
+    //connect(testDAQSocket, SIGNAL(readyRead()), this, SLOT(testDAQSocketRead()));
+    connect(testDAQSocket, SIGNAL(readyRead()), this, SLOT(readEvent()));
+}
+// ------------------------------------------------------------------------ //
+void DataHandler::connectDAQSocket()
+{
+    qDebug() << "CONNECT DAQ SOCKET THREAD : " << QThread::currentThreadId();
+    bool bind = testDAQSocket->bind(6006);
+    if(bind)
+        msg()("DAQ SOCKET BOUND SUCCESS");
+    else {
+        msg()("DAQ SOCKET FAIL TO BIND");
+    }
+}
+// ------------------------------------------------------------------------ //
+void DataHandler::testFunction2()
+{
+
+    qDebug() << "+++++++++++++++++++++++++++++++";
+    qDebug() << "  test call of function 2      ";
+    qDebug() << "  > thread: " << QThread::currentThreadId();
+    qDebug() << "+++++++++++++++++++++++++++++++";
+
+    stringstream sx;
+    sx << "FROM MESSAGE HANDLER, THREAD = " << QThread::currentThreadId();
+    msg()(sx,"DataHandler::testFunction");
+}
+// ------------------------------------------------------------------------ //
+void DataHandler::testFunction()
+{
+    qDebug() << "+++++++++++++++++++++++++++++++";
+    qDebug() << "  test call of function        ";
+    qDebug() << "  > thread: " << QThread::currentThreadId();
+    qDebug() << "+++++++++++++++++++++++++++++++";
+
+   // string thID = QThread::currentThreadId().toString().toStdString();
+
+    stringstream sx;
+    sx << "FROM MESSAGE HANDLER, THREAD = " << QThread::currentThreadId();
+    msg()(sx,"DataHandler::testFunction");
+
+}
+// ------------------------------------------------------------------------ //
+void DataHandler::testDAQSocketRead()
+{
+    QByteArray buffer;
+    buffer.resize(testDAQSocket->pendingDatagramSize());
+    QHostAddress sender;
+    quint16 senderPort;
+   
+    testDAQSocket->readDatagram(buffer.data(), buffer.size(), &sender, &senderPort); 
+
+    qDebug() << "--------------------------------";
+    qDebug() << "--------------------------------";
+    qDebug() << " TEST DAQ SOCKET RECEIVING DATA ";
+    qDebug() << "   message   : " << buffer;
+    qDebug() << "   from      : " << sender.toString();
+    qDebug() << "   from port : " << senderPort;
+    qDebug() << "- - - - - - - - - - - - - - - - ";
+    qDebug() << "   IN THREAD : " << QThread::currentThreadId();
+    qDebug() << "--------------------------------";
+    qDebug() << "--------------------------------";
+
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::LoadMessageHandler(MessageHandler& m)
 {
     m_msg = &m;
+}
+// ------------------------------------------------------------------------ //
+void DataHandler::setUseChannelMap(bool useMap)
+{
+    m_use_channelmap = useMap;
+    if(dbg()) {
+        stringstream sx;
+        sx << "Using channel map: " << (useMap ? "YES" : "NO");
+        msg()(sx,"DataHandler::setUseChannelMap");
+    }
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::LoadDAQSocket(VMMSocket& vmmsocket)
@@ -73,7 +159,7 @@ void DataHandler::LoadDAQSocket(VMMSocket& vmmsocket)
     return;
 }
 // ------------------------------------------------------------------------ //
-bool DataHandler::LoadELxChannelMap(QString mapname)
+void DataHandler::loadELxChannelMapping(QString mapname)
 {
     stringstream sx;
 
@@ -136,9 +222,42 @@ bool DataHandler::LoadELxChannelMap(QString mapname)
         } // not a comment line
     } //while
 
+    ///////////////////////////////////////////////////////////////
+    // if the map is not "OK" turn off the use of the channel map
+    // altogether
+    ///////////////////////////////////////////////////////////////
+    if(!mapOK) {
+        sx << "WARNING Unable to load ELx channel map properly. Will use VMM \nchannels instead"
+           << " of strip numbers.";
+        msg()(sx, "DataHandler::loadELxChannelMapping");
+        m_use_channelmap = false;
+    }
 
-    return mapOK;
-    
+}
+// ------------------------------------------------------------------------ //
+void DataHandler::setWriteNtuple(bool doit)
+{
+    m_write = doit;
+}
+// ------------------------------------------------------------------------ //
+void DataHandler::setIgnore16(bool doit)
+{
+    m_ignore16 = doit;
+}
+// ------------------------------------------------------------------------ //
+void DataHandler::setCalibrationRun(bool doit)
+{
+    m_calibRun = doit;
+    if(dbg())
+        msg()("Setting run as calibration run...", "DataHandler::setCalibrationRun");
+}
+// ------------------------------------------------------------------------ //
+void DataHandler::testMultiARG(QString x, QString y, QString z)
+{
+    stringstream sx;
+    sx << "MULTI ARG : " << x.toStdString() << " " << y.toStdString() << " " << z.toStdString();
+    msg()(sx, "DataHandler::testMultiARG");
+
 }
 // ------------------------------------------------------------------------ //
 int DataHandler::channelToStrip(int chipNumber, int channelNumber)
@@ -176,8 +295,9 @@ void DataHandler::connectDAQ()
     connect(m_daqSocket, SIGNAL(dataReady()), this, SLOT(readEvent));
 }
 // ------------------------------------------------------------------------ //
-bool DataHandler::setupOutputFiles(TriggerDAQ& daq, QString outdir,
-                                                               QString filename)
+//bool DataHandler::setupOutputFiles(TriggerDAQ& daq, QString outdir_,
+//                                                               QString filename)
+bool DataHandler::setupOutputFiles(QString outdir_, QString filename)
 {
     stringstream sx;
 
@@ -190,9 +310,9 @@ bool DataHandler::setupOutputFiles(TriggerDAQ& daq, QString outdir,
     //////////////////////////////////////////////////////////////////////
 
     QString fullfilename = "";
-
+/*
     // ------ use xml ------- //
-    if(outdir=="" && filename=="") {
+    if(outdir_=="" && filename=="") {
         fullfilename = daq.output_path;
         if(!daq.output_path.endsWith("/")) fullfilename.append("/");
 
@@ -215,7 +335,7 @@ bool DataHandler::setupOutputFiles(TriggerDAQ& daq, QString outdir,
 //            msg()("Setting output data file to: " + fullfilename.toStdString(),
 //                    "DataHandler::setupOutputFiles");
         #warning implement test mode or increment of filename!!
-//        if(m_daqFile.exists() /*&&testmode */) {
+//        if(m_daqFile.exists()) {
 //            msg()("Output file exists. Erasing existing version.",
 //                    "DataHandler::setupOutputFiles");
 //            m_daqFile.remove();
@@ -251,9 +371,10 @@ bool DataHandler::setupOutputFiles(TriggerDAQ& daq, QString outdir,
         } // writeNtuple
     } // xml
     // ------ use provided names ------- //
-    else if(!(outdir=="" && filename=="")) {
+    else if(!(outdir_=="" && filename=="")) {
+*/
         m_outDir.clear();
-        m_outDir = outdir;
+        m_outDir = outdir_;
 
         //////////////////////////////////////////////////
         // binary dump file
@@ -312,11 +433,15 @@ bool DataHandler::setupOutputFiles(TriggerDAQ& daq, QString outdir,
             } 
             m_rootFileOK = true;
         }
-    } // user-provided
+//    } // user-provided
 
     m_fileOK = status;
     m_rootFileOK = status;
+
+    emit setRunDirOK(status);
     return status;
+
+
 }
 // ------------------------------------------------------------------------ //
 int DataHandler::checkForExistingFiles(std::string dirname, int expectedNumber)
@@ -463,6 +588,7 @@ void DataHandler::dataFileHeader(CommInfo& info, GlobalSetting& global,
 
 }
 // ------------------------------------------------------------------------ //
+// ------------------------------------------------------------------------ //
 void DataHandler::getRunProperties(const GlobalSetting& global,
         int runNumber, int angle)
 {
@@ -480,6 +606,7 @@ void DataHandler::getRunProperties(const GlobalSetting& global,
 
     if(writeNtuple()) {
         m_daqRootFile->cd();
+        if(!m_runProperties) cout << "TREE NOT UP" << endl;
         m_runProperties->Fill();
         m_runProperties->Write("", TObject::kOverwrite);
         delete m_runProperties;
@@ -559,6 +686,13 @@ void DataHandler::setupOutputTrees()
 // ------------------------------------------------------------------------ //
 void DataHandler::writeAndCloseDataFile()
 {
+
+    // close file
+    msg()("Closing DAQ socket", "DataHandler::writeAndCloseDataFile");
+    testDAQSocket->close();
+    testDAQSocket->disconnectFromHost();
+
+
     if(dbg())
         msg()("Writing output files and closing...",
                 "DataHandler::writeAndCloseDataFile");
@@ -658,7 +792,6 @@ void DataHandler::EndRun()
 // ------------------------------------------------------------------------ //
 void DataHandler::readEvent()
 {
-
     stringstream sx;
 
     bool ok_to_read = true;
@@ -692,9 +825,13 @@ void DataHandler::readEvent()
  //   datamap.clear();
  //   QTextStream out(&m_daqFile);
 
-    while(daqSocket().hasPendingDatagrams()){
-        datagram.resize(daqSocket().socket().pendingDatagramSize());
-        daqSocket().socket().readDatagram(datagram.data(), datagram.size(), &vmmip);
+    //thread
+  //  while(daqSocket().hasPendingDatagrams()){
+  //      datagram.resize(daqSocket().socket().pendingDatagramSize());
+  //      daqSocket().socket().readDatagram(datagram.data(), datagram.size(), &vmmip);
+    while(testDAQSocket->hasPendingDatagrams()) {
+        datagram.resize(testDAQSocket->pendingDatagramSize());
+        testDAQSocket->readDatagram(datagram.data(), datagram.size(), &vmmip);
 
 
         //qDebug() << datagram.toHex();
@@ -862,7 +999,7 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                 uint gray = DataHandler::grayToBinary(outBCID_);
                 _gray.push_back(gray);
 
-              //  if(dbg() && verbose) {
+               // if(dbg() && verbose) {
                 if(true) {
                     sx.str("");
                     sx << "channel          : " << channel_no << "\n"
@@ -1128,4 +1265,10 @@ uint DataHandler::grayToBinary(uint num)
         num = num ^ mask;
     }
     return num;
+}
+// ------------------------------------------------------------------------ //
+void DataHandler::daqThreadWhere(QString name)
+{
+    qDebug() << "DATAHANDLE THREAD WHERE   : " << QThread::currentThreadId();
+    qDebug() << "DATAHANDLE THREAD WHERE fname : " << name;
 }

@@ -172,7 +172,8 @@ int main(int argc, char *argv[])
         dataHandle.setWriteNtuple(writeNtuple);
         if(writeNtuple) {
             dataHandle.setIgnore16((bool)conf_handler.daqSettings().ignore16);
-            dataHandle.setupOutputFiles(conf_handler.daqSettings(),
+            //dataHandle.setupOutputFiles(conf_handler.daqSettings(),
+            dataHandle.setupOutputFiles(
                 "/Users/dantrim/workarea/NSW/VMMReadout/restructure/build/",
                 "test_run.root");
             dataHandle.setupOutputTrees();

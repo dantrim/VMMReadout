@@ -99,9 +99,9 @@ void VMMSocket::readyRead()
 
     if     (getName()=="fec" || getName()=="FEC")
         emit dataReady();
-    else if(getName()=="DAQ" || getName()=="daq") {
-        emit dataReady();
-    }
+//    else if(getName()=="DAQ" || getName()=="daq") {
+//        emit dataReady();
+//    }
 }
 // ----------------------------------------------------------------------- //
 quint64 VMMSocket::writeDatagram(const QByteArray& datagram,
@@ -190,7 +190,6 @@ QByteArray VMMSocket::processReply(const QString &ip_to_check, quint32 cmd_delay
         //debug
         datagram.resize(socket().pendingDatagramSize());
         socket().readDatagram(datagram.data(), datagram.size(), &vmmIP);
-        qDebug() << "YEP : " << datagram.toHex();
 
       //  buffer().resize(socket().pendingDatagramSize());
       //  socket().readDatagram(buffer().data(), buffer().size(), &vmmIP);

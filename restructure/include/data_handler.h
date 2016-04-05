@@ -43,23 +43,18 @@ class DataHandler : public QObject
         void LoadMessageHandler(MessageHandler& msg);
         MessageHandler& msg() { return *m_msg; }
 
-        void setCalibrationRun(bool calib) { m_calibRun = calib; }
         bool calibRun() { return m_calibRun; }
-        void setIgnore16(bool doit) { m_ignore16 = doit; }
         bool ignore16() { return m_ignore16; }
-        void setUseChannelMap(bool doit) { m_use_channelmap = doit; }
         bool useChannelMap() { return m_use_channelmap; }
-        bool LoadELxChannelMap(QString mapfilename="");
         int channelToStrip(int chipNumber, int channelNumber);
-        void setWriteNtuple(bool doit) { m_write = doit; }
         bool writeNtuple() { return m_write; }
 
         void LoadDAQSocket(VMMSocket& socket); 
         void connectDAQ();
 
-        bool setupOutputFiles(TriggerDAQ& daq, QString outdir = "",
-                                            QString filename = "");
-        int checkForExistingFiles(std::string dirname="", int expectedRunNumber=0);
+      //  bool setupOutputFiles(TriggerDAQ& daq, QString outdir = "",
+      //                                      QString filename = "");
+        static int checkForExistingFiles(std::string dirname="", int expectedRunNumber=0);
         bool checkQFileOK(std::string fname="");
         bool checkQFileFound(std::string fname="");
 
@@ -69,10 +64,6 @@ class DataHandler : public QObject
                                             int angle);
 
         QString getRootFileName(const QString& outdir);
-
-
-        // output ntuples
-        void setupOutputTrees();
 
 
         /////////////////////////////////////////
@@ -100,6 +91,9 @@ class DataHandler : public QObject
 
         int n_daqCnt;
 
+        //thread
+        void testFunction();
+
 
     private :
         bool m_dbg;
@@ -107,6 +101,9 @@ class DataHandler : public QObject
         bool m_write;
         bool m_ignore16;
         bool m_use_channelmap;
+
+        //thread
+        QUdpSocket *testDAQSocket;
 
         QString m_mapping_file; ///wait... is this needed?
         std::string m_mapping; //type of mapping file/ELx
@@ -214,11 +211,29 @@ class DataHandler : public QObject
 
     signals :
         void checkDAQCount();
+        void setRunDirOK(bool);
 
     public slots :
         void readEvent();
         void EndRun();
         void writeAndCloseDataFile();
+        void setUseChannelMap(bool);
+        void loadELxChannelMapping(QString);
+        void setWriteNtuple(bool);
+        void setIgnore16(bool);
+        void setCalibrationRun(bool);
+        bool setupOutputFiles(QString, QString);
+        void setupOutputTrees();
+        void connectDAQSocket();
+
+
+        void testMultiARG(QString,QString,QString);
+        //void setUseChannelMap(bool doit) { m_use_channelmap = doit; }
+
+        //thread
+        void testDAQSocketRead();
+        void daqThreadWhere(QString);
+        void testFunction2();
 
     private slots :
 

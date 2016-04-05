@@ -27,9 +27,9 @@ SocketHandler::SocketHandler(QObject* parent) :
     m_fecSocket(0),
     m_fecSetup(false),
     m_vmmappSocket(0),
-    m_vmmappSetup(false),
-    m_daqSocket(0),
-    m_daqSetup(false)
+    m_vmmappSetup(false)
+    //m_daqSocket(0),
+    //m_daqSetup(false)
 {
 }
 // ---------------------------------------------------------------------- //
@@ -119,20 +119,20 @@ void SocketHandler::addSocket(std::string name, quint16 bindingPort,
         m_fecSocket->Print();
 
     } // fec
-    else if(lname=="daq") {
-     //   if(m_daqSetup) return;
-        m_daqSocket = new VMMSocket();
-        m_daqSocket->LoadMessageHandler(msg());
-        m_daqSocket->setDebug(dbg());
-        m_daqSocket->setName(name);
-        m_daqSocket->setBindingPort(bindingPort);
-     //   if(!dryrun())
-     //       m_daqSocket->bindSocket(bindingPort, mode);
-        
-        m_daqSetup = true;
-        msg()("VMMSocket added:","SocketHandler::addSocket");
-        m_daqSocket->Print();
-    } //daq
+//    else if(lname=="daq") {
+//     //   if(m_daqSetup) return;
+//        m_daqSocket = new VMMSocket();
+//        m_daqSocket->LoadMessageHandler(msg());
+//        m_daqSocket->setDebug(dbg());
+//        m_daqSocket->setName(name);
+//        m_daqSocket->setBindingPort(bindingPort);
+//     //   if(!dryrun())
+//     //       m_daqSocket->bindSocket(bindingPort, mode);
+//        
+//        m_daqSetup = true;
+//        msg()("VMMSocket added:","SocketHandler::addSocket");
+//        m_daqSocket->Print();
+//    } //daq
     else if(lname=="vmmapp") {
         if(m_vmmappSetup) return;
         m_vmmappSocket = new VMMSocket();
@@ -149,7 +149,7 @@ void SocketHandler::addSocket(std::string name, quint16 bindingPort,
     } //vmmapp
     else {
         stringstream sx;
-        sx << "ERROR Current can only add the 'fec', 'daq', or 'vmmapp' sockets\n"
+        sx << "ERROR Current can only add the 'fec' or 'vmmapp' sockets\n"
            << "ERROR You have attemped to add a socket named: " << name;
         msg()(sx,"SocketHandler::addSocket",true);
         exit(1);
@@ -170,12 +170,12 @@ bool SocketHandler::vmmappSocketOK()
     return status;
 }
 // ---------------------------------------------------------------------- //
-bool SocketHandler::daqSocketOK()
-{
-    bool status = true;
-    if(!m_daqSocket) status = false;
-    return status;
-}
+//bool SocketHandler::daqSocketOK()
+//{
+//    bool status = true;
+//    if(!m_daqSocket) status = false;
+//    return status;
+//}
 // ---------------------------------------------------------------------- //
 void SocketHandler::SendDatagram(const QByteArray& datagram, const QString& ip,
             const quint16& destPort, const QString& whichSocket, const QString& callingFn)
@@ -282,13 +282,13 @@ VMMSocket& SocketHandler::getSocket(std::string whichSocket)
             exit(1);
         }
     }
-    else if(lname=="daq") {
-        if(m_daqSocket) return *m_daqSocket;
-        else {
-            msg()("Requested socket (daq) is null!","SocketHandler::getSocket",true);
-            exit(1);
-        }
-    }
+//    else if(lname=="daq") {
+//        if(m_daqSocket) return *m_daqSocket;
+//        else {
+//            msg()("Requested socket (daq) is null!","SocketHandler::getSocket",true);
+//            exit(1);
+//        }
+//    }
     else if(lname=="vmmapp") {
         if(m_vmmappSocket) return *m_vmmappSocket;
         else {
@@ -298,7 +298,7 @@ VMMSocket& SocketHandler::getSocket(std::string whichSocket)
     }
     else {
         sx.str("");
-        sx << "ERROR Currently can only retrieve the 'fec', 'daq', or 'vmmapp' sockets.\n"
+        sx << "ERROR Currently can only retrieve the 'fec' or 'vmmapp' sockets.\n"
            << "ERROR You have attempted to retrieve a socket named: " << whichSocket;
         msg()(sx, "SocketHandler::getSocket",true);
         exit(1);
@@ -307,15 +307,15 @@ VMMSocket& SocketHandler::getSocket(std::string whichSocket)
 // ---------------------------------------------------------------------- //
 void SocketHandler::Print()
 {
-    if(!m_fecSocket && !m_daqSocket && !m_vmmappSocket) {
+    if(!m_fecSocket && !m_vmmappSocket) {
         if(dbg())
             msg()("SocketHandler currently holds no sockets!",
                                                 "SocketHandler::Print");
     }
     if(m_fecSocket)
         fecSocket().Print();
-    if(m_daqSocket)
-        daqSocket().Print();
+//    if(m_daqSocket)
+//        daqSocket().Print();
     if(m_vmmappSocket)
         vmmappSocket().Print();
 }
