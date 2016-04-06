@@ -188,6 +188,7 @@ class MainWindow : public QMainWindow
         void setupOutputTrees();
         void checkReadyToRead();
         void startDAQSocket();
+        void closeDAQSocket();
 
         //thread
         void testThread(QString);

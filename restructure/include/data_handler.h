@@ -225,6 +225,7 @@ class DataHandler : public QObject
         bool setupOutputFiles(QString, QString);
         void setupOutputTrees();
         void connectDAQSocket();
+        void closeDAQSocket();
 
 
         void testMultiARG(QString,QString,QString);

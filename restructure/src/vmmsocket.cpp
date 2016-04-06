@@ -166,7 +166,6 @@ QByteArray VMMSocket::processReply(const QString &ip_to_check, quint32 cmd_delay
     stringstream sx;
     //debug
     sx << getName() << " socket processing replies for IP: " + ip_to_check.toStdString();
-    msg()(sx, "BLAH");sx.str("");
     if(dbg()) msg()("Processing datagram replies for IP: " + ip_to_check.toStdString(),
                         "VMMSocket::processReply");
 

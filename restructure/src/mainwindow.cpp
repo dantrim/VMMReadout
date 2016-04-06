@@ -124,6 +124,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(resetDAQCount()), vmmDataHandler, SLOT(resetDAQCount()));
     connect(this, SIGNAL(startDAQSocket()), vmmDataHandler,
                                 SLOT(connectDAQSocket()));
+    connect(this, SIGNAL(closeDAQSocket()), vmmDataHandler,
+                                SLOT(closeDAQSocket()));
 
     connect(this, SIGNAL(EndRun()), vmmDataHandler, SLOT(writeAndCloseDataFile()));
 
@@ -293,11 +295,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //thread
     vmmDataHandler->moveToThread(daqThread);
-    daqThread->start();
+    //daqThread->start();
 
     QString fname = "dummy_filename.txt";
     connect(this, SIGNAL(testThread(QString)), vmmDataHandler, SLOT(daqThreadWhere(QString)));
-    emit testThread(fname);
+    //emit testThread(fname);
     QUdpSocket* dummySocket = new QUdpSocket();
     dummySocket->bind(QHostAddress::LocalHost, 1234);
 
@@ -306,9 +308,9 @@ MainWindow::MainWindow(QWidget *parent) :
     dummySocket->writeDatagram(datatest, QHostAddress("10.0.0.2"), 6006);
     //dummySocket->writeDatagram(datatest, QHostAddress::LocalHost, 1235);
 
-    dataHandle().testFunction();
+    //dataHandle().testFunction();
     connect(this, SIGNAL(testFunction2()), vmmDataHandler, SLOT(testFunction2()));
-    emit testFunction2();
+    //emit testFunction2();
 
     QString one = "ONE";
     QString two = "TWO";
@@ -316,7 +318,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(this, SIGNAL(testMultiARG(QString,QString,QString)),
                             vmmDataHandler, SLOT(testMultiARG(QString,QString,QString)));
-    emit testMultiARG(one, two, three);
+    //emit testMultiARG(one, two, three);
 
 
     delete dummySocket;
@@ -1975,16 +1977,31 @@ void MainWindow::triggerHandler()
 
 {
     stringstream sx;
-    if(ui->useMapping->isChecked()) {
-        emit setUseChannelMap(true);
-        QString mapFileName = configHandle().daqSettings().mapping_file;
-        emit loadELxChannelMapping(mapFileName);
-    }
-    else {
-        emit setUseChannelMap(false);
-    }
+  //  if(ui->useMapping->isChecked()) {
+  //      emit setUseChannelMap(true);
+  //      QString mapFileName = configHandle().daqSettings().mapping_file;
+  //      emit loadELxChannelMapping(mapFileName);
+  //  }
+  //  else {
+  //      emit setUseChannelMap(false);
+  //  }
 
     if(QObject::sender() == ui->checkTriggers) {
+
+        //spin up the DAQ
+        daqThread->start();
+        delay();
+
+        //mapping
+        if(ui->useMapping->isChecked()) {
+            emit setUseChannelMap(true);
+            QString mapFileName = configHandle().daqSettings().mapping_file;
+            emit loadELxChannelMapping(mapFileName);
+        } else {
+            emit setUseChannelMap(false);
+        }
+
+
         ui->useMapping->setEnabled(false);
 
         emit setWriteNtuple(ui->writeData->isChecked());
@@ -2029,16 +2046,14 @@ void MainWindow::triggerHandler()
             msg()(sx); sx.str("");
             m_daqInProgress = true;
 
-            //thread
-            msg()("startDAQSocket");
-            delay(); delay();
-            emit startDAQSocket();
-
-
             //reset DAQ count for this run
             dataHandle().resetDAQCount();
             QString cnt;
             ui->triggerCntLabel->setText(cnt.number(dataHandle().getDAQCount(), 10));
+
+            //thread
+            delay(); delay();
+            emit startDAQSocket();
 
             // gui stuff
             ui->runStatusField->setText("Run:"+ui->runNumber->text()+" ongoing");
@@ -2046,7 +2061,9 @@ void MainWindow::triggerHandler()
             ui->checkTriggers->setEnabled(false);
             ui->stopTriggerCnt->setEnabled(true);
 
-            #warning ADD IN CALIBRATION LOOP
+            /////////////////////////////////////////////////
+            // calibration loop
+            /////////////////////////////////////////////////
             if(ui->calibration->isChecked()) {
                 if(ui->autoCalib->isChecked())
                     startCalibration();
@@ -2056,8 +2073,17 @@ void MainWindow::triggerHandler()
 
         } // writeData
         else {
+
+            sx << " * Starting DAQ run *";
+            msg()(sx); sx.str("");
+            m_daqInProgress = true;
+
+            //msg()("startDAQSocket");
+            emit startDAQSocket();
+
             ui->checkTriggers->setEnabled(false);
             ui->stopTriggerCnt->setEnabled(true);
+
         } // not writing data
 
         ui->runNumber->setEnabled(false);
@@ -2076,11 +2102,17 @@ void MainWindow::triggerHandler()
         m_daqInProgress = false;
         ui->useMapping->setEnabled(true);
 
+        // daq socket exists in another thread so must call it with signal
+        emit closeDAQSocket();
+
         ui->runStatusField->setText("Run:"+ui->runNumber->text()+" finished");
         ui->runStatusField->setStyleSheet("background-color: lightGray");
         if(ui->writeData->isChecked()) {
-            emit EndRun();
+            dataHandle().writeAndCloseDataFile();
+            //emit EndRun();
         } // writeData
+        daqThread->quit();
+
 
         ui->runNumber->setValue(ui->runNumber->value()+1);
         ui->checkTriggers->setEnabled(true);

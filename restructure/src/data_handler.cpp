@@ -60,13 +60,21 @@ DataHandler::DataHandler(QObject *parent) :
 // ------------------------------------------------------------------------ //
 void DataHandler::connectDAQSocket()
 {
-    qDebug() << "CONNECT DAQ SOCKET THREAD : " << QThread::currentThreadId();
+    //qDebug() << "CONNECT DAQ SOCKET THREAD : " << QThread::currentThreadId();
     bool bind = testDAQSocket->bind(6006);
-    if(bind)
-        msg()("DAQ SOCKET BOUND SUCCESS");
+    if(bind){ }
+        //msg()("DAQ SOCKET BOUND SUCCESS");
     else {
         msg()("DAQ SOCKET FAIL TO BIND");
     }
+}
+// ------------------------------------------------------------------------ //
+void DataHandler::closeDAQSocket()
+{
+    // close the socket
+    //msg()("Closing DAQ socket", "DataHandler::closeDAQSocket");
+    testDAQSocket->close();
+    testDAQSocket->disconnectFromHost();
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::testFunction2()
@@ -687,11 +695,10 @@ void DataHandler::setupOutputTrees()
 void DataHandler::writeAndCloseDataFile()
 {
 
-    // close file
-    msg()("Closing DAQ socket", "DataHandler::writeAndCloseDataFile");
-    testDAQSocket->close();
-    testDAQSocket->disconnectFromHost();
-
+  //  // close the socket
+  //  msg()("Closing DAQ socket", "DataHandler::writeAndCloseDataFile");
+  //  testDAQSocket->close();
+  //  testDAQSocket->disconnectFromHost();
 
     if(dbg())
         msg()("Writing output files and closing...",
@@ -850,7 +857,8 @@ void DataHandler::readEvent()
 //        datamap.insert(ip, arr); // fill the value at datamap[ip] = arr
 
         // here is where we write the ntuple
-        if(writeNtuple())
+        //if(writeNtuple())
+        // still decode even if not writing out
             decodeAndWriteData(datagram);
 
     } // while loop
