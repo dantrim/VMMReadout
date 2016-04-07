@@ -113,8 +113,10 @@ void Configuration::SendConfig()
         // update global command counter
         socket().updateCommandCounter();
         //debug
-        sx << "sending command SPI at comamnd #: " << socket().commandCounter();
-        msg()(sx,"Configuration::SendConfig");sx.str("");
+        if(dbg()) {
+            sx << "sending command SPI at comamnd #: " << socket().commandCounter();
+            msg()(sx,"Configuration::SendConfig");sx.str("");
+        }
 
         datagram.clear();
         QDataStream out (&datagram, QIODevice::WriteOnly);
@@ -145,9 +147,11 @@ void Configuration::SendConfig()
 
         bool readOK = true;
         //debug
-        sx.str("");
-        sx << "Send config to port: " << send_to_port;
-        msg()(sx);sx.str("");
+        if(dbg()) {
+            sx.str("");
+            sx << "Send config to port: " << send_to_port;
+            msg()(sx);sx.str("");
+        }
         socket().SendDatagram(datagram, ip, send_to_port, "fec",
                                         "Configuration::SendConfig"); 
         //sleep(2);

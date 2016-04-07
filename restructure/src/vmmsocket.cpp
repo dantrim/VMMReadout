@@ -182,9 +182,11 @@ QByteArray VMMSocket::processReply(const QString &ip_to_check, quint32 cmd_delay
     while(socket().hasPendingDatagrams()) {
 
         //debug
-        sx.str("");
-        sx << "socket " << getName() << " has datagrams";
-        msg()(sx,"VMMSocket::processReply");sx.str("");
+        if(dbg()) {
+            sx.str("");
+            sx << "socket " << getName() << " has datagrams";
+            msg()(sx,"VMMSocket::processReply");sx.str("");
+        }
 
         //debug
         datagram.resize(socket().pendingDatagramSize());
@@ -253,9 +255,9 @@ QByteArray VMMSocket::processReply(const QString &ip_to_check, quint32 cmd_delay
             } // unexpected ip
         } // ip
     } // replies > 0
-    sx.str("");
-    sx << "replies size : " << replies.size() << endl;
-    msg()(sx);
+    //sx.str("");
+    //sx << "replies size : " << replies.size() << endl;
+    //msg()(sx);
 
     if(!replies.contains(ip_to_check)) {
         sx.str("");

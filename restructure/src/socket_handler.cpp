@@ -235,9 +235,9 @@ QByteArray SocketHandler::processReply(std::string name, const QString& ip_to_ch
 {
     QByteArray outbuffer;
     quint32 count = commandCounter();
-    stringstream sx;
-    sx << "HANDLER: delay = " << cmd_delay << " global: " << count;
-    msg()(sx, "SocketHandler::processReply");
+    //stringstream sx;
+    //sx << "HANDLER: delay = " << cmd_delay << " global: " << count;
+    //msg()(sx, "SocketHandler::processReply");
 
     if(dryrun() || m_skipProcessing) {
         msg()("NOT PROCESSING REPLIES!", "SocketHandler::processReply");

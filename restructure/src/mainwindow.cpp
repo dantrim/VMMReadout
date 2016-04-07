@@ -45,7 +45,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //thread
     daqThread = new QThread();
-    qDebug() << "MAINWINDOW THREAD: " << QThread::currentThreadId();
 
     vmmMessageHandler = new MessageHandler();
     vmmMessageHandler->setMessageSize(75);
@@ -121,7 +120,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(vmmDataHandler, SIGNAL(setRunDirOK(bool)), this, SLOT(setRunDirOK(bool)));
 
     connect(this, SIGNAL(setupOutputTrees()), vmmDataHandler, SLOT(setupOutputTrees()));
-    connect(this, SIGNAL(resetDAQCount()), vmmDataHandler, SLOT(resetDAQCount()));
     connect(this, SIGNAL(startDAQSocket()), vmmDataHandler,
                                 SLOT(connectDAQSocket()));
     connect(this, SIGNAL(closeDAQSocket()), vmmDataHandler,
@@ -297,31 +295,31 @@ MainWindow::MainWindow(QWidget *parent) :
     vmmDataHandler->moveToThread(daqThread);
     //daqThread->start();
 
-    QString fname = "dummy_filename.txt";
-    connect(this, SIGNAL(testThread(QString)), vmmDataHandler, SLOT(daqThreadWhere(QString)));
-    //emit testThread(fname);
-    QUdpSocket* dummySocket = new QUdpSocket();
-    dummySocket->bind(QHostAddress::LocalHost, 1234);
+   // QString fname = "dummy_filename.txt";
+   // connect(this, SIGNAL(testThread(QString)), vmmDataHandler, SLOT(daqThreadWhere(QString)));
+   // //emit testThread(fname);
+   // QUdpSocket* dummySocket = new QUdpSocket();
+   // dummySocket->bind(QHostAddress::LocalHost, 1234);
 
-    QByteArray datatest;
-    datatest.append(" >>>> THIS IS A TEST DATAGRAM <<<< ");
-    dummySocket->writeDatagram(datatest, QHostAddress("10.0.0.2"), 6006);
-    //dummySocket->writeDatagram(datatest, QHostAddress::LocalHost, 1235);
+   // QByteArray datatest;
+   // datatest.append(" >>>> THIS IS A TEST DATAGRAM <<<< ");
+   // dummySocket->writeDatagram(datatest, QHostAddress("10.0.0.2"), 6006);
+   // //dummySocket->writeDatagram(datatest, QHostAddress::LocalHost, 1235);
 
-    //dataHandle().testFunction();
-    connect(this, SIGNAL(testFunction2()), vmmDataHandler, SLOT(testFunction2()));
-    //emit testFunction2();
+   // //dataHandle().testFunction();
+   // connect(this, SIGNAL(testFunction2()), vmmDataHandler, SLOT(testFunction2()));
+   // //emit testFunction2();
 
-    QString one = "ONE";
-    QString two = "TWO";
-    QString three = "THREE";
+   // QString one = "ONE";
+   // QString two = "TWO";
+   // QString three = "THREE";
 
-    connect(this, SIGNAL(testMultiARG(QString,QString,QString)),
-                            vmmDataHandler, SLOT(testMultiARG(QString,QString,QString)));
-    //emit testMultiARG(one, two, three);
+   // connect(this, SIGNAL(testMultiARG(QString,QString,QString)),
+   //                         vmmDataHandler, SLOT(testMultiARG(QString,QString,QString)));
+   // //emit testMultiARG(one, two, three);
 
 
-    delete dummySocket;
+   // delete dummySocket;
 
 }
 
@@ -1912,7 +1910,9 @@ void MainWindow::setHDMIMask()
 // ------------------------------------------------------------------------- //
 void MainWindow::setART()
 {
-    runModule().enableART();
+    bool enabling = true;
+    if(!(ui->enableART->isChecked())) enabling = false;
+    runModule().enableART(enabling);
     ui->s6RB->setChecked(true);
 }
 // ------------------------------------------------------------------------- //

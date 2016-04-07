@@ -44,9 +44,8 @@ DataHandler::DataHandler(QObject *parent) :
     m_runProperties(NULL),
     m_artTree(NULL)
 {
-    qDebug() << "DATAHANDLE THREAD (CONSTRUCTOR) : " << QThread::currentThreadId();
     //thread
-    testDAQSocket = new QUdpSocket();
+   // testDAQSocket = new QUdpSocket();
    // bool bind = testDAQSocket->bind(6006, QAbstractSocket::DefaultForPlatform); 
    // if(bind) {
    //     msg()("DAQ SOCKET SUCCESSFULLY BOUND");
@@ -55,24 +54,61 @@ DataHandler::DataHandler(QObject *parent) :
    // }
    // //testDAQSocket->bind(QHostAddress::LocalHost, 1235);
     //connect(testDAQSocket, SIGNAL(readyRead()), this, SLOT(testDAQSocketRead()));
-    connect(testDAQSocket, SIGNAL(readyRead()), this, SLOT(readEvent()));
+   // connect(testDAQSocket, SIGNAL(readyRead()), this, SLOT(readEvent()));
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::connectDAQSocket()
 {
-    //qDebug() << "CONNECT DAQ SOCKET THREAD : " << QThread::currentThreadId();
-    bool bind = testDAQSocket->bind(6006);
-    if(bind){ }
-        //msg()("DAQ SOCKET BOUND SUCCESS");
-    else {
-        msg()("DAQ SOCKET FAIL TO BIND");
+    stringstream sx;
+
+    int daqport = 6006;
+
+    if(!testDAQSocket) {
+        msg()("Initializing DAQ socket...","DataHandler::connectDAQSocket");
+        testDAQSocket = new QUdpSocket();
+        connect(testDAQSocket, SIGNAL(readyRead()), this, SLOT(readEvent()));
     }
+
+    if(testDAQSocket->state() == QAbstractSocket::UnconnectedState) {
+        if(dbg()){
+            sx << "About to re-bind DAQ socket";
+            msg()(sx,"DataHandler::connectDAQSocket"); sx.str("");
+        }
+        bool bnd = testDAQSocket->bind(daqport, QUdpSocket::ShareAddress);
+        if(!bnd) {
+            sx << "ERROR Unable to re-bind DAQ socket to port " << daqport;
+            msg()(sx, "DataHandler::connectDAQSocket"); sx.str(""); 
+            if(dbg()) {
+                sx << "Closing and disconnecting DAQ socket";
+                msg()(sx,"DataHandler::connectDAQSocket"); sx.str("");
+            } 
+            testDAQSocket->close();
+            testDAQSocket->disconnectFromHost();
+        } // not bnd correctly
+        else {
+            if(dbg()) {
+                sx << "DAQ socket successfully bound to port " << daqport;
+                msg()(sx,"DataHandler::connectDAQSocket"); sx.str("");
+            }
+        } // bnd ok
+    }
+
+    //qDebug() << "CONNECT DAQ SOCKET THREAD : " << QThread::currentThreadId();
+
+
+
+//    bool bind = testDAQSocket->bind(6006);
+//    if(bind){ }
+//        //msg()("DAQ SOCKET BOUND SUCCESS");
+//    else {
+//        msg()("DAQ SOCKET FAIL TO BIND");
+//    }
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::closeDAQSocket()
 {
     // close the socket
-    //msg()("Closing DAQ socket", "DataHandler::closeDAQSocket");
+    if(dbg()) msg()("Closing DAQ socket", "DataHandler::closeDAQSocket");
     testDAQSocket->close();
     testDAQSocket->disconnectFromHost();
 }

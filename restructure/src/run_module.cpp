@@ -422,9 +422,9 @@ void RunModule::ACQoff()
         cmdLength   = "FFFF";
         msbCounter  = "0x80000000";
 
-        stringstream sx;
-        sx << "AQCOFF command counter = " << socket().commandCounter();
-        msg()(sx);sx.str("");
+        //stringstream sx;
+        //sx << "AQCOFF command counter = " << socket().commandCounter();
+        //msg()(sx);sx.str("");
 
         out << (quint32)(socket().commandCounter() + msbCounter.toUInt(&ok,16)) //[0,3]
             << (quint16) 0 //[4,5]
@@ -548,7 +548,8 @@ void RunModule::setEventHeaders(const int bld_info, const int bld_mode)
 // ------------------------------------------------------------------------ //
 void RunModule::resetASICs()
 {
-    if(dbg()) msg()("Resetting ASICs...","RunModule::resetASICs");
+    msg()("Resetting VMMs...","RunModule::resetASICs");
+    //if(dbg()) msg()("Resetting ASICs...","RunModule::resetASICs");
 
     bool ok;
     QByteArray datagram;
@@ -737,9 +738,13 @@ void RunModule::setMask()
 
 }
 // ------------------------------------------------------------------------ //
-void RunModule::enableART()
+void RunModule::enableART(bool enabling)
 {
-    if(dbg()) msg()("Enabling ART...","RunModule::enableART");
+    if(enabling)
+        msg()("Enabling ART...","RunModule::enableART");
+    else
+        msg()("Disabling ART...","RunModule::enableART");
+    //if(dbg()) msg()("Enabling ART...","RunModule::enableART");
 
     bool ok;
     QByteArray datagram;

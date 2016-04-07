@@ -66,7 +66,7 @@ class RunModule : public QObject
         void resetASICs();
         void resetFEC(bool do_reset);
         void setMask();
-        void enableART();
+        void enableART(bool enabling);
         void checkLinkStatus();
         void resetLinks();
         void s6clocks(int cktk, int ckbc, int ckbc_skew);
