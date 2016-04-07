@@ -52,6 +52,7 @@ SOURCES += $$sourcepath/main.cpp\
            $$sourcepath/socket_handler.cpp\
            $$sourcepath/vmmsocket.cpp\
            $$sourcepath/data_handler.cpp\
+           $$sourcepath/calibration_module.cpp\
            $$sourcepath/message_handler.cpp
 
 HEADERS  += $$includepath/mainwindow.h\
@@ -61,6 +62,7 @@ HEADERS  += $$includepath/mainwindow.h\
             $$includepath/socket_handler.h\
             $$includepath/vmmsocket.h\
             $$includepath/data_handler.h\
+            $$includepath/calibration_module.h\
             $$includepath/message_handler.h
 
 FORMS    += $$sourcepath/mainwindow.ui

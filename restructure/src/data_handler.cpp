@@ -862,8 +862,8 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                 uint gray = DataHandler::grayToBinary(outBCID_);
                 _gray.push_back(gray);
 
-              //  if(dbg() && verbose) {
-                if(true) {
+                if(dbg() && verbose) {
+              //  if(true) {
                     sx.str("");
                     sx << "channel          : " << channel_no << "\n"
                        << "flag             : " << flag << "\n"

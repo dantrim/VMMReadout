@@ -5,6 +5,29 @@
 #include <iostream>
 using namespace std;
 
+// qt
+#include <QEventLoop>
+
+
+//////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------ //
+//  pdoCalibration struct
+// ------------------------------------------------------------------------ //
+//////////////////////////////////////////////////////////////////////////////
+pdoCalibration::pdoCalibration()
+{
+    gain_start = 1;
+    gain_end = 1;
+
+    threshold_start = 200;
+    threshold_end = 300;
+    threshold_step = 50;
+
+    pulser_start = 200;
+    pulser_end = 300;
+    pulser_step = 50;
+}
+
 
 //////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------ //
@@ -20,6 +43,13 @@ CalibModule::CalibModule(QObject *parent) :
     m_chan_end(1),
     m_advance(false)
 {
+    connect(this, SIGNAL(calibACQcomplete()), this, SLOT(advanceCalibLoop()));
+}
+// ------------------------------------------------------------------------ //
+void CalibModule::advanceCalibLoop()
+{
+    msg()("Setting advance to true", "CalibModule::advanceCalibLoop");
+    m_advance = true;
 }
 // ------------------------------------------------------------------------ //
 void CalibModule::LoadMessageHandler(MessageHandler& m)
@@ -57,7 +87,7 @@ bool CalibModule::setChannelRange(int start, int end)
     return ok;
 }
 // ------------------------------------------------------------------------ //
-bool CalibModule::loadPDOCalibrationRecipe(pdoCalib& calib)
+bool CalibModule::loadPDOCalibrationRecipe(pdoCalibration& calib)
 {
 
     stringstream sx;
@@ -154,27 +184,28 @@ bool CalibModule::beginPDOCalibration()
                     emit setChannels(ch);
                     // put delays in within MainWindow
 
-                    emit setupCalibConfig();
+                    emit setupCalibrationConfig();
 
-                    emit setCalibACQon(events_per_chan);
+                    emit setCalibrationACQon(events_per_chan);
 
 
-                    {
-                        // mainwindow needs to have a signal attached to calibmodule slot
-                        // whcih then emits 'calibACQcomplete'
-                        // or in mainwindow just call "emit calibModule().calibACQcomplete()"
+                    while(!m_advance) {}
 
-                        QEventLoop acqLoop;
-                        acqLoop.connect(this, SIGNAL(calibACQcomplete()), SLOT(quit()));
-                        acqLoop.exec();
-                    }
+                   // {
+                   //     // mainwindow needs to have a signal attached to calibmodule slot
+                   //     // whcih then emits 'calibACQcomplete'
+                   //     // or in mainwindow just call "emit calibModule().calibACQcomplete()"
+                   //     QEventLoop acqLoop;
+                   //     acqLoop.connect(this, SIGNAL(calibACQcomplete()), SLOT(quit()));
+                   //     acqLoop.exec();
+                   // }
                     //while(!m_advance)
                     //{
                     //// in setCalibACQon MainWindow will have a signal
                     //// to toggle m_advance
                     //}
 
-                emit setCalibACQoff();
+                emit setCalibrationACQoff();
                     
                 } // ch
 
@@ -185,8 +216,8 @@ bool CalibModule::beginPDOCalibration()
        << "   * PDO calibration finished *\n"
        << "-----------------------------------";
     msg()(sx,"CalibModule::beginPDOCalibration"); sx.str("");
-    emit endCalibRun();
+    emit endCalibrationRun();
 
-
+    return true;
 
 }

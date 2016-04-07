@@ -28,12 +28,13 @@ MainWindow::MainWindow(QWidget *parent) :
     vmmSocketHandler(0),
     vmmConfigModule(0),
     vmmRunModule(0),
+    vmmDataHandler(0),
+    vmmCalibModule(0),
     m_commOK(false),
     m_configOK(false),
     m_tdaqOK(false),
     m_runModeOK(false),
     m_acqMode(""),
-    m_daqInProgress(false),
     m_hdmiMaskON(false)
 {
 
@@ -67,19 +68,23 @@ MainWindow::MainWindow(QWidget *parent) :
     vmmConfigModule  = new Configuration();
     vmmRunModule     = new RunModule();
     vmmDataHandler   = new DataHandler();
+    vmmCalibModule = new CalibModule();
 
     vmmConfigHandler->LoadMessageHandler(msg());
     vmmSocketHandler->LoadMessageHandler(msg());
     vmmConfigModule ->LoadMessageHandler(msg());
     vmmDataHandler  ->LoadMessageHandler(msg());
+    vmmCalibModule  ->LoadMessageHandler(msg());
     vmmRunModule    ->LoadMessageHandler(msg());
 
 
+    m_dbg = false;
     vmmConfigHandler ->setDebug(false);
     vmmSocketHandler ->setDebug(false);
     vmmConfigModule  ->setDebug(false);
     vmmRunModule     ->setDebug(false);
     vmmDataHandler   ->setDebug(false);
+    vmmCalibModule   ->setDebug(false);
 
     // set dry run for testing
     //msg()(" !! SOCKETHANDLER SET FOR DRY RUN !! ");
@@ -252,7 +257,24 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->enableDebugPB, SIGNAL(stateChanged(int)),
                                     this, SLOT(toggleDebug()));
 
-
+    /////////////////////////////////////////////////////////////////////
+    //-----------------------------------------------------------------//
+    //  calibration
+    //-----------------------------------------------------------------//
+    /////////////////////////////////////////////////////////////////////
+    //frack
+    connect(vmmCalibModule, SIGNAL(setPDOCalibrationState(int,int,int)),
+                        this, SLOT(setPDOCalibrationState(int,int,int)));
+    connect(vmmCalibModule, SIGNAL(setChannels(int)),
+                        this, SLOT(setChannelsForCalib(int)));
+    connect(vmmCalibModule, SIGNAL(setupCalibrationConfig()),
+                        this, SLOT(setupCalibrationConfig()));
+    connect(vmmCalibModule, SIGNAL(setCalibrationACQon(int)),
+                        this, SLOT(setCalibrationACQon(int)));
+    connect(vmmCalibModule, SIGNAL(setCalibrationACQoff()),
+                        this, SLOT(setCalibrationACQoff()));
+    connect(vmmCalibModule, SIGNAL(endCalibrationRun()),
+                        this, SLOT(endCalibrationRun()));
 
     /////////////////////////////////////////////////////////////////////
     //-----------------------------------------------------------------//
@@ -311,18 +333,22 @@ void MainWindow::selectOutputDirectory()
 void MainWindow::toggleDebug()
 {
     if(ui->enableDebugPB->isChecked()) {
+        m_dbg = true;
         vmmConfigHandler ->setDebug(true);
         vmmSocketHandler ->setDebug(true);
         vmmConfigModule  ->setDebug(true);
         vmmRunModule     ->setDebug(true);
         vmmDataHandler   ->setDebug(true);
+        vmmCalibModule   ->setDebug(true);
     }
     else {
+        m_dbg = false;
         vmmConfigHandler ->setDebug(false);
         vmmSocketHandler ->setDebug(false);
         vmmConfigModule  ->setDebug(false);
         vmmRunModule     ->setDebug(false);
         vmmDataHandler   ->setDebug(false);
+        vmmCalibModule   ->setDebug(false);
     }
 }
 // ------------------------------------------------------------------------- //
@@ -787,6 +813,9 @@ void MainWindow::SetInitialState()
     #warning is this conversion still valid?
     ui->dacmvLabel->setText(tmp.number((0.6862*ui->sdt->value()+63.478), 'f', 2) + " mV");
     ui->dacmvLabel_TP->setText(tmp.number((0.6862*ui->sdp_2->value()+63.478), 'f', 2) + " mV");
+
+    // disable calibration
+    ui->calibration->setChecked(false);
 
 }
 // ------------------------------------------------------------------------- //
@@ -1942,7 +1971,6 @@ void MainWindow::triggerHandler()
     if(QObject::sender() == ui->checkTriggers) {
         sx << " * Starting DAQ run *";
         msg()(sx); sx.str("");
-        m_daqInProgress = true;
         ui->useMapping->setEnabled(false);
 
         //socketHandle().addSocket("DAQ", DAQPORT); 
@@ -2011,10 +2039,39 @@ void MainWindow::triggerHandler()
 
             #warning ADD IN CALIBRATION LOOP
             if(ui->calibration->isChecked()) {
-                if(ui->autoCalib->isChecked())
-                    startCalibration();
-                else if(ui->manCalib->isChecked())
-                    msg()("Manual Calibration");
+
+                // should add check box for PDO vs. TDO calibration
+                if(ui->autoCalib->isChecked()) {
+
+                    /////////////////////////////////////////
+                    // load the calibration recipe
+                    /////////////////////////////////////////
+                    pdoCalibration calib;
+
+                    calib.gain_start = ui->sg_cal_min->currentIndex();
+                    calib.gain_end = ui->sg_cal_max->currentIndex();
+
+                    calib.threshold_start = int(ui->sdt_cal_min->value());
+                    calib.threshold_end   = int(ui->sdt_cal_max->value());
+                    calib.threshold_step  = int(ui->sdt_cal_step->value());
+
+                    calib.pulser_start = int(ui->sdp_cal_min->value());
+                    calib.pulser_end   = int(ui->sdp_cal_max->value());
+                    calib.pulser_step  = int(ui->sdp_cal_step->value());
+
+                    calibModule().loadPDOCalibrationRecipe(calib);
+
+                    calibModule().setNEvents(int(ui->evCalib->text().toUInt(&ok,10)));
+                    calibModule().setChannelRange(int(ui->chRange_calib_min->currentIndex()),
+                                                  int(ui->chRange_calib_max->currentIndex()));
+
+                    calibModule().beginPDOCalibration(); 
+                }
+
+              //  if(ui->autoCalib->isChecked())
+              //      startCalibration();
+              //  else if(ui->manCalib->isChecked())
+              //      msg()("Manual Calibration");
             } // calibration
 
         } // writeData
@@ -2037,7 +2094,6 @@ void MainWindow::triggerHandler()
     if(QObject::sender() == ui->stopTriggerCnt) {
         sx << " * Ending DAQ run " << ui->runNumber->value() << " *";
         msg()(sx); sx.str("");
-        m_daqInProgress = false;
         ui->useMapping->setEnabled(true);
 
         ui->runStatusField->setText("Run:"+ui->runNumber->text()+" finished");
@@ -2061,6 +2117,112 @@ void MainWindow::updateTriggerCount()
 {
     QString cnt_;
     ui->triggerCntLabel->setText(cnt_.number(dataHandle().getDAQCount(),10));
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::setPDOCalibrationState(int gain, int threshold_daq, int pulser_daq)
+{
+    ui->sg->setCurrentIndex(gain);
+    ui->sdt->setValue(threshold_daq);
+    ui->sdp_2->setValue(pulser_daq);
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::setChannelsForCalib(int calib_channel)
+{
+    QString style_off = "background-color: lightGray";
+
+    for(int ch = 0; ch < 64; ch++) {
+        VMMSM[ch]->setStyleSheet(style_off);
+        VMMSMBool[ch] = 0;
+        VMMSMBoolAll = 0;
+        VMMST[ch]->setStyleSheet(style_off);
+        VMMSTBool[ch] = 0;
+        VMMSTBoolAll = 0;
+    } // ch
+
+    if(ui->masking_calib->isChecked()) {
+        emit SMLabel->click();
+        VMMSM[calib_channel]->click();
+        if(calib_channel>0)  VMMSM[calib_channel-1]->click();
+        if(calib_channel<63) VMMSM[calib_channel+1]->click();
+    } // masking
+
+    VMMST[calib_channel]->click();
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::setupCalibrationConfig()
+{
+    if(dbg()) msg()("   --> Setting mask...");
+    emit ui->setMask->click();
+    delay();
+
+    if(dbg()) msg()("   --> Setting headers...");
+    emit ui->setEvbld->click();
+    delay();
+
+    if(dbg()) msg()("   --> Initializing electronics...");
+    emit ui->SendConfiguration->click();
+    delay();
+    emit ui->SendConfiguration->click();
+    delay();
+
+    if(dbg()) msg()("   --> Setting T/DAQ configuration...");
+    emit ui->setTrgAcqConst->click();
+    delay();
+
+    if(dbg()) msg()("   --> Setting pulser DAC...");
+    emit ui->trgPulser->click();
+
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::setCalibrationACQon(int events_for_loop)
+{
+    bool ok;
+
+    int initial_number_of_events = ui->triggerCntLabel->text().toUInt(&ok,10);
+
+
+
+    emit ui->onACQ->click();
+
+    stringstream sx;
+    sx << "loop with intiial : " << initial_number_of_events
+       << "  and total tot loop: " << events_for_loop;
+    msg()(sx);
+
+    //int x = 0;
+    while(int(ui->triggerCntLabel->text().toUInt(&ok,10) - initial_number_of_events)
+                    <= events_for_loop) {
+        msg()(" * Waiting for event collecting * ");
+        sx.str("");
+        sx << ui->triggerCntLabel->text().toUInt(&ok,10);
+        msg()(sx);
+        delay();
+        delay();
+        delay();
+        delay();
+        //if(x>10) { x = 0; break; }
+        //x++;
+    } // while loop
+
+    emit calibModule().calibACQcomplete();
+
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::setCalibrationACQoff()
+{
+    emit ui->offACQ->click();
+    delay();
+    delay();
+    delay();
+
+    emit ui->asic_reset->click();
+    delay();
+    delay();
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::endCalibrationRun()
+{
+    emit ui->stopTriggerCnt->click();
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::startCalibration()

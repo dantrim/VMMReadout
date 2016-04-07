@@ -16,6 +16,7 @@
 #include "run_module.h"
 #include "socket_handler.h"
 #include "data_handler.h"
+#include "calibration_module.h"
 #include "message_handler.h"
 
 namespace Ui {
@@ -29,6 +30,8 @@ class MainWindow : public QMainWindow
     public:
         explicit MainWindow(QWidget *parent = 0);
         ~MainWindow();
+
+        bool dbg() { return m_dbg; }
 
         bool eventFilter(QObject *obj, QEvent *event);
 
@@ -51,6 +54,7 @@ class MainWindow : public QMainWindow
         Configuration& configModule() { return *vmmConfigModule;  }
         RunModule&     runModule()    { return *vmmRunModule;     }
         DataHandler&   dataHandle()   { return *vmmDataHandler;    }
+        CalibModule&   calibModule()  { return *vmmCalibModule; }
         MessageHandler& msg()         { return *vmmMessageHandler; }
     
         //////////////////////////////////////////////////////
@@ -141,6 +145,7 @@ class MainWindow : public QMainWindow
     
     private:
         Ui::MainWindow *ui;
+        bool m_dbg;
 
         // sets the GUI to whatever state
         // the ConfigHandle object is in
@@ -157,6 +162,7 @@ class MainWindow : public QMainWindow
         Configuration *vmmConfigModule;
         RunModule     *vmmRunModule;
         DataHandler   *vmmDataHandler;
+        CalibModule *vmmCalibModule;
         MessageHandler *vmmMessageHandler;
 
 
@@ -239,6 +245,14 @@ class MainWindow : public QMainWindow
 
         // connect to IP
         void Connect();
+
+        // calibration-related
+        void setPDOCalibrationState(int,int,int);
+        void setChannelsForCalib(int);
+        void setupCalibrationConfig();
+        void setCalibrationACQon(int);
+        void setCalibrationACQoff();
+        void endCalibrationRun();
 
 };
 

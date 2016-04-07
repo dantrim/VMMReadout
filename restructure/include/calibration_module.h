@@ -80,12 +80,15 @@ class CalibModule : public QObject
     signals :
         void setPDOCalibrationState(int,int,int); // set gain, thresh, amplitude
         void setChannels(int);
-        void setupCalibConfig();
-        void setCalibACQon(int);
-        void setCalibACQoff();
-        void endCalibRun();
+        void setupCalibrationConfig();
+        void setCalibrationACQon(int);
+        void setCalibrationACQoff();
+        void endCalibrationRun();
+
+        void calibACQcomplete();
 
     public slots :
+        void advanceCalibLoop();
 
 
 
