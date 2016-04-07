@@ -450,7 +450,6 @@ void RunModule::ACQoff()
             buffer = socket().fecSocket().processReply(ip, 0, socket().commandCounter()); //.processReply("fec", ip);
 
             //QByteArray buffer = socket().buffer("fec");
-            qDebug() << "CRAP : " << buffer.toHex() << " size : " << buffer.size();
 
             QString bin, hex;
             QDataStream out (&buffer, QIODevice::WriteOnly);
