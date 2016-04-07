@@ -1097,9 +1097,7 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
             m_artFlag.clear();
 
             QString art_channel = datagram.mid(7,1).toHex();
-          //  cout << "ART CHANNEL = " << art_channel.toStdString() << endl;
-          //  qDebug() << "ARTGRAM : " << datagram.toHex();
-            qDebug() << " > art size : " << datagram.size();
+           // qDebug() << " > art size : " << datagram.size();
             for(int i = 12; i < (int)datagram.size(); ) {
                 quint32 art_timestamp = datagram.mid(i,2).toHex().toUInt(&ok,16);
                 quint32 art_data = datagram.mid(i+2,2).toHex().toUInt(&ok,16);
@@ -1122,8 +1120,8 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                     }
                 }
 
-               // if(dbg() && test_art) {
-                if(test_art) {
+                if(dbg() && test_art) {
+               // if(test_art) {
                     QString art_timestamp_test = datagram.mid(i,2).toHex();
                     QString art1_test = datagram.mid(i+2,1);
                     QString art2_test = datagram.mid(i+3,1);
