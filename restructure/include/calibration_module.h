@@ -63,7 +63,10 @@ class CalibModule : public QObject
         /////////////////////////////////
         bool loadPDOCalibrationRecipe(pdoCalibration& calib);
         pdoCalibration& pdoCalib() { return m_pdoCalib; }
-        bool beginPDOCalibration();
+        void beginPDOCalibration();
+
+        bool continueLoop() { return m_continueLoop; }
+        void quitLoop();
 
     private :
         bool m_dbg;
@@ -76,8 +79,10 @@ class CalibModule : public QObject
         pdoCalibration m_pdoCalib;
 
         bool m_advance;
+        bool m_continueLoop;
 
     signals :
+        void calibrationLoopState(bool);
         void setPDOCalibrationState(int,int,int); // set gain, thresh, amplitude
         void setChannels(int);
         void setupCalibrationConfig();
@@ -89,6 +94,7 @@ class CalibModule : public QObject
 
     public slots :
         void advanceCalibLoop();
+        void stopCalibrationLoop();
 
 
 

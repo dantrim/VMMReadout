@@ -172,10 +172,12 @@ class MainWindow : public QMainWindow
         bool m_runModeOK;
         QString m_acqMode;
         bool m_hdmiMaskON;
+        bool m_inCalibrationLoop;
 
     signals :
         void checkFSM();
         void EndRun();
+        void stopCalibrationLoop();
 
     public slots:
         // dac-to-mV
@@ -247,6 +249,7 @@ class MainWindow : public QMainWindow
         void Connect();
 
         // calibration-related
+        void calibrationLoopState(bool);
         void setPDOCalibrationState(int,int,int);
         void setChannelsForCalib(int);
         void setupCalibrationConfig();

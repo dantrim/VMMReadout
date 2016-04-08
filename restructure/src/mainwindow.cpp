@@ -35,7 +35,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_tdaqOK(false),
     m_runModeOK(false),
     m_acqMode(""),
-    m_hdmiMaskON(false)
+    m_hdmiMaskON(false),
+    m_inCalibrationLoop(false)
 {
 
 
@@ -263,6 +264,10 @@ MainWindow::MainWindow(QWidget *parent) :
     //-----------------------------------------------------------------//
     /////////////////////////////////////////////////////////////////////
     //frack
+    connect(vmmCalibModule, SIGNAL(calibrationLoopState(bool)),
+                        this, SLOT(calibrationLoopState(bool)));
+    connect(this, SIGNAL(stopCalibrationLoop()),
+                        vmmCalibModule, SLOT(stopCalibrationLoop()));
     connect(vmmCalibModule, SIGNAL(setPDOCalibrationState(int,int,int)),
                         this, SLOT(setPDOCalibrationState(int,int,int)));
     connect(vmmCalibModule, SIGNAL(setChannels(int)),
@@ -2096,12 +2101,21 @@ void MainWindow::triggerHandler()
         msg()(sx); sx.str("");
         ui->useMapping->setEnabled(true);
 
+        //blah
+        if(m_inCalibrationLoop) {
+            sx << "EMITTING STOP CALIBRATION";
+            msg()(sx);
+            emit stopCalibrationLoop();
+            delay();
+        }
+
         ui->runStatusField->setText("Run:"+ui->runNumber->text()+" finished");
         ui->runStatusField->setStyleSheet("background-color: lightGray");
         if(ui->writeData->isChecked()) {
             #warning make this a signal and slot
             emit EndRun();
         } // writeData
+
 
         socketHandle().daqSocket().closeAndDisconnect("VMMDCS INFO");
 
@@ -2111,6 +2125,11 @@ void MainWindow::triggerHandler()
         ui->runNumber->setEnabled(true);
     } // stopTriggerCnt
 
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::calibrationLoopState(bool calib_on)
+{
+    m_inCalibrationLoop = calib_on;
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::updateTriggerCount()
@@ -2180,8 +2199,6 @@ void MainWindow::setCalibrationACQon(int events_for_loop)
 
     int initial_number_of_events = ui->triggerCntLabel->text().toUInt(&ok,10);
 
-
-
     emit ui->onACQ->click();
 
     stringstream sx;
@@ -2190,8 +2207,8 @@ void MainWindow::setCalibrationACQon(int events_for_loop)
     msg()(sx);
 
     //int x = 0;
-    while(int(ui->triggerCntLabel->text().toUInt(&ok,10) - initial_number_of_events)
-                    <= events_for_loop) {
+    while((int(ui->triggerCntLabel->text().toUInt(&ok,10) - initial_number_of_events)
+                    <= events_for_loop) && calibModule().continueLoop()) {
         msg()(" * Waiting for event collecting * ");
         sx.str("");
         sx << ui->triggerCntLabel->text().toUInt(&ok,10);

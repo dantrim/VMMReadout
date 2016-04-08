@@ -41,7 +41,8 @@ CalibModule::CalibModule(QObject *parent) :
     m_events_for_loop(1000),
     m_chan_start(1),
     m_chan_end(1),
-    m_advance(false)
+    m_advance(false),
+    m_continueLoop(true)
 {
     connect(this, SIGNAL(calibACQcomplete()), this, SLOT(advanceCalibLoop()));
 }
@@ -66,13 +67,13 @@ bool CalibModule::setChannelRange(int start, int end)
     m_chan_start = start;
     m_chan_end = end;
 
-    if( (m_chan_start > 64 || m_chan_start < 1) ) {
+    if( (m_chan_start > 63 || m_chan_start < 0) ) {
         ok = false;
         sx << "ERROR Starting channel number is invalid.\n>>Must be between (inclusive)"
-           << "1 and 64";
+           << "0 and 63";
         msg()(sx,"CalibModule::setChannelRange"); sx.str("");
     }
-    if( (m_chan_end > 64 || m_chan_start < 1) ) {
+    if( (m_chan_end > 63 || m_chan_start < 0) ) {
         ok = false;
         sx << "ERROR Ending channel number is invalid.\n>>Must be between (inclusive)"
            << "1 and 64";
@@ -130,7 +131,26 @@ bool CalibModule::loadPDOCalibrationRecipe(pdoCalibration& calib)
 
 }
 // ------------------------------------------------------------------------ //
-bool CalibModule::beginPDOCalibration()
+void CalibModule::stopCalibrationLoop()
+{
+    m_continueLoop = false;
+}
+// ------------------------------------------------------------------------ //
+void CalibModule::quitLoop()
+{
+    stringstream sx;
+    sx << "Exiting calibration loop...";
+    msg()(sx, "CalibModule::quitLoop"); sx.str("");
+
+    emit setCalibrationACQoff();
+
+    emit endCalibrationRun();
+
+    emit calibrationLoopState(false);
+    
+}
+// ------------------------------------------------------------------------ //
+void CalibModule::beginPDOCalibration()
 {
     stringstream sx;
 
@@ -142,6 +162,9 @@ bool CalibModule::beginPDOCalibration()
        << "   * Starting PDO calibration *\n"
        << "-----------------------------------";
     msg()(sx,"CalibModule::beginPDOCalibration"); sx.str("");
+
+    emit calibrationLoopState(true);
+    m_continueLoop = true;
 
     int g_start = pdoCalib().gain_start;
     int g_end = pdoCalib().gain_end;
@@ -159,8 +182,11 @@ bool CalibModule::beginPDOCalibration()
     int events_per_chan = getNEvents();
 
     for(int g = g_start; g <= g_end; g++) {
+        if(!continueLoop()) { quitLoop(); return; }
         for(int t = t_start; t <= t_end; t+= t_step) {
+            if(!continueLoop()) { quitLoop(); return; }
             for(int amp = amp_start; amp <= amp_end; amp += amp_step) {
+                if(!continueLoop()) { quitLoop(); return; }
 
                 sx << "-----------------------------------\n"
                    << "  PDO calibration loop update\n"
@@ -174,6 +200,7 @@ bool CalibModule::beginPDOCalibration()
                 emit setPDOCalibrationState(g, t, amp);
 
                 for(int ch = chan_start; ch <= chan_end; ch++) {
+                    if(!continueLoop()) { quitLoop(); return; }
 
                     m_advance = false;
                     sx << " - - - - - - - - - - - - - - - - - \n"
@@ -188,8 +215,8 @@ bool CalibModule::beginPDOCalibration()
 
                     emit setCalibrationACQon(events_per_chan);
 
-
-                    while(!m_advance) {}
+                    if(!continueLoop()) { quitLoop(); return; }
+                    while(!m_advance && continueLoop()) {}
 
                    // {
                    //     // mainwindow needs to have a signal attached to calibmodule slot
@@ -199,16 +226,12 @@ bool CalibModule::beginPDOCalibration()
                    //     acqLoop.connect(this, SIGNAL(calibACQcomplete()), SLOT(quit()));
                    //     acqLoop.exec();
                    // }
-                    //while(!m_advance)
-                    //{
-                    //// in setCalibACQon MainWindow will have a signal
-                    //// to toggle m_advance
-                    //}
 
                 emit setCalibrationACQoff();
+
+                if(!continueLoop()) { quitLoop(); return; }
                     
                 } // ch
-
             } // amp
         } // t
     } // g
@@ -218,6 +241,8 @@ bool CalibModule::beginPDOCalibration()
     msg()(sx,"CalibModule::beginPDOCalibration"); sx.str("");
     emit endCalibrationRun();
 
-    return true;
+    emit calibrationLoopState(false);
+
+    return;
 
 }
