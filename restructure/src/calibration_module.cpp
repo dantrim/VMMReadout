@@ -49,7 +49,6 @@ CalibModule::CalibModule(QObject *parent) :
 // ------------------------------------------------------------------------ //
 void CalibModule::advanceCalibLoop()
 {
-    msg()("Setting advance to true", "CalibModule::advanceCalibLoop");
     m_advance = true;
 }
 // ------------------------------------------------------------------------ //
