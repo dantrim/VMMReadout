@@ -2168,7 +2168,6 @@ void MainWindow::triggerHandler()
         emit closeDAQSocket();
         //blah
         if(m_inCalibrationLoop) {
-            sx << "EMITTING STOP CALIBRATION";
             msg()(sx);
             emit stopCalibrationLoop();
             delay();
