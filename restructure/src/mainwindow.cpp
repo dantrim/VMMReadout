@@ -2030,7 +2030,7 @@ void MainWindow::triggerHandler()
         //mapping
         if(ui->useMapping->isChecked()) {
             emit setUseChannelMap(true);
-            QString mapFileName = configHandle().daqSettings().mapping_file;
+            QString mapFileName = configHandle().daqSettings().mapping_file; // default to mini2 map
             emit loadELxChannelMapping(mapFileName);
         } else {
             emit setUseChannelMap(false);
