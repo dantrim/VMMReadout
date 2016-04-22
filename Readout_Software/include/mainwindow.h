@@ -192,6 +192,7 @@ class MainWindow : public QMainWindow
         void setWriteNtuple(bool);
         void setIgnore16(bool);
         void setCalibrationRun(bool);
+        void updateCalibrationState(int, int, int, int, int);
         void setupOutputFiles(QString, QString);
         void setupOutputTrees();
         void checkReadyToRead();
@@ -276,6 +277,8 @@ class MainWindow : public QMainWindow
         // calibration-related
         void calibrationLoopState(bool);
         void setPDOCalibrationState(int,int,int);
+        void setTDOCalibrationState(int,int,int,int);
+        void changeDelayLabels(int);
         void setChannelsForCalib(int);
         void setupCalibrationConfig();
         void setCalibrationACQon(int);

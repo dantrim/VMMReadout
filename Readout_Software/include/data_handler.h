@@ -61,7 +61,7 @@ class DataHandler : public QObject
         void dataFileHeader(CommInfo& comm, GlobalSetting& global,
                                 TriggerDAQ& daq);
         void getRunProperties(const GlobalSetting& global, int runNumber,
-                                            int angle);
+                                            int angle, double tpSkew);
 
         QString getRootFileName(const QString& outdir);
 
@@ -128,6 +128,7 @@ class DataHandler : public QObject
         int m_peakTime;
         int m_dacCounts;
         int m_pulserCounts;
+        double m_tpSkew; // ns
         int m_angle;
 
         // event data OTF
@@ -157,10 +158,12 @@ class DataHandler : public QObject
         std::vector< std::vector<int> > m_grayDecoded;
 
         // calibration data
+        int m_channel_for_calib;
         int m_pulserCounts_calib;
         double m_gain_calib;
         int m_peakTime_calib;
         int m_dacCounts_calib;
+        double m_tpSkew_calib;
         std::vector< std::vector<int> > m_neighbor_calib;
         
 
@@ -191,6 +194,7 @@ class DataHandler : public QObject
         TBranch *br_gainCalib;
         TBranch *br_peakTimeCalib;
         TBranch *br_threshCalib;
+        TBranch *br_s6TPskewCalib;
         TBranch *br_calibRun;
         TBranch *br_neighborCalib;
 
@@ -201,6 +205,7 @@ class DataHandler : public QObject
         TBranch *br_peakTime;
         TBranch *br_dacCounts;
         TBranch *br_pulserCounts;
+        TBranch *br_s6TPskew;
         TBranch *br_angle;
         TBranch *br_calibrationRun;
 
@@ -222,6 +227,8 @@ class DataHandler : public QObject
         void setWriteNtuple(bool);
         void setIgnore16(bool);
         void setCalibrationRun(bool);
+        void setCalibrationChannel(int);
+        void updateCalibrationState(int,int,int,int,int);
         bool setupOutputFiles(QString, QString);
         void setupOutputTrees();
         void connectDAQSocket();

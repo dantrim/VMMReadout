@@ -28,6 +28,19 @@ pdoCalibration::pdoCalibration()
     pulser_step = 50;
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------ //
+//  tdoCalibration struct
+// ------------------------------------------------------------------------ //
+//////////////////////////////////////////////////////////////////////////////
+tdoCalibration::tdoCalibration()
+{
+    n_steps = 5; // [0, 3.125, 6.25, 9.375, 12.5] ns
+
+    gain = 1;
+    amplitude = 300;
+    threshold = 200;
+}
 
 //////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------ //
@@ -44,6 +57,12 @@ CalibModule::CalibModule(QObject *parent) :
     m_advance(false),
     m_continueLoop(true)
 {
+    std::vector<string> gains {"0.5","1.0","3.0","4.5","6.0","9.0","12.0","16.0"};
+    m_gains = gains;
+
+    std::vector<string> delays { "0.0", "3.125", "6.25", "9.375", "12.5", "15.625", "18.75", "21.875" };
+    m_delays = delays;
+
     connect(this, SIGNAL(calibACQcomplete()), this, SLOT(advanceCalibLoop()));
 }
 // ------------------------------------------------------------------------ //
@@ -94,8 +113,10 @@ bool CalibModule::loadPDOCalibrationRecipe(pdoCalibration& calib)
 
     bool ok = true;
 
-    sx << "Loading PDO calibration recipe...";
-    msg()(sx,"CalibModule::loadPDOCalibrationRecipe"); sx.str("");
+    if(dbg()) {
+        sx << "Loading PDO calibration recipe...";
+        msg()(sx,"CalibModule::loadPDOCalibrationRecipe"); sx.str("");
+    }
 
 
     if(calib.gain_start > calib.gain_end) {
@@ -130,6 +151,25 @@ bool CalibModule::loadPDOCalibrationRecipe(pdoCalibration& calib)
 
 }
 // ------------------------------------------------------------------------ //
+bool CalibModule::loadTDOCalibrationRecipe(tdoCalibration& calib)
+{
+    stringstream sx;
+
+    bool ok = true;
+
+    if(dbg()) {
+        sx << "Loading TDO calibration recipe...";
+        msg()(sx,"CalibModule::loadTDOCalibrationRecipe"); sx.str("");
+    }
+
+    m_tdoCalib.n_steps = calib.n_steps;
+    m_tdoCalib.gain = calib.gain;
+    m_tdoCalib.amplitude = calib.amplitude;
+    m_tdoCalib.threshold = calib.threshold;
+
+    return ok;
+}
+// ------------------------------------------------------------------------ //
 void CalibModule::stopCalibrationLoop()
 {
     m_continueLoop = false;
@@ -153,7 +193,6 @@ void CalibModule::beginPDOCalibration()
 {
     stringstream sx;
 
-    std::vector<string> gains {"0.5","1.0","3.0","4.5","6.0","9.0","12.0","16.0"};
 
     bool ok;
 
@@ -190,7 +229,7 @@ void CalibModule::beginPDOCalibration()
                 sx << "-----------------------------------\n"
                    << "  PDO calibration loop update\n"
                    << " - - - - - - - - - - - - - - - - - \n"
-                   << "    > Gain      : " << gains[g] << " mV/fC\n"
+                   << "    > Gain      : " << m_gains[g] << " mV/fC\n"
                    << "    > Threshold : " << t << "\n"
                    << "    > Amplitude : " << amp << "\n" 
                    << "-----------------------------------";
@@ -238,6 +277,80 @@ void CalibModule::beginPDOCalibration()
        << "   * PDO calibration finished *\n"
        << "-----------------------------------";
     msg()(sx,"CalibModule::beginPDOCalibration"); sx.str("");
+    emit endCalibrationRun();
+
+    emit calibrationLoopState(false);
+
+    return;
+
+}
+// ------------------------------------------------------------------------ //
+void CalibModule::beginTDOCalibration()
+{
+    stringstream sx;
+
+    sx << "-----------------------------------\n"
+       << "   * Starting TDO calibration *\n"
+       << "-----------------------------------";
+    msg()(sx,"CalibModule::beginTDOCalibration"); sx.str("");
+
+    emit calibrationLoopState(true);
+    m_continueLoop = true;
+
+    int n_steps = tdoCalib().n_steps;
+
+    int gain = tdoCalib().gain;
+    int amplitude = tdoCalib().amplitude;
+    int threshold = tdoCalib().threshold;
+
+    int chan_start = getChannelStart();
+    int chan_end = getChannelEnd();
+    int events_per_chan = getNEvents();
+
+    for(int istep = 0; istep <= n_steps; istep++) {
+        if(!continueLoop()) { quitLoop(); return; }
+
+        sx << "-----------------------------------\n"
+           << "  TDO calibration loop update\n"
+           << " - - - - - - - - - - - - - - - - - \n"
+           << "    > TP delay  : " << m_delays[istep] << " ns\n"
+           << "    > Gain      : " << m_gains[gain] << " mV/fC\n"
+           << "    > Threshold : " << threshold << "\n"
+           << "    > Amplitude : " << amplitude << "\n" 
+           << "-----------------------------------";
+        msg()(sx,"CalibModule::beginTDOCalibration"); sx.str("");
+
+        emit setTDOCalibrationState(istep, gain, amplitude, threshold);
+
+        for(int ch = chan_start; ch <= chan_end; ch++) {
+            if(!continueLoop()) { quitLoop(); return; }
+
+            m_advance = false;
+            sx << " - - - - - - - - - - - - - - - - - \n"
+               << "    > Channel   : " << ch << "\n"
+               << " - - - - - - - - - - - - - - - - - ";
+            msg()(sx,"CalibModule::beginTDOCalibration"); sx.str("");
+
+            emit setChannels(ch);
+
+            emit setupCalibrationConfig();
+
+            emit setCalibrationACQon(events_per_chan);
+
+            if(!continueLoop()) { quitLoop(); return; }
+            while(!m_advance && continueLoop()) {}
+
+            emit setCalibrationACQoff();
+
+            if(!continueLoop()) { quitLoop(); return; }
+
+        } // ch
+    } // istep
+
+    sx << "-----------------------------------\n"
+       << "   * TDO calibration finished *\n"
+       << "-----------------------------------";
+    msg()(sx,"CalibModule::beginTDOCalibration"); sx.str("");
     emit endCalibrationRun();
 
     emit calibrationLoopState(false);

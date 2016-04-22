@@ -36,6 +36,7 @@ DataHandler::DataHandler(QObject *parent) :
     m_msg(0),
     m_fileOK(false),
     m_outDir(""),
+    m_channel_for_calib(-1),
     m_daqRootFile(0),
     m_rootFileOK(false),
     m_treesSetup(false),
@@ -294,6 +295,37 @@ void DataHandler::setCalibrationRun(bool doit)
     m_calibRun = doit;
     if(dbg())
         msg()("Setting run as calibration run...", "DataHandler::setCalibrationRun");
+}
+// ------------------------------------------------------------------------ //
+void DataHandler::setCalibrationChannel(int channel)
+{
+    stringstream sx;
+    if(dbg()) {
+        sx << "Setting calibration channel to " << channel;
+        msg()(sx,"DataHandler::setCalibrationChannel"); sx.str("");
+    }
+    m_channel_for_calib = channel;
+}
+// ------------------------------------------------------------------------ //
+void DataHandler::updateCalibrationState(int gainIdx, int threshDAC, int ampDAC,
+                                            int tpSkewIdx, int peakTimeIdx)
+{
+    m_gain_calib = ConfigHandler::all_gains[gainIdx].toDouble();
+    m_dacCounts_calib = threshDAC;
+    m_pulserCounts_calib = ampDAC;
+    m_tpSkew_calib = ConfigHandler::all_s6TPskews[tpSkewIdx].toDouble();
+    m_peakTime_calib = ConfigHandler::all_peakTimes[peakTimeIdx];
+
+    if(dbg()) {
+        stringstream sx;
+        sx << " ** Updating calibration state ** " << endl;
+        sx << "     gain           : " << m_gain_calib << endl;
+        sx << "     dac thresh     : " << m_dacCounts_calib << endl;
+        sx << "     pulser ampl.   : " << m_pulserCounts_calib << endl;
+        sx << "     s6 tp skew     : " << m_tpSkew_calib << endl;
+        sx << "     peak/int. time : " << m_peakTime_calib << endl;
+        cout << sx.str() << endl;
+    }
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::testMultiARG(QString x, QString y, QString z)
@@ -634,7 +666,7 @@ void DataHandler::dataFileHeader(CommInfo& info, GlobalSetting& global,
 // ------------------------------------------------------------------------ //
 // ------------------------------------------------------------------------ //
 void DataHandler::getRunProperties(const GlobalSetting& global,
-        int runNumber, int angle)
+        int runNumber, int angle, double s6TPSkew)
 {
     if(dbg())
         msg()("Filling run properties...",
@@ -647,6 +679,8 @@ void DataHandler::getRunProperties(const GlobalSetting& global,
     m_dacCounts     = global.threshold_dac;
     m_pulserCounts  = global.test_pulse_dac;
     m_angle         = angle;
+    #warning use config_handler for_ getting tpskew value from index
+    m_tpSkew        = s6TPSkew;
 
     if(writeNtuple()) {
         m_daqRootFile->cd();
@@ -673,6 +707,7 @@ void DataHandler::setupOutputTrees()
     br_peakTime         = m_runProperties->Branch("peakTime", &m_peakTime);
     br_dacCounts        = m_runProperties->Branch("dacCounts", &m_dacCounts);
     br_pulserCounts     = m_runProperties->Branch("pulserCounts", &m_pulserCounts);
+    br_s6TPskew         = m_runProperties->Branch("tpSkew", &m_tpSkew);
     br_angle            = m_runProperties->Branch("angle", &m_angle);
     br_calibrationRun   = m_runProperties->Branch("calibrationRun", &m_calibRun);
 
@@ -711,6 +746,8 @@ void DataHandler::setupOutputTrees()
                                                 &m_peakTime_calib);
         br_threshCalib      = m_vmm2->Branch("thresholdSet",
                                                 &m_dacCounts_calib);
+        br_s6TPskewCalib      = m_vmm2->Branch("tpSkew",
+                                                &m_tpSkew_calib);
         br_calibRun         = m_vmm2->Branch("calibrationRun",
                                                 &m_calibRun);
         br_neighborCalib    = m_vmm2->Branch("neighbor",
@@ -795,6 +832,7 @@ void DataHandler::clearData()
     m_peakTime      = -999;
     m_dacCounts     = -999;
     m_pulserCounts  = -999;
+    m_tpSkew        = -999;
     m_angle         = -999;
 
     // clear the event data
@@ -959,7 +997,7 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                 sx.str("");
                 sx << "Empty event from chip #: " << chipNumberStr.toInt(&ok,16);
                 cout << sx.str() << endl;
-                msg()(sx,"DataHandler::decodeAndWriteData");
+                msg()(sx,"DataHandler::decodeAndWriteData"); sx.str("");
             }
 
             // data containers for this chip
@@ -987,6 +1025,21 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
 
                 // --- channel number --- //
                 int channel_no = (bytes2 & 0xfc) >> 2; // 0xfc = 0000 0000 1111 1100
+
+                if(calibRun()) {
+                    if(m_channel_for_calib < 0) {
+                        sx.str("");
+                        sx << "Channel for calibration has not been set!\n"
+                           << "Make sure that it is set correctly in"
+                           << " DataHandler::setCalibrationChannel";
+                        msg()(sx, "DataHandler::decodeAndWriteData"); sx.str(""); 
+                        _neighbor.push_back(0);
+                    }
+                    else {
+                        _neighbor.push_back(!(m_channel_for_calib == channel_no));
+                    }
+                }
+
                 if(useChannelMap()) {
                     int chan_test = channelToStrip(chipNumberStr.toInt(&ok,16),
                                 channel_no);
@@ -1077,6 +1130,10 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                 m_bcid.push_back(_bcid);
                 m_channelId.push_back(_channelNo);
                 m_grayDecoded.push_back(_gray);
+
+                if(calibRun())
+                    m_neighbor_calib.push_back(_neighbor);
+
             } //writeNutple
 
         } // VMM2 event data
@@ -1152,9 +1209,27 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
         m_eventNumberFAFA = getDAQCount() - 1;
 
         if(calibRun()) {
-            #warning IMPLEMENT STORAGE OF CALIB INFO
-            // calib info is updated within calls to
-            // updateCalibInfo
+            #warning CONFIRM THAT CALIB INFORMATION IS FILLED // in "updateCalibrationState"
+            m_calibRun = true;
+
+            //pulser amplitude
+     //       // pulser amplitude
+     //       m_pulserCounts_calib = ui->sdp_2->value();
+
+     //       // gain
+     //       QString tmpGainString = ui->sg->currentText().left(3);
+     //       m_gain_calib = tmpGainString.toDouble(&ok);
+
+     //       // integration time (peak time)
+     //       QString tmpIntTimeString = ui->st->currentText().left(3);
+     //       m_peakTime_calib = tmpIntTimeString.toInt(&ok,10);
+
+     //       // threshold
+     //       m_dacCounts_calib = ui->sdt->value(); 
+
+     //       // bool bool bool
+     //       m_calibRun = true;
+
         }
 
         updateDAQCount();

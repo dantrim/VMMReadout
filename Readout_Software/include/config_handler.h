@@ -123,7 +123,7 @@ struct GlobalSetting {
     int dual_clock_6bit;
     int threshold_dac;
     int test_pulse_dac;
-
+    
     void Validate();
     void Print();
 };
@@ -229,6 +229,7 @@ class ConfigHandler : public QObject
         ////////////////////////////
         static const QStringList all_gains;
         static const QList<int>  all_peakTimes;
+        static const QStringList all_s6TPskews;
         static const QList<int>  all_TACslopes;
         static const QStringList all_polarities;
         static const QStringList all_ARTmodes;

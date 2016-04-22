@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
             dataHandle.dataFileHeader(conf_handler.commSettings(),
                     conf_handler.globalSettings(), conf_handler.daqSettings());
             #warning runNumber and angle in standalone executable?
-            dataHandle.getRunProperties(conf_handler.globalSettings(), 0, 0);
+            dataHandle.getRunProperties(conf_handler.globalSettings(), 0, 0, 0);
         } //writeNtuple
         
 

@@ -21,6 +21,8 @@ const QStringList ConfigHandler::all_gains
     = {"0.5", "1.0", "3.0", "4.5", "6.0", "9.0", "12.0", "16.0"}; //mV/fC
 const QList<int> ConfigHandler::all_peakTimes
     = {200, 100, 50, 25}; //ns
+const QStringList ConfigHandler::all_s6TPskews
+    = {"0", "3.125", "6.25", "9.375", "12.5", "15.625", "18.75", "21.875" }; //ns
 const QList<int> ConfigHandler::all_TACslopes
     = {125, 250, 500, 1000}; //ns
 const QStringList ConfigHandler::all_polarities

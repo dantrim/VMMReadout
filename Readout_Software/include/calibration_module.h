@@ -38,6 +38,25 @@ struct pdoCalibration {
 
 };
 
+struct tdoCalibration {
+    // IF YOU ADD ANY DATA MEMBERS
+    // YOU MUST ADD THEM TO THE
+    // CONSTRUCTOR!!!
+
+    tdoCalibration();
+
+    // number of skew steps, in intervals
+    // of 3.125 ns (delays w.r.t. CKBC)
+    int n_steps;
+
+    // pulser gain
+    int gain;
+    // pulser amplitude
+    int amplitude;
+    // dac threshold
+    int threshold;
+};
+
 class CalibModule : public QObject
 {
     Q_OBJECT
@@ -61,9 +80,16 @@ class CalibModule : public QObject
         /////////////////////////////////
         // calibration recipes
         /////////////////////////////////
+
+        // pdo calibration
         bool loadPDOCalibrationRecipe(pdoCalibration& calib);
         pdoCalibration& pdoCalib() { return m_pdoCalib; }
         void beginPDOCalibration();
+
+        // tdo calibration
+        bool loadTDOCalibrationRecipe(tdoCalibration& calib);
+        tdoCalibration& tdoCalib() { return m_tdoCalib; }
+        void beginTDOCalibration();
 
         bool continueLoop() { return m_continueLoop; }
         void quitLoop();
@@ -72,11 +98,15 @@ class CalibModule : public QObject
         bool m_dbg;
         MessageHandler *m_msg;
 
+        std::vector<std::string> m_gains;
+        std::vector<std::string> m_delays;
+
         int m_events_for_loop;
         int m_chan_start;
         int m_chan_end;
 
         pdoCalibration m_pdoCalib;
+        tdoCalibration m_tdoCalib;
 
         bool m_advance;
         bool m_continueLoop;
@@ -84,6 +114,7 @@ class CalibModule : public QObject
     signals :
         void calibrationLoopState(bool);
         void setPDOCalibrationState(int,int,int); // set gain, thresh, amplitude
+        void setTDOCalibrationState(int,int,int,int); // set delay, gain, amplitude, thresh
         void setChannels(int);
         void setupCalibrationConfig();
         void setCalibrationACQon(int);

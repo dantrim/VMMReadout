@@ -61,6 +61,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //this->setMinimumWidth(1200);
     Font.setFamily("Arial");
     ui->loggingScreen->setReadOnly(true);
+    ui->debugScreen->setReadOnly(true);
     ui->runStatusField->setReadOnly(true);
 
     ui->tabWidget->setStyleSheet("QTabBar::tab { height: 18px; width: 100px; }");
@@ -300,8 +301,14 @@ MainWindow::MainWindow(QWidget *parent) :
                         vmmCalibModule, SLOT(stopCalibrationLoop()));
     connect(vmmCalibModule, SIGNAL(setPDOCalibrationState(int,int,int)),
                         this, SLOT(setPDOCalibrationState(int,int,int)));
+    connect(vmmCalibModule, SIGNAL(setTDOCalibrationState(int,int,int,int)),
+                        this, SLOT(setTDOCalibrationState(int,int,int,int)));
+    connect(this, SIGNAL(updateCalibrationState(int,int,int,int,int)),
+                        vmmDataHandler, SLOT(updateCalibrationState(int,int,int,int,int)));
     connect(vmmCalibModule, SIGNAL(setChannels(int)),
                         this, SLOT(setChannelsForCalib(int)));
+    connect(vmmCalibModule, SIGNAL(setChannels(int)),
+                        vmmDataHandler, SLOT(setCalibrationChannel(int)));
     connect(vmmCalibModule, SIGNAL(setupCalibrationConfig()),
                         this, SLOT(setupCalibrationConfig()));
     connect(vmmCalibModule, SIGNAL(setCalibrationACQon(int)),
@@ -310,6 +317,8 @@ MainWindow::MainWindow(QWidget *parent) :
                         this, SLOT(setCalibrationACQoff()));
     connect(vmmCalibModule, SIGNAL(endCalibrationRun()),
                         this, SLOT(endCalibrationRun()));
+    connect(ui->delaySteps, SIGNAL(currentIndexChanged(int)),
+                        this, SLOT(changeDelayLabels(int)));
 
     /////////////////////////////////////////////////////////////////////
     //-----------------------------------------------------------------//
@@ -883,7 +892,9 @@ void MainWindow::SetInitialState()
     ui->dacmvLabel_TP->setText(tmp.number((0.6862*ui->sdp_2->value()+63.478), 'f', 2) + " mV");
 
     // disable calibration
-    ui->calibration->setChecked(false);
+    //ui->calibration->setChecked(false);
+    ui->doPDOCalib->setChecked(false);
+    ui->doTDOCalib->setChecked(false);
 
 }
 // ------------------------------------------------------------------------- //
@@ -2012,6 +2023,7 @@ void MainWindow::triggerHandler()
 
 {
     stringstream sx;
+
   //  if(ui->useMapping->isChecked()) {
   //      emit setUseChannelMap(true);
   //      QString mapFileName = configHandle().daqSettings().mapping_file;
@@ -2040,7 +2052,8 @@ void MainWindow::triggerHandler()
 
         emit setWriteNtuple(ui->writeData->isChecked());
         emit setIgnore16(ui->ignore16->isChecked());
-        emit setCalibrationRun(ui->calibration->isChecked());
+        //emit setCalibrationRun(ui->calibration->isChecked());
+        emit setCalibrationRun( (ui->doPDOCalib->isChecked() || ui->doTDOCalib->isChecked()) );
         bool ok;
         if(ui->writeData->isChecked()) {
 
@@ -2072,8 +2085,11 @@ void MainWindow::triggerHandler()
 
 
             //fill the run properties
+            QString tmpTPSkew = ui->tpSkew->currentText().remove("ns");
+            double tp_skew = tmpTPSkew.toDouble(&ok);
             dataHandle().getRunProperties(configHandle().globalSettings(),
-                         ui->runNumber->value(), ui->angle->value());
+                         ui->runNumber->value(), ui->angle->value(),
+                         tp_skew);
 
             // things should be OK by now
             sx << " * Starting DAQ run *";
@@ -2098,9 +2114,9 @@ void MainWindow::triggerHandler()
             /////////////////////////////////////////////////
             // calibration loop
             /////////////////////////////////////////////////
-            if(ui->calibration->isChecked()) {
+            //if(ui->calibration->isChecked()) {
+            if(ui->doPDOCalib->isChecked()) {
 
-                // should add check box for PDO vs. TDO calibration
                 if(ui->autoCalib->isChecked()) {
 
                     /////////////////////////////////////////
@@ -2132,7 +2148,32 @@ void MainWindow::triggerHandler()
               //      startCalibration();
               //  else if(ui->manCalib->isChecked())
               //      msg()("Manual Calibration");
-            } // calibration
+            } // PDO calibration
+
+            else if(ui->doTDOCalib->isChecked()) {
+                if(ui->autoCalib->isChecked()) {
+
+                    /////////////////////////////////////////
+                    // load the calibration recipe
+                    /////////////////////////////////////////
+                    tdoCalibration calib;
+
+                    calib.n_steps = ui->delaySteps->currentIndex();
+                    calib.gain = int(ui->sg_tdoCal->currentIndex());
+                    calib.amplitude = int(ui->sdp_tdoCal->value());
+                    calib.threshold = int(ui->sdt_tdoCal->value());
+
+                    calibModule().loadTDOCalibrationRecipe(calib);
+
+                    calibModule().setNEvents(int(ui->evCalib->text().toUInt(&ok,10)));
+                    calibModule().setChannelRange(int(ui->chRange_calib_min->currentIndex()),
+                                                    int(ui->chRange_calib_max->currentIndex()));
+
+                    calibModule().beginTDOCalibration();
+                } // auto
+
+
+            } // TDO calibration
 
         } // writeData
         else {
@@ -2215,6 +2256,42 @@ void MainWindow::setPDOCalibrationState(int gain, int threshold_daq, int pulser_
     ui->sg->setCurrentIndex(gain);
     ui->sdt->setValue(threshold_daq);
     ui->sdp_2->setValue(pulser_daq);
+
+    // send overall calibration state
+    emit updateCalibrationState(ui->sg->currentIndex(),
+                                ui->sdt->value(),
+                                ui->sdp_2->value(),
+                                ui->tpSkew->currentIndex(),
+                                ui->st->currentIndex());
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::changeDelayLabels(int delayIdx)
+{
+
+    QString tmp;
+    #warning current TDO loop always starts at zero delay
+
+    ui->tdoCalib_skewLabLow->setText(tmp.number(0.000) + " ns");
+    ui->tdoCalib_skewLabHigh->setText(tmp.number((3.125*delayIdx), 'f', 3) + " ns");
+    //ui->tdoCalib_skewLabHigh->setText(tmp.number((3.125*ui->delaySteps->currentIndex()), 'f', 2) + " ns");
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::setTDOCalibrationState(int delay, int gain, int amplitude, int threshold)
+{
+    ui->sg->setCurrentIndex(gain);
+    ui->sdt->setValue(threshold);
+    ui->sdp_2->setValue(amplitude);
+
+    ui->tpSkew->setCurrentIndex(delay);
+
+    emit ui->setTp_s6->click();
+
+    emit updateCalibrationState(ui->sg->currentIndex(),
+                                ui->sdt->value(),
+                                ui->sdp_2->value(),
+                                ui->tpSkew->currentIndex(),
+                                ui->st->currentIndex());
+
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::setChannelsForCalib(int calib_channel)
@@ -2292,7 +2369,7 @@ void MainWindow::setCalibrationACQon(int events_for_loop)
         //if(x>10) { x = 0; break; }
         //x++;
     } // while loop
-
+    
     emit calibModule().calibACQcomplete();
 
 }
