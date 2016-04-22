@@ -893,6 +893,7 @@ void MainWindow::SetInitialState()
 
     // disable calibration
     //ui->calibration->setChecked(false);
+    ui->doCalib->setChecked(false);
     ui->doPDOCalib->setChecked(false);
     ui->doTDOCalib->setChecked(false);
 
@@ -2053,7 +2054,9 @@ void MainWindow::triggerHandler()
         emit setWriteNtuple(ui->writeData->isChecked());
         emit setIgnore16(ui->ignore16->isChecked());
         //emit setCalibrationRun(ui->calibration->isChecked());
-        emit setCalibrationRun( (ui->doPDOCalib->isChecked() || ui->doTDOCalib->isChecked()) );
+        //emit setCalibrationRun( (ui->doPDOCalib->isChecked() || ui->doTDOCalib->isChecked()) );
+        emit setCalibrationRun( ui->doCalib->isChecked() &&
+                (ui->doPDOCalib->isChecked() || ui->doTDOCalib->isChecked()) );
         bool ok;
         if(ui->writeData->isChecked()) {
 
@@ -2115,7 +2118,7 @@ void MainWindow::triggerHandler()
             // calibration loop
             /////////////////////////////////////////////////
             //if(ui->calibration->isChecked()) {
-            if(ui->doPDOCalib->isChecked()) {
+            if(ui->doCalib->isChecked() && ui->doPDOCalib->isChecked()) {
 
                 if(ui->autoCalib->isChecked()) {
 
@@ -2150,7 +2153,7 @@ void MainWindow::triggerHandler()
               //      msg()("Manual Calibration");
             } // PDO calibration
 
-            else if(ui->doTDOCalib->isChecked()) {
+            else if(ui->doCalib->isChecked() && ui->doTDOCalib->isChecked()) {
                 if(ui->autoCalib->isChecked()) {
 
                     /////////////////////////////////////////
@@ -2229,6 +2232,7 @@ void MainWindow::triggerHandler()
     } // stopTriggerCnt
 
 }
+// ------------------------------------------------------------------------- //
 // ------------------------------------------------------------------------- //
 void MainWindow::calibrationLoopState(bool calib_on)
 {

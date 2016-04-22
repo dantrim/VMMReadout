@@ -1,5 +1,7 @@
 #!/bin bash
 
+is_mac_=${1}
+
 cd include
 git clone -b master https://github.com/dantrim/boost_includes.git boost
 
@@ -10,4 +12,13 @@ g++ -o ../build/objects/libMylib.so aDict.cxx `root-config --cflags --libs` -sha
 
 cd ../build
 ln -s objects/libMylib.so .
-qmake -o Makefile vmmall.pro
+
+if [ "${is_mac_}" == "--mac" ]
+then
+    qmake -spec macx-g++ -o Makefile vmmall.pro
+else
+    qmake -o Makefile vmmall.pro
+fi
+
+
+#qmake -o Makefile vmmall.pro
