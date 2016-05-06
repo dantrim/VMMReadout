@@ -1216,7 +1216,7 @@
        <x>10</x>
        <y>280</y>
        <width>291</width>
-       <height>211</height>
+       <height>221</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -4314,7 +4314,7 @@
     <property name="geometry">
      <rect>
       <x>600</x>
-      <y>0</y>
+      <y>10</y>
       <width>691</width>
       <height>671</height>
      </rect>
@@ -5138,9 +5138,9 @@
       </property>
       <property name="geometry">
        <rect>
-        <x>220</x>
+        <x>298</x>
         <y>10</y>
-        <width>169</width>
+        <width>91</width>
         <height>24</height>
        </rect>
       </property>
@@ -5976,18 +5976,39 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="layoutWidget_2">
+     <widget class="QPushButton" name="doCalib">
       <property name="geometry">
        <rect>
-        <x>10</x>
+        <x>7</x>
+        <y>7</y>
+        <width>81</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Calibration</string>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QWidget" name="">
+      <property name="geometry">
+       <rect>
+        <x>90</x>
         <y>10</y>
-        <width>202</width>
+        <width>201</width>
         <height>21</height>
        </rect>
       </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_21">
+      <layout class="QHBoxLayout" name="horizontalLayout_17">
        <item>
-        <widget class="QRadioButton" name="doPDOCalib">
+        <widget class="QCheckBox" name="doPDOCalib">
          <property name="font">
           <font>
            <pointsize>9</pointsize>
@@ -5996,22 +6017,22 @@
          <property name="text">
           <string>PDO calibration</string>
          </property>
-         <property name="checked">
-          <bool>false</bool>
+         <property name="autoExclusive">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QRadioButton" name="doTDOCalib">
+        <widget class="QCheckBox" name="doTDOCalib">
          <property name="font">
           <font>
            <pointsize>9</pointsize>
           </font>
          </property>
          <property name="text">
-          <string>TDO Calibration</string>
+          <string>TDO calibration</string>
          </property>
-         <property name="checked">
+         <property name="autoExclusive">
           <bool>true</bool>
          </property>
         </widget>
