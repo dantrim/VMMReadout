@@ -53,7 +53,13 @@ SOURCES += $$sourcepath/main.cpp\
            $$sourcepath/vmmsocket.cpp\
            $$sourcepath/data_handler.cpp\
            $$sourcepath/calibration_module.cpp\
-           $$sourcepath/message_handler.cpp
+           $$sourcepath/message_handler.cpp\
+           $$sourcepath/daqconfig.cpp\
+           $$sourcepath/srsconfig.cpp\
+           $$sourcepath/detectorconfig.cpp\
+           $$sourcepath/fec.cpp\
+           $$sourcepath/chip.cpp\
+           $$sourcepath/coordinates.cpp
 
 HEADERS  += $$includepath/mainwindow.h\
             $$includepath/run_module.h\
@@ -63,7 +69,13 @@ HEADERS  += $$includepath/mainwindow.h\
             $$includepath/vmmsocket.h\
             $$includepath/data_handler.h\
             $$includepath/calibration_module.h\
-            $$includepath/message_handler.h
+            $$includepath/message_handler.h\
+            $$includepath/daqconfig.h\
+            $$includepath/srsconfig.h\
+            $$includepath/detectorconfig.h\
+            $$includepath/fec.h\
+            $$includepath/chip.h\
+            $$includepath/coordinates.h 
 
 FORMS    += $$sourcepath/mainwindow.ui
 
