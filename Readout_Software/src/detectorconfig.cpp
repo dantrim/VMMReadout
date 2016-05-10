@@ -74,6 +74,8 @@ bool DetectorConfig::readXMLfile(const string filename)
                 try {
                     #warning parent path not needed with environment var
                     //m_chamberArray[n_chamber] = new Chamber(v /*,parent_path*/);
+                    m_chamberArray[n_chamber] = new Chamber();
+                    if(!m_chamberArray[n_chamber]->loadChamber(v)) ok = false;
                 }
                 catch(std::exception &e) {
                     cout << "DetectorConfig::readXMLfile    ERROR creating chamber["<<n_chamber<<"]" << endl;
