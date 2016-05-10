@@ -26,7 +26,7 @@ DaqConfig::DaqConfig() :
 {
 }
 
-void DaqConfig::loadXml(string filename)
+void DaqConfig::loadXml(std::string filename)
 {
     char* mmdaqpath;
     mmdaqpath = getenv("MMDAQDIR");

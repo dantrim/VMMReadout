@@ -24,6 +24,11 @@ class VMMSocket;
 #include "TTree.h"
 #include "TBranch.h"
 
+//mmdaq
+#include "daqconfig.h"
+#include "sharedmemorywriter.h"
+#include "createevents.h"
+
 
 //////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------ //
@@ -101,6 +106,11 @@ class DataHandler : public QObject
         bool m_write;
         bool m_ignore16;
         bool m_use_channelmap;
+
+        //test shared
+        DaqConfig* m_daqConf;
+        CreateEvents* m_ce;
+        SharedMemoryWriter* m_sh;
 
         //thread
         QUdpSocket *testDAQSocket;
@@ -219,6 +229,8 @@ class DataHandler : public QObject
         void setRunDirOK(bool);
 
     public slots :
+        //testing sharted memory
+        void testSharedMem();
         void readEvent();
         void EndRun();
         void writeAndCloseDataFile();

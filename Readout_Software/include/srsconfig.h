@@ -12,6 +12,8 @@ class SRSConfig {
     public :
         SRSConfig();
         void loadXml(std::string filename);
+        std::string getFecContainsChipName(std::string chipname);
+
         void print();
 
         std::string getConfigXml() { return m_configXml; }

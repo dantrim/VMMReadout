@@ -8,8 +8,15 @@
 
 //std/stl
 #include <stdlib.h> //getenv
+#include <sstream>
 
 using namespace std;
+
+bool dataCompare (const tuple<int, int, int, string, int> &lhs,
+                    const tuple<int, int, int, string, int> &rhs)
+{
+    return get<0>(lhs) < get<0>(rhs);
+}
 
 ////////////////////////////////////////////////////////////////////////
 // ConnectorSpecs
@@ -51,6 +58,9 @@ bool ConnectorSpecs::loadSpecs(const boost::property_tree::ptree::value_type pt)
                 m_id = v.second.get<string>("id", "NaNN");
                 trim(m_id);
             }
+            else if(v.first == "<xmlcomment>") {    
+                continue;
+            }
 
             else {
                 cout << "ConnectorSpecs::loadSpecs    WARNING Unknown key: " << v.first << endl;
@@ -88,14 +98,14 @@ bool ConnectorSpecs::loadMapFile(string filename)
     string full_filename = path + "readout_configuration/" + filename;
     bool exists = std::ifstream(full_filename).good();
     if(!exists) {
-        cout << "ConnectorSpecs::loadSpecs    ERROR Unable to find spec file: \"" << fileame << "\"!" << endl;
+        cout << "ConnectorSpecs::loadSpecs    ERROR Unable to find spec file: \"" << filename << "\"!" << endl;
         cout << "ConnectorSpecs::loadSpecs    ERROR Looking in full path: " << full_filename << "." << endl;
         exit(1);
     }
     cout << "ConnectorSpecs::loadSpecs    INFO Found input spec file: " << full_filename << endl;
 
     if(!readMapFile(full_filename)) {
-        cout << "ConnectorSpecs::loadSpecs    ERROR Unavle to read spec file" << endl;
+        cout << "ConnectorSpecs::loadSpecs    ERROR Unable to read spec file" << endl;
         ok = false;
     }
 
@@ -186,9 +196,3 @@ void ConnectorSpecs::print()
     cout << "-----------------------------------" << endl;
 }
 
-
-bool dataCompare (const tuple<int, int, int, string, int> &lhs,
-                    const tuple<int, int, int, string, int> &rhs)
-{
-    return get<0>(lhs) < get<0>(rhs);
-}

@@ -68,6 +68,9 @@ bool Fec::loadFec(const boost::property_tree::ptree::value_type pt)
                     m_id = v.second.get<string>("id");
                     trim(m_id);
                 }
+                else if(v.first == "<xmlcomment>") {
+                    continue;
+                }
                 ////////////////////////////////////////////
                 // load the chips
                 ////////////////////////////////////////////

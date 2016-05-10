@@ -13,6 +13,11 @@
 #include <QDir>
 #include <QThread>
 
+//mmdaq
+//#include "createevents.h"
+//#include "sharedmemorywriter.h"
+//#include "daqconfig.h"
+
 using namespace std;
 
 
@@ -29,6 +34,10 @@ DataHandler::DataHandler(QObject *parent) :
     n_daqCnt(0),
     m_ignore16(false),
     m_use_channelmap(false),
+    //test shared
+    m_daqConf(0),
+    m_ce(0),
+    m_sh(0),
     //thread
     testDAQSocket(0), 
     m_mapping_file(""),
@@ -45,6 +54,14 @@ DataHandler::DataHandler(QObject *parent) :
     m_runProperties(NULL),
     m_artTree(NULL)
 {
+    m_daqConf = new DaqConfig();
+    m_daqConf->loadXml("DAQ_config.xml");
+    m_ce = new CreateEvents();
+    m_sh = new SharedMemoryWriter();
+    m_sh->initializeSharedMemory();
+  //  m_daqConf = new DaqConfig();
+  //  m_daqConf->loadXml("DAQ_config.xml");
+
     //thread
    // testDAQSocket = new QUdpSocket();
    // bool bind = testDAQSocket->bind(6006, QAbstractSocket::DefaultForPlatform); 
@@ -56,6 +73,50 @@ DataHandler::DataHandler(QObject *parent) :
    // //testDAQSocket->bind(QHostAddress::LocalHost, 1235);
     //connect(testDAQSocket, SIGNAL(readyRead()), this, SLOT(testDAQSocketRead()));
    // connect(testDAQSocket, SIGNAL(readyRead()), this, SLOT(readEvent()));
+}
+// ------------------------------------------------------------------------ //
+void DataHandler::testSharedMem()
+{
+
+    m_ce->setDaq(m_daqConf);
+    m_ce->createEvents();
+
+   // m_daqConf = new DaqConfig();
+
+   // DaqConfig* daqConf = new DaqConfig();
+   // std::string config = "DAQ_config.xml";
+   // daq->loadXml(config);
+   // CreateEvents* ce = new CreateEvents();
+   // ce->setDaq(daq);
+   // ce->createEvents();
+
+    //SharedMemoryWriter* sh = new SharedMemoryWriter();
+    //sh->initializeSharedMemory();
+    cout << "DATAHANDLER " << __LINE__ << endl;
+
+    int n = 0;
+    while(true) {
+        if(n>10) break;
+        int chip_number = 1;
+        int channel = 30;
+        int event = 12;
+        int charge = 720;
+        int time = 70;
+        vector<string> outvector;
+        cout << "DATAHAN " << __LINE__ << endl;
+        for(int i = 0; i < 10; i++) {
+            //string data = "1 23 87 74 X X X"; 
+            //outvector.push_back(data);
+            cout << "DATAHAN " << __LINE__ << endl;
+            outvector.push_back(m_ce->getEvent(chip_number, channel, event, charge, time));
+        }
+
+        m_sh->publishEvent(outvector);
+
+        sleep(1);
+        n++;
+    }
+
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::connectDAQSocket()

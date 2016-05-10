@@ -139,8 +139,8 @@
       <rect>
        <x>10</x>
        <y>33</y>
-       <width>291</width>
-       <height>241</height>
+       <width>385</width>
+       <height>280</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
@@ -1215,8 +1215,8 @@
       <rect>
        <x>10</x>
        <y>280</y>
-       <width>291</width>
-       <height>221</height>
+       <width>369</width>
+       <height>244</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -2455,7 +2455,7 @@
       <bool>true</bool>
      </property>
     </widget>
-    <widget class="QPushButton" name="prepareConfigButton">
+    <widget class="QPushButton" name="testSharedMemory">
      <property name="geometry">
       <rect>
        <x>450</x>
@@ -2464,8 +2464,13 @@
        <height>32</height>
       </rect>
      </property>
+     <property name="font">
+      <font>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
      <property name="text">
-      <string>Ready Config</string>
+      <string>Test Shared Memory</string>
      </property>
     </widget>
     <zorder>label_7</zorder>
@@ -2488,7 +2493,7 @@
     <zorder>checkTriggers</zorder>
     <zorder>readTrigger</zorder>
     <zorder>writeData</zorder>
-    <zorder>prepareConfigButton</zorder>
+    <zorder>testSharedMemory</zorder>
    </widget>
    <widget class="QGroupBox" name="groupBox">
     <property name="geometry">
@@ -3440,7 +3445,7 @@
         <x>0</x>
         <y>51</y>
         <width>101</width>
-        <height>131</height>
+        <height>167</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_11">
@@ -5997,7 +6002,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
         <x>90</x>

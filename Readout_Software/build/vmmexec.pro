@@ -41,6 +41,7 @@ QMAKE_CXXFLAGS += -std=c++11
 QMAKE_LFLAGS   += -stdlib=libc++
 
 #LIBS += -L$$boostlib -lboost_system -lboost_filesystem
+#LIBS += -L/usr/local/opt/boost/lib -lboost_thread-mt -lboost_filesystem  -lboost_system
 
 OBJECTS_DIR += ./objects/
 MOC_DIR     += ./moc/

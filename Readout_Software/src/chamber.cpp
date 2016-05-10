@@ -61,7 +61,7 @@ bool Chamber::loadChamber(const boost::property_tree::ptree::value_type pt)
                 ////////////////////////////////////////////
                 else if(v.first == "drift_gap") {
                     m_drift_gap = v.second.data();
-                    trim(drift_gap);
+                    trim(m_drift_gap);
                 }
                 ////////////////////////////////////////////
                 // voltages
@@ -98,6 +98,9 @@ bool Chamber::loadChamber(const boost::property_tree::ptree::value_type pt)
                 else if(v.first == "<xmlattr>") {
                     m_name = v.second.get<string>("name");
                 }
+                else if(v.first == "<xmlcomment>"){
+                    continue;
+                }
 
                 else {
                     cout << "Chamber::loadChamber    WARNING Unknown key: " << v.first << endl;
@@ -133,7 +136,7 @@ Connector& Chamber::getConnector(string connectorName)
             c = m_connectorArray[i];
         }
     } // i
-    return c;
+    return *c;
 }
 
 void Chamber::print()

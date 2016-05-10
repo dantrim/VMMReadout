@@ -5,7 +5,7 @@
 #include <string>
 
 //mmdaq
-//#include "chamber.h"
+#include "chamber.h"
 #include "coordinates.h"
 
 
@@ -14,12 +14,14 @@ class DetectorConfig {
         DetectorConfig();
         void loadXml(std::string filename);
 
+        int getChamberArraySize() { return n_chamberArraySize; }
+
         std::string getConfigXml() { return m_configXml; }
 
 
-        //int n_chamberArraySize;
-        //#warning make this_ a vector and implement a getter
-        //Chamber** m_chamberArray;
+        int n_chamberArraySize;
+        #warning make this_ a vector and implement a getter
+        Chamber** m_chamberArray;
 
     private :
 

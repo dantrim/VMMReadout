@@ -36,6 +36,9 @@ bool Readout::loadReadout(const boost::property_tree::ptree::value_type pt)
                 m_name = v.second.get<string>("name", "NaN");
                 m_id = v.second.get<string>("id", "NaNN");
             }
+            else if(v.first == "<xmlcomment>") {
+                continue;
+            }
             ////////////////////////////////////////////
             // position/rotation
             ////////////////////////////////////////////

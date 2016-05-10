@@ -17,7 +17,7 @@ MultiLayer::MultiLayer() :
 {
 }
 
-bool MultiLayer::loadLayer(const boost::proeprty_tree::ptree::value_type pt)
+bool MultiLayer::loadLayer(const boost::property_tree::ptree::value_type pt)
 {
     bool ok = true;
 
@@ -47,7 +47,7 @@ bool MultiLayer::loadLayer(const boost::proeprty_tree::ptree::value_type pt)
                 // layer
                 ////////////////////////////////////////////
                 if(v.first == "layer") {
-                    m_layerArray[n_layer] = new Lyaer();
+                    m_layerArray[n_layer] = new Layer();
                     if(!m_layerArray[n_layer]->loadLayer(v)) ok = false;
                     n_layer++;
                 }
@@ -73,6 +73,9 @@ bool MultiLayer::loadLayer(const boost::proeprty_tree::ptree::value_type pt)
                 else if(v.first == "<xmlattr>") {
                     m_name = v.second.get<string>("name", "NaN");
                     m_id = v.second.get<string>("id", "NaNN");
+                }
+                else if(v.first == "<xmlcomment>"){
+                    continue;
                 }
 
                 else {

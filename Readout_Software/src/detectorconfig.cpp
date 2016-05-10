@@ -13,8 +13,8 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////
 DetectorConfig::DetectorConfig() :
     m_configXml(""),
-    //n_chamberArraySize(0),
-    //m_chamberArray(NULL),
+    n_chamberArraySize(0),
+    m_chamberArray(NULL),
     position(NULL),
     rotation(NULL)
 {
@@ -31,11 +31,11 @@ void DetectorConfig::loadXml(string filename)
     cout << "DetectorConfig::loadXml    INFO Detector configuration loaded from file: " << filename << endl;
 
     m_configXml = filename;
-
 }
 
 bool DetectorConfig::readXMLfile(const string filename)
 {
+    cout << "IN DetectorConfig::readXMLfile" << endl;
     bool ok = true;
 
     using boost::property_tree::ptree;
@@ -48,6 +48,7 @@ bool DetectorConfig::readXMLfile(const string filename)
     try {
         BOOST_FOREACH(const ptree::value_type &v, pt.get_child("detector")) {
             if(v.first == "chamber") {
+                cout << "IN FOREACH" << endl;
                 n_chamber_counter++;
             }
         }
@@ -61,8 +62,8 @@ bool DetectorConfig::readXMLfile(const string filename)
     }
 
     if(ok) {
-        //n_chamberArraySize = n_chamber_counter;
-        //m_chamberArray = new Chamber*[n_chamber_counter];
+        n_chamberArraySize = n_chamber_counter;
+        m_chamberArray = new Chamber*[n_chamber_counter];
 
         int n_chamber = 0;
 
@@ -124,6 +125,12 @@ bool DetectorConfig::readXMLfile(const string filename)
                     throw;
                 }
             } // rotation
+            else if(v.first == "<xmlattr>") {
+                continue;
+            }
+            else if(v.first == "<xmlcomment>") {
+                continue;
+            }
 
             else {
                 cout << "DetectorConfig::readXMLfile    WARNING Unknown key: " << v.first

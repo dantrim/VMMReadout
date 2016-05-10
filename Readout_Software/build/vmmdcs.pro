@@ -13,7 +13,9 @@ QT       += core gui
 QT       += network
 QT       += widgets
 QT       += xml
+CONFIG       += console
 CONFIG+=declarative_debug
+CONFIG+=c++11
 
 TARGET   = vmmdcs
 TEMPLATE = app
@@ -26,7 +28,8 @@ win32:LIBS += -L$(ROOTSYS)/lib -llibCint -llibRIO -llibNet \
 else:LIBS += -L$(ROOTSYS)/lib -lCore -lCint -lRIO -lNet \
        -lHist -lGraf -lGraf3d -lGpad -lTree \
        -lRint -lPostscript -lMatrix -lPhysics \
-       -lGui -lRGL -lMathCore
+       -lGui -lMathCore #-lRGL -lMathCore
+LIBS +=  -L/usr/local/opt/boost/lib -lboost_thread-mt -lboost_filesystem  -lboost_system
 
 LIBS += -L./objects -lMylib
 
@@ -59,6 +62,17 @@ SOURCES += $$sourcepath/main.cpp\
            $$sourcepath/detectorconfig.cpp\
            $$sourcepath/fec.cpp\
            $$sourcepath/chip.cpp\
+           $$sourcepath/multilayer.cpp\
+           $$sourcepath/readout.cpp\
+           $$sourcepath/layer.cpp\
+           $$sourcepath/chamberspecs.cpp\
+           $$sourcepath/chamber.cpp\
+           $$sourcepath/connectorspecs.cpp\
+           $$sourcepath/connector.cpp\
+           $$sourcepath/AsioService.cpp\
+           $$sourcepath/sharedmemorywriter.cpp\
+           $$sourcepath/createevents.cpp\
+           $$sourcepath/event.cpp\
            $$sourcepath/coordinates.cpp
 
 HEADERS  += $$includepath/mainwindow.h\
@@ -75,6 +89,17 @@ HEADERS  += $$includepath/mainwindow.h\
             $$includepath/detectorconfig.h\
             $$includepath/fec.h\
             $$includepath/chip.h\
+            $$includepath/multilayer.h\
+            $$includepath/readout.h\
+            $$includepath/layer.h\
+            $$includepath/chamberspecs.h\
+            $$includepath/chamber.h\
+            $$includepath/connectorspecs.h\
+            $$includepath/connector.h\
+            $$includepath/AsioService.h\
+            $$includepath/sharedmemorywriter.h\
+            $$includepath/createevents.h\
+            $$includepath/event.h\
             $$includepath/coordinates.h 
 
 FORMS    += $$sourcepath/mainwindow.ui

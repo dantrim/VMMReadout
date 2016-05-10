@@ -1,36 +1,30 @@
-#ifndef CONNECTOR_H
-#define CONNECTOR_H
+#ifndef CONNECTORSPECS_H
+#define CONNECTORSPECS_H
 
 #include <iostream>
 #include <string>
-#include <tuple>
 #include <vector>
-
-
-//mmdaq
-#include "srsconfig.h"
+#include <tuple>
 
 //boost
 #include <boost/property_tree/ptree.hpp>
 
-class Connector {
+class ConnectorSpecs {
+
     public :
-        Connector();
-        bool loadConnector(const boost::property_tree::ptree::value_type pt);
-
-        void print();
-
+        ConnectorSpecs();
+        bool loadSpecs(const boost::property_tree::ptree::value_type pt);
         bool loadMapFile(std::string filename);
         bool readMapFile(std::string filename);
 
-        std::string getChipName() { return m_chipName; }
         std::string getName() { return m_name; }
         std::string getId() { return m_id; }
+        std::string getChipName() { return m_chipName; }
         std::string getMapFileName() { return m_map_filename; }
 
-        #warning the data here is different for VMM than with APV
-        std::tuple<int, int, int> getPin(int pin); // pinstr, chipstr, chanstr
-        std::vector<std::tuple<int,int,int>> data; // pin, chip, chan
+        std::vector<std::tuple<int, int, int, std::string, int> > data; // pin, multilayer, layer, readout, strip
+
+        void print();
 
     private :
         std::string m_name;

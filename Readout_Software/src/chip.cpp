@@ -49,6 +49,10 @@ bool Chip::loadChip(const boost::property_tree::ptree::value_type pt)
                 trim(m_type);
             }
 
+            else if(v.first == "<xmlcomment>") {
+                continue;
+            }
+
             else {
                 cout << "Chip::loadChip    WARNING Unknown key: " << v.first << endl;
                 ok = false;

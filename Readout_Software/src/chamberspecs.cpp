@@ -83,7 +83,7 @@ bool ChamberSpecs::readXMLfile(string filename)
 
     if(ok) {
         m_connectorArraySize = n_connector_count;
-        m_connectorArray = new ConnectorSpecs*[n_connector_count]
+        m_connectorArray = new ConnectorSpecs*[n_connector_count];
 
         int n_con = 0;
 
@@ -108,7 +108,7 @@ bool ChamberSpecs::readXMLfile(string filename)
                 // multilayer
                 ////////////////////////////////////////////
                 else if(v.first == "multilayer") {
-                    m_multilayer = new Multilayer();
+                    m_multilayer = new MultiLayer();
                     if(!m_multilayer->loadLayer(v)) ok = false;
                 }
                 ////////////////////////////////////////////
@@ -118,6 +118,10 @@ bool ChamberSpecs::readXMLfile(string filename)
                     m_id = v.second.get<string>("id");
                     trim(m_id);
                 }
+
+                else if(v.first == "<xmlcomment>") {
+                    continue;
+                } 
 
                 else {
                     cout << "ChamberSpecs::readXMLfile    WARNING Unknown key: " << v.first << endl;

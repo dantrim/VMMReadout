@@ -112,6 +112,9 @@ MainWindow::MainWindow(QWidget *parent) :
     vmmRunModule->LoadConfig(*vmmConfigHandler);
     vmmRunModule->LoadSocket(*vmmSocketHandler);
 
+    // testing shared memory
+    connect(ui->testSharedMemory, SIGNAL(pressed()), vmmDataHandler, SLOT(testSharedMem()));
+
 
     //////////////////////////////////////////////////////////////////////
     //------------------------------------------------------------------//
@@ -329,7 +332,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     //thread
-    vmmDataHandler->moveToThread(daqThread);
+    msg()("NOT MOVING TO DAQ THREAD");
+    //vmmDataHandler->moveToThread(daqThread);
     //daqThread->start();
 
    // QString fname = "dummy_filename.txt";
@@ -848,7 +852,7 @@ void MainWindow::SetInitialState()
     ui->writeRB->setChecked(true);
 
     // don't yet prepare the config
-    ui->prepareConfigButton->setEnabled(false);
+    //ui->prepareConfigButton->setEnabled(false);
 
     // disable ability to send config
     ui->SendConfiguration->setEnabled(false);

@@ -65,7 +65,7 @@ bool SRSConfig::readXMLfile(const string filename)
         BOOST_FOREACH(const ptree::value_type &v, pt.get_child("srs")) {
             if(v.first == "fec") {
                 try {
-                    cout << "SRSConfig::readXMLfile    at fec[" << n_fec << "] --> NOT LOADING IT YET" << endl;
+                    cout << "SRSConfig::readXMLfile    at fec[" << n_fec << "] " << endl;
                     m_fecArray[n_fec] = new Fec();
                     if(!m_fecArray[n_fec]->loadFec(v)) ok = false;
                     #warning previous version sets f++ in array index??
@@ -95,6 +95,19 @@ bool SRSConfig::readXMLfile(const string filename)
 
     return ok;
 }
+string SRSConfig::getFecContainsChipName(string chipname)
+{
+    string out = "";
+    for(int i = 0; i < m_fecArraySize; i++) {
+        for(int j = 0; j < m_fecArray[i]->m_chipArraySize; j++) {
+            if(!m_fecArray[i]->m_chipArray[j]->getName().compare(chipname)) {
+                out = m_fecArray[i]->getId();
+            }
+        } // j
+    } // i
+    return out;
+}
+
 
 void SRSConfig::print()
 {

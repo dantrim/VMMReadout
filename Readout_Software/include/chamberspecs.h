@@ -32,7 +32,7 @@ class ChamberSpecs {
 
         std::string m_name;
         std::string m_id;
-        Multilayer *m_multilayer;
+        MultiLayer *m_multilayer;
 
 }; //class
 

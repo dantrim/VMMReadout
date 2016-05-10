@@ -1,0 +1,114 @@
+#include "createevents.h"
+
+//std/stl
+#include <set>
+
+//boost
+#include <boost/lexical_cast.hpp>
+
+////////////////////////////////////////////////////////////////////////
+// CREATEVENTS
+////////////////////////////////////////////////////////////////////////
+CreateEvents::CreateEvents() :
+    n_eventCounter(-1),
+    m_daq(0),
+    m_srs(0),
+    m_detector(0)
+{
+    cout << "INITIALIZE CREATEVENTS" << endl;
+}
+void CreateEvents::setDaq(DaqConfig* daq)
+{
+    m_daq = daq;
+    m_srs = &daq->getSrsConfig();
+    m_detector = &daq->getDetectorConfig();
+    n_eventCounter = -1;
+}
+
+
+// this method is the "createNewEvents3()" from the older DAQ code
+void CreateEvents::createEvents()
+{
+    for(int i = 0; i < getDetector().getChamberArraySize(); i++) {
+        string chamber_name = getDetector().m_chamberArray[i]->getName();
+        set<string> readout;
+        for(int j = 0; j < getDetector().m_chamberArray[i]->connectorArraySize(); j++) {
+            //if(!getDetector().m_chamberArray[i]->getChipName().compare(4,1,"2")) break; // this is an APV thing?
+            cout << "CreateEvents::createEvents   " << getDetector().m_chamberArray[i]->m_connectorArray[j]->getChipName() << " : " << getDetector().m_chamberArray[i]->m_connectorArray[j]->getName() << endl;
+
+            string chip_name = getDetector().m_chamberArray[i]->m_connectorArray[j]->getChipName();
+            string connector_name = getDetector().m_chamberArray[i]->m_connectorArray[j]->getName();
+            string chamber_name = getDetector().m_chamberArray[i]->getName();
+            //cout << __LINE__ << endl;
+
+            map_channel channels;
+            for(int k = 0; k < getDetector().m_chamberArray[i]->m_chamberSpecs->getConnectorArraySize(); k++) {
+                if(!connector_name.compare(getDetector().m_chamberArray[i]->m_chamberSpecs->m_connectorArray[k]->getName())) {
+                    //cout << __LINE__ << endl;
+                    string fec_name = getSrs().getFecContainsChipName(getDetector().m_chamberArray[i]->m_connectorArray[j]->getChipName());
+                    for(vector<tuple<int, int, int, string, int>>::iterator it = getDetector().m_chamberArray[i]->m_chamberSpecs->m_connectorArray[k]->data.begin();
+                                it != getDetector().m_chamberArray[i]->m_chamberSpecs->m_connectorArray[k]->data.end(); ++it) {
+
+                        cout << "ceonnectSepc" << endl;
+                        cout << "coo " << get<0>(*it) << " " << get<1>(*it) << " " << get<2>(*it) << " " << get<3>(*it) << " " << get<4>(*it) << endl;
+
+                        // map the chamber pin to the connector/chip pint
+                        tuple<int, int, int> myTuple = getDetector().m_chamberArray[i]->m_connectorArray[j]->getPin(get<0>(*it));
+                        cout << "PIN: " << endl;
+                        cout << "   chip name: " << chip_name << "  cham: " << get<0>(*it) << "  con: " << get<0>(myTuple) << "  1: " << get<1>(myTuple) << "  2: " << get<2>(myTuple) << endl;
+
+                        // { connector strip : Event() }
+                        cout << "BLAH" << endl;
+                        // channels 0-63 of VMM are odd # VMMs
+                        if(boost::lexical_cast<int>(get<0>(*it)) < 64) {
+                            channels[get<1>(myTuple)] = new Event( chamber_name, to_string(get<1>(*it)), to_string(get<2>(*it)), get<3>(*it), to_string(get<4>(*it)), fec_name,
+                                                                        "NaN", to_string(get<1>(myTuple)));
+                            cout << "yep  " << chamber_name << "  " << to_string(get<1>(*it)) << "  " << to_string(get<2>(*it)) << "  " << get<3>(*it) << "  " << to_string(get<4>(*it)) << "  " << fec_name << "  " << "NaN" << "  " << to_string(get<1>(myTuple)) << endl;
+                        }
+                        // channels 64-127 are even # VMMs
+                        else if(boost::lexical_cast<int>(get<0>(*it)) >=64) {
+                            channels[get<2>(myTuple)] = new Event( chamber_name, to_string(get<1>(*it)), to_string(get<2>(*it)), get<3>(*it), to_string(get<4>(*it)), fec_name,
+                                                                        "NaN", to_string(get<2>(myTuple)));
+                            cout << "yep  " <<  chamber_name << "  " << to_string(get<1>(*it)) << "  " << to_string(get<2>(*it)) << "  " << get<3>(*it) << "  " << to_string(get<4>(*it)) << "  " << fec_name << "  " << "NaN" << "  " << to_string(get<2>(myTuple)) << endl;
+                        }
+                        
+                    } // it
+                } // this connector is attached to this chamber element
+            } // k
+            // { chip name : { connector strip : Event() } }
+            cout << __LINE__ << endl;
+            m_chips_map[chip_name] = channels;
+        } // j
+    }//i
+}
+
+string CreateEvents::getEvent(int chip, int channel, int event, int charge, int time)
+{
+    cout << "in getEvent" << endl;
+    if(chip >= 16)
+        chip -= 16;
+    string chip_str;
+    if (chip < 10) {
+        chip_str = "VMM2.1.0";
+        cout << "getEvent " << __LINE__ << endl;
+        chip_str += boost::lexical_cast<std::string>(chip);
+        cout << "getEvent " << __LINE__ << endl;
+    }
+    else {
+        chip_str = "VMM2.1.";
+        cout << "getEvnet " << __LINE__ << endl;
+        chip_str += boost::lexical_cast<std::string>(chip);
+        cout << "getEvnet " << __LINE__ << endl;
+    }
+
+   cout << "getEvnet " << __LINE__ << endl;
+    cout << "\n\nHardcoding chip name for mapping ==> fix!\n\n" << endl;
+    chip_str = "VMM2.1.00";
+    cout << "[" << chip_str << "][" << channel << "]" << endl;
+    ((m_chips_map.find(chip_str))->second).find(channel)->second->constructEvent(event, charge, time);
+
+   cout << "getEvnet " << __LINE__ << endl;
+    cout << ((m_chips_map.find(chip_str))->second).find(channel)->second->msg() << endl;
+    return ((m_chips_map.find(chip_str))->second).find(channel)->second->msg();
+}
+    
