@@ -113,7 +113,7 @@ void DataHandler::testSharedMem()
 
         m_sh->publishEvent(outvector);
 
-        sleep(1);
+        //sleep(1);
         n++;
     }
 

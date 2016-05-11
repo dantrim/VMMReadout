@@ -113,7 +113,9 @@ MainWindow::MainWindow(QWidget *parent) :
     vmmRunModule->LoadSocket(*vmmSocketHandler);
 
     // testing shared memory
-    connect(ui->testSharedMemory, SIGNAL(pressed()), vmmDataHandler, SLOT(testSharedMem()));
+    // make it direct connection (which means the daq thread will not be the thread in which it is processed
+    // but this will not be needed when actually processing shared memory)
+    connect(ui->testSharedMemory, SIGNAL(pressed()), vmmDataHandler, SLOT(testSharedMem()), Qt::DirectConnection);
 
 
     //////////////////////////////////////////////////////////////////////
@@ -332,8 +334,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     //thread
-    msg()("NOT MOVING TO DAQ THREAD");
-    //vmmDataHandler->moveToThread(daqThread);
+    //msg()("NOT MOVING TO DAQ THREAD");
+    vmmDataHandler->moveToThread(daqThread);
     //daqThread->start();
 
    // QString fname = "dummy_filename.txt";
