@@ -9,7 +9,7 @@
 
 //mmdaq
 #include "connector.h"
-#include "chamberSpecs.h"
+#include "chamberspecs.h"
 #include "coordinates.h"
 
 
