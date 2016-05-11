@@ -15,9 +15,11 @@ ln -s objects/libMylib.so .
 
 if [ "${is_mac_}" == "--mac" ]
 then
-    qmake -spec macx-g++ -o Makefile vmmall.pro
+    qmake -spec macx-g++ -o Makefile vmmdcs.pro
+    #qmake -spec macx-g++ -o Makefile vmmall.pro
 else
-    qmake -o Makefile vmmall.pro
+    qmake -o Makefile vmmdcs.pro
+    #qmake -o Makefile vmmall.pro
 fi
 
 
