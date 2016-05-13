@@ -73,35 +73,35 @@ void SharedMemoryWriter::publishEvent(vector<string> event)
 {
     int counter = 0;
 
-    // initialize the lock on the shared memory
-    static boost::interprocess::named_mutex shm_mutex(boost::interprocess::open_or_create, "mmDaqSharedMutex");
-    static boost::interprocess::scoped_lock< boost::interprocess::named_mutex > lock(shm_mutex,
-                                                    boost::interprocess::defer_lock_type());
-
-    try {
-        boost::posix_time::ptime timeout(boost::posix_time::second_clock::universal_time() +
-                                            boost::posix_time::seconds(50));
-        if(!lock.timed_lock(timeout)) {
-            cout << "SharedMemoryWriter::publishEvent    Lock timed out (fail)" << endl;
-            #warning what is this for?
-        }
+//    // initialize the lock on the shared memory
+//    static boost::interprocess::named_mutex shm_mutex(boost::interprocess::open_or_create, "mmDaqSharedMutex");
+//    static boost::interprocess::scoped_lock< boost::interprocess::named_mutex > lock(shm_mutex,
+//                                                    boost::interprocess::defer_lock_type());
+//
+//    try {
+//        boost::posix_time::ptime timeout(boost::posix_time::second_clock::universal_time() +
+//                                            boost::posix_time::seconds(50));
+//        if(!lock.timed_lock(timeout)) {
+//            cout << "SharedMemoryWriter::publishEvent    Lock timed out (fail)" << endl;
+//            #warning what is this for?
+//        }
 
         publish_event_info();
         //publish_raw_data();
         publish_event_strips(event);
 
-        m_shm_condition->notify_all();
-
-        if(lock) {
-            lock.unlock();
-            cout << "SharedMemoryWriter::publishEvent    shm_mutex unlocked" << endl;
-            #warning is this needed?
-        }
-        counter++;
-    } //
-    catch(boost::interprocess::interprocess_exception &e) {
-        cout << "SharedMemoryWriter::publishEvent    ERROR: " << e.what() << endl;
-    }
+//        m_shm_condition->notify_all();
+//
+//        if(lock) {
+//            lock.unlock();
+//            cout << "SharedMemoryWriter::publishEvent    shm_mutex unlocked" << endl;
+//            #warning is this needed?
+//        }
+//        counter++;
+//    } //
+//    catch(boost::interprocess::interprocess_exception &e) {
+//        cout << "SharedMemoryWriter::publishEvent    ERROR: " << e.what() << endl;
+//    }
 
 }
 
@@ -134,10 +134,12 @@ void SharedMemoryWriter::publish_raw_data()
 void SharedMemoryWriter::publish_event_strips(vector<string> event)
 {
     ShmemCharString local_string(m_shm_manager->get_allocator<ShmemCharAllocator>());
+    int nev = 0;
     for(auto ev : event) {
         local_string = ev.c_str();
-        cout << "Publish event strips : " << local_string << endl;
+        cout << "SharedMmeoryWriter::publish_event_strips: strip[" << nev << "] : " << local_string << endl;
         m_shm_event_strings->push_back(local_string);
+        nev++;
     } // ev
     return;
 }

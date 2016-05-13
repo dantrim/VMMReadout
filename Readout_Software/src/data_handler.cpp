@@ -54,9 +54,12 @@ DataHandler::DataHandler(QObject *parent) :
     m_runProperties(NULL),
     m_artTree(NULL)
 {
+    m_sharedDataStrips.clear();
     m_daqConf = new DaqConfig();
     m_daqConf->loadXml("DAQ_config.xml");
     m_ce = new CreateEvents();
+    m_ce->setDaq(m_daqConf);
+    m_ce->createEvents();
     m_sh = new SharedMemoryWriter();
     m_sh->initializeSharedMemory();
   //  m_daqConf = new DaqConfig();
@@ -78,8 +81,6 @@ DataHandler::DataHandler(QObject *parent) :
 void DataHandler::testSharedMem()
 {
 
-    m_ce->setDaq(m_daqConf);
-    m_ce->createEvents();
 
    // m_daqConf = new DaqConfig();
 
@@ -92,29 +93,34 @@ void DataHandler::testSharedMem()
 
     //SharedMemoryWriter* sh = new SharedMemoryWriter();
     //sh->initializeSharedMemory();
-    cout << "DATAHANDLER " << __LINE__ << endl;
 
-    int n = 0;
-    while(true) {
-        if(n>10) break;
+    int n = 1000;
+    //vector<string> outvector;
+    for (int i = 0; i < n; i++){
+        //if(n>10) break;
         int chip_number = 1;
         int channel = 30;
         int event = 12;
         int charge = 720;
         int time = 70;
-        vector<string> outvector;
-        cout << "DATAHAN " << __LINE__ << endl;
+        string x = "10 TL2 0 0 X 45 1 20 60 40 40 40 40";
+        //    outvector.push_back(m_ce->getEvent(chip_number, channel, event, charge, time, charge, time));
+        //cout << "BLAH getEvent [" << n << "] : " << m_ce->getEvent(chip_number, channel, event, charge, time, charge, time) << endl;
+        //m_sh->publishEvent(outvector);
         for(int i = 0; i < 10; i++) {
             //string data = "1 23 87 74 X X X"; 
             //outvector.push_back(data);
-            cout << "DATAHAN " << __LINE__ << endl;
-            outvector.push_back(m_ce->getEvent(chip_number, channel, event, charge, time));
+            m_sharedDataStrips.push_back(x);
+            //outvector.push_back(x);
+            //outvector.push_back(m_ce->getEvent(chip_number, channel, event, charge, time, charge, time));
         }
 
-        m_sh->publishEvent(outvector);
 
-        //sleep(1);
-        n++;
+       // usleep(100*1000);
+    m_sh->publishEvent(m_sharedDataStrips);
+    //m_sh->publishEvent(outvector);
+    m_sharedDataStrips.clear();
+    //outvector.clear();
     }
 
 }
@@ -211,6 +217,7 @@ void DataHandler::testDAQSocketRead()
     quint16 senderPort;
    
     testDAQSocket->readDatagram(buffer.data(), buffer.size(), &sender, &senderPort); 
+    //QString sender_port = senderPort.toIPv4Address().toString();
 
     qDebug() << "--------------------------------";
     qDebug() << "--------------------------------";
@@ -971,7 +978,11 @@ void DataHandler::readEvent()
   //  while(daqSocket().hasPendingDatagrams()){
   //      datagram.resize(daqSocket().socket().pendingDatagramSize());
   //      daqSocket().socket().readDatagram(datagram.data(), datagram.size(), &vmmip);
+    m_sharedDataStrips.clear();
     while(testDAQSocket->hasPendingDatagrams()) {
+        //shared
+
+        //shared
         datagram.resize(testDAQSocket->pendingDatagramSize());
         testDAQSocket->readDatagram(datagram.data(), datagram.size(), &vmmip);
 
@@ -1024,6 +1035,9 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
     bool verbose = false;
 
     QString frameCounterStr = datagram.mid(0,4).toHex(); //Frame Counter
+
+    //shared
+    vector<string> outvector;
 
     ///////////////////////////////////////
     //event data incoming from chip
@@ -1157,8 +1171,8 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                 uint gray = DataHandler::grayToBinary(outBCID_);
                 _gray.push_back(gray);
 
-                if(dbg() && verbose) {
-               // if(true) {
+              //  if(dbg() && verbose) {
+                if(true) {
                     sx.str("");
                     sx << "channel          : " << channel_no << "\n"
                        << "flag             : " << flag << "\n"
@@ -1173,7 +1187,19 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                     //msg()(sx,"DataHandler::decodeAndWriteData");
                     //msg()(" "," ");
                 } // dbg
+        //shared
+        //string x = "10 TL2 0 0 X 45 1 20 60 40 40 40 40";
+        string x = "";
+        x = m_ce->getEvent(chipNumberStr.toInt(&ok,16), channel_no, outBCID_, outCharge_, outTac_, outCharge_, outTac_); 
+        cout << "-------------------------------" << endl;
+        cout << "DataHandler::decodeAndWriteData RETURN FROM GET EVENT: " << x << endl; 
+        cout << "-------------------------------" << endl;
+        m_sharedDataStrips.push_back(x);
 
+                //shared
+                //cout << "BLAH : " << m_ce->getEvent(chipNumberStr.toInt(&ok,16), channel_no, outBCID_, outCharge_, outTac_, outCharge_, outTac_, outCharge_, outTac_) << endl;
+                //m_sharedDataStrips->push_back(m_ce->getEvent(chipNumberStr.toInt(&ok,16), channel_no, outBCID_, outCharge_, outTac_, outCharge_, outTac_, outCharge_, outTac_));
+                
                 // move to next channel (8 bytes forward)
                 i += 8;
             } // i
@@ -1299,6 +1325,14 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
 
         // clear the data containers for this chip before the next one
         // is read int
+
+        m_sh->publishEvent(m_sharedDataStrips);
+        m_sharedDataStrips.clear();
+        //shared
+        //out << "BLAH SIZE OF STRIPS TO SHARED : " << m_sharedDataStrips->size();
+        //m_sh->publishEvent(*m_sharedDataStrips);
+
+
         clearData();
 
     } // == fafafafa

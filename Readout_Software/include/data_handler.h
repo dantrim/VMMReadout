@@ -111,6 +111,7 @@ class DataHandler : public QObject
         DaqConfig* m_daqConf;
         CreateEvents* m_ce;
         SharedMemoryWriter* m_sh;
+        std::vector<std::string> m_sharedDataStrips;
 
         //thread
         QUdpSocket *testDAQSocket;

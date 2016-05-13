@@ -191,6 +191,7 @@ QByteArray VMMSocket::processReply(const QString &ip_to_check, quint32 cmd_delay
         //debug
         datagram.resize(socket().pendingDatagramSize());
         socket().readDatagram(datagram.data(), datagram.size(), &vmmIP);
+        //QString vmm_ip = vmmIP.toIPv4Address().toString();
 
       //  buffer().resize(socket().pendingDatagramSize());
       //  socket().readDatagram(buffer().data(), buffer().size(), &vmmIP);
@@ -201,6 +202,7 @@ QByteArray VMMSocket::processReply(const QString &ip_to_check, quint32 cmd_delay
             sx.str("");
             sx << "Received datagram (hex): \n"
                << datagram.toHex().toStdString() << "\n"
+               //<< "from VMM with IP: " << vmm_ip 
                << "from VMM with IP: " << vmmIP.toString().toStdString()
                << " and message size is " << datagram.size();
             msg()(sx,"VMMSocket::processReply");sx.str("");
@@ -229,6 +231,7 @@ QByteArray VMMSocket::processReply(const QString &ip_to_check, quint32 cmd_delay
         }
 
         // fill our list of VMM replies
+        //replies.append(vmm_ip);
         replies.append(vmmIP.toString());
     }//while
 

@@ -82,33 +82,27 @@ void CreateEvents::createEvents()
     }//i
 }
 
-string CreateEvents::getEvent(int chip, int channel, int event, int charge, int time)
+string CreateEvents::getEvent(int chip, int channel, int event, int charge, int time, int charge2, int time2)
 {
-    cout << "in getEvent" << endl;
     if(chip >= 16)
         chip -= 16;
     string chip_str;
     if (chip < 10) {
         chip_str = "VMM2.1.0";
-        cout << "getEvent " << __LINE__ << endl;
         chip_str += boost::lexical_cast<std::string>(chip);
-        cout << "getEvent " << __LINE__ << endl;
     }
     else {
         chip_str = "VMM2.1.";
-        cout << "getEvnet " << __LINE__ << endl;
         chip_str += boost::lexical_cast<std::string>(chip);
-        cout << "getEvnet " << __LINE__ << endl;
     }
 
-   cout << "getEvnet " << __LINE__ << endl;
     cout << "\n\nHardcoding chip name for mapping ==> fix!\n\n" << endl;
     chip_str = "VMM2.1.00";
-    cout << "[" << chip_str << "][" << channel << "]" << endl;
-    ((m_chips_map.find(chip_str))->second).find(channel)->second->constructEvent(event, charge, time);
+    cout << "CreateEvents::getEvent    event for [" << chip_str << "][" << channel << "]" << endl;
+    return ((m_chips_map.find(chip_str))->second).find(channel)->second->constructEvent(event, charge, time, charge2, time2);
+    //((m_chips_map.find(chip_str))->second).find(channel)->second->constructEvent(event, charge, time, charge2, time2);
 
-   cout << "getEvnet " << __LINE__ << endl;
-    cout << ((m_chips_map.find(chip_str))->second).find(channel)->second->msg() << endl;
-    return ((m_chips_map.find(chip_str))->second).find(channel)->second->msg();
+   // cout << "CreateEvents::getEvent Event msg(): " << ((m_chips_map.find(chip_str))->second).find(channel)->second->msg() << endl;
+   // return ((m_chips_map.find(chip_str))->second).find(channel)->second->msg();
 }
     

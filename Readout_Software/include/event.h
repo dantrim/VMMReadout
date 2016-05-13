@@ -15,7 +15,8 @@ class Event {
                 std::string chip,
                 std::string channel);
 
-        void constructEvent(int event, int charge, int time);
+        std::string constructEvent(int event, int charge, int time, int charge2, int time2);
+        //void constructEvent(int event, int charge, int time, int charge2, int time2);
         std::string msg();
 
     private :
@@ -32,6 +33,8 @@ class Event {
         std::string m_channelStr;
         std::string m_chargeStr;
         std::string m_timeStr;
+        std::string m_pdoStr;
+        std::string m_tdoStr;
 
 }; // class
 

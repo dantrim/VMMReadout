@@ -34,7 +34,7 @@ class CreateEvents {
 
         map_chip m_chips_map;
 
-        std::string getEvent(int chip, int channel, int event, int charge, int time);
+        std::string getEvent(int chip, int channel, int event, int charge, int time, int charge2, int time2);
 
     private :
         int n_eventCounter;
