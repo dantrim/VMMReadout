@@ -56,6 +56,7 @@ class SharedMemoryWriter {
         SharedMemoryWriter();
         //virtual ~SharedMemoryWriter();
         void initializeSharedMemory();
+        void clearSharedMemory();
 
         void publishEvent(std::vector<std::string> event);
         void publishEvent();

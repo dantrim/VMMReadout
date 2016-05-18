@@ -42,6 +42,12 @@ void SharedMemoryWriter::initializeSharedMemory()
 
 }
 
+void SharedMemoryWriter::clearSharedMemory()
+{
+    boost::interprocess::shared_memory_object::remove("mmDaqSharedMemory");
+    boost::interprocess::named_condition::remove("mmDaqSharedCondition");
+}
+
 void SharedMemoryWriter::run()
 {
     cout << " *** *** *** *** *** *** *** *** *** *** *** *** *** ***   " << endl;
@@ -135,6 +141,11 @@ void SharedMemoryWriter::publish_event_strips(vector<string> event)
 {
     ShmemCharString local_string(m_shm_manager->get_allocator<ShmemCharAllocator>());
     int nev = 0;
+    cout << "SharedMemoryWriter::publish_event_strips  strips size: " << m_shm_event_strings->size() << endl;
+    if(m_shm_event_strings->size()>1000){
+        cout << "SharedMemoryWriter::publish_event_strips    CLEARING EVENT STRIPS" << endl;
+         m_shm_event_strings->clear();
+    }
     for(auto ev : event) {
         local_string = ev.c_str();
         cout << "SharedMmeoryWriter::publish_event_strips: strip[" << nev << "] : " << local_string << endl;
