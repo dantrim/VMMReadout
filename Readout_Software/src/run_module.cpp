@@ -486,7 +486,7 @@ void RunModule::ACQoff()
     socket().closeAndDisconnect("fec", "RunModule::ACQoff");
 }
 // ------------------------------------------------------------------------ //
-void RunModule::setEventHeaders(const int bld_info, const int bld_mode)
+void RunModule::setEventHeaders(const int bld_info, const int bld_mode, bool highRes)
 {
     if(dbg()) msg()("Setting event headers...","RunModule::setEventHeaders");
 
@@ -502,8 +502,20 @@ void RunModule::setEventHeaders(const int bld_info, const int bld_mode)
     msbCounter = "0x80000000";
 
     // setup the word
-    quint32 evbldinfo = (quint32) 256 * pow(2, bld_info);
+    quint32 evbldinfo = 0;
+    if(bld_info==0)             evbldinfo = 0;
+    else if(bld_info==1)        evbldinfo = 256;
+    else if(bld_info==2)        evbldinfo = 512;
+    else if(bld_info==3)        evbldinfo = 768;
+    else if(bld_info==4)        evbldinfo = 1024;
+    else if(bld_info==5)        evbldinfo = 1280;
+    //quint32 evbldinfo = (quint32) 256*bld_info;
     quint32 evbldmode = (quint32)bld_mode;
+
+    //resolution
+    quint32 resolutionBits = 0;
+    if(highRes)
+        resolutionBits = 32768;
 
     for(const auto& ip : socket().ipList()) {
         datagram.clear();
@@ -526,8 +538,7 @@ void RunModule::setEventHeaders(const int bld_info, const int bld_mode)
         out << (quint32) 10 //[16,19]
             << (quint32) evbldmode //[20,23]
             << (quint32) 12 //[24,27]
-        #warning WHY IS bld info hard coded to 1280??
-            << (quint32) 1280; //[28,31] 
+            << (quint32) (evbldinfo + resolutionBits); //[28,31]
 
         socket().SendDatagram(datagram, ip, send_to_port, "fec",
                                                 "RunModule::setEventHeaders");
@@ -982,7 +993,8 @@ void RunModule::s6clocks(int cktk, int ckbc, int ckbc_skew)
 
 }
 // ------------------------------------------------------------------------ //
-void RunModule::setS6Resets(int s6_tk_pulses, bool set_s6_autoReset, bool set_s6_fecReset)
+void RunModule::setS6Resets(int s6_tk_pulses, bool set_s6_autoReset, bool set_s6_fecReset,
+                                    int s6_fec_periodRest)
 {
     if(dbg()) msg()("Setting s6 reset settings...","RunModule::setS6Resets");
 
@@ -996,6 +1008,11 @@ void RunModule::setS6Resets(int s6_tk_pulses, bool set_s6_autoReset, bool set_s6
     QString cmd, msbCounter;
     cmd = "AAAAFFFF";
     msbCounter = "0x80000000"; 
+    int s6_auto_reset = 0;
+    int s6_fec_reset = 0;
+    bool fec_reset = false;
+    if(set_s6_autoReset) s6_auto_reset = 8;
+    if(set_s6_fecReset) { s6_fec_reset = 32; fec_reset = true; }
 
     for(const auto& ip : socket().ipList()) {
         datagram.clear();
@@ -1016,13 +1033,16 @@ void RunModule::setS6Resets(int s6_tk_pulses, bool set_s6_autoReset, bool set_s6
         ////////////////////////////
         out << (quint32) 0; //[12,15]
 
-        int s6_auto = 0;
-        int s6_fec = 0;
-        if(set_s6_autoReset) s6_auto = 8;
-        if(set_s6_fecReset) s6_fec = 16;
-
         out << (quint32) 9 //[16,19]
-            << (quint32)( s6_tk_pulses + s6_auto + s6_fec); //[20,23]
+            << (quint32)( s6_tk_pulses + s6_auto_reset + s6_fec_reset); //[20,23]
+
+    //    int s6_auto = 0;
+    //    int s6_fec = 0;
+    //    if(set_s6_autoReset) s6_auto = 8;
+    //    if(set_s6_fecReset) s6_fec = 16;
+
+    //    out << (quint32) 9 //[16,19]
+    //        << (quint32)( s6_tk_pulses + s6_auto + s6_fec); //[20,23]
 
         socket().SendDatagram(datagram, ip, send_to_port, "fec",
                                                 "RunModule::setS6Resets");
@@ -1037,6 +1057,44 @@ void RunModule::setS6Resets(int s6_tk_pulses, bool set_s6_autoReset, bool set_s6
                                     "RunModule::setS6Resets", true);
             socket().closeAndDisconnect("fec","RunModule::setS6Resets");
             exit(1);
+        }
+
+        ////////////////////////////////
+        // set periodic reset
+        ////////////////////////////////
+
+        bool resetSeek = out.device()->reset();
+        if(resetSeek) {
+            emit s6resetStatus(true);
+            socket().updateCommandCounter();
+            out << (quint32)(socket().commandCounter() + msbCounter.toUInt(&ok,16))
+                << (quint32) config().getHDMIChannelMap()
+                << (quint32) cmd.toUInt(&ok,16);
+
+            /////////////////////
+            // command
+            /////////////////////
+            out << (quint32) 9
+                << (quint32) s6_fec_periodRest;
+
+            socket().SendDatagram(datagram, ip, send_to_port, "fec",
+                                                "RunModule::setS6Resets");
+
+            readOK = socket().waitForReadyRead("fec");
+            if(readOK) {
+                if(dbg()) msg()("Processing replies [2]...", "RunModule::setS6Resets");
+                socket().processReply("fec", ip);
+            } else {
+                msg()("Timeout while waiting for replies from VMM [2]",
+                                    "RunModule::setS6Resets", true);
+                socket().closeAndDisconnect("fec","RunModule::setS6Resets");
+                exit(1);
+            } // readok
+        } //resetSeek
+        else {
+            msg()("Error upon resetting datastream seek. Unable to send period reset command for FEC",
+                                        "RunModule::setS6Resets");
+            emit s6resetStatus(false);
         }
     } // ip
 

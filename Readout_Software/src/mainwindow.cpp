@@ -275,6 +275,8 @@ MainWindow::MainWindow(QWidget *parent) :
     // s6 reset configuration
     connect(ui->setck_s6_resets, SIGNAL(clicked()),
                                     this, SLOT(setS6Resets()));
+    connect(vmmRunModule, SIGNAL(s6resetStatus(bool)),
+                                    this, SLOT(set_s6resetStatus(bool)));
 
     // daq ~conversion to mV
     connect(ui->sdt, SIGNAL(valueChanged(int)),
@@ -336,38 +338,9 @@ MainWindow::MainWindow(QWidget *parent) :
     /////////////////////////////////////////////////////////////////////
     SetInitialState();
 
-
     //thread
     //msg()("NOT MOVING TO DAQ THREAD");
     vmmDataHandler->moveToThread(daqThread);
-    //daqThread->start();
-
-   // QString fname = "dummy_filename.txt";
-   // connect(this, SIGNAL(testThread(QString)), vmmDataHandler, SLOT(daqThreadWhere(QString)));
-   // //emit testThread(fname);
-   // QUdpSocket* dummySocket = new QUdpSocket();
-   // dummySocket->bind(QHostAddress::LocalHost, 1234);
-
-   // QByteArray datatest;
-   // datatest.append(" >>>> THIS IS A TEST DATAGRAM <<<< ");
-   // dummySocket->writeDatagram(datatest, QHostAddress("10.0.0.2"), 6006);
-   // //dummySocket->writeDatagram(datatest, QHostAddress::LocalHost, 1235);
-
-   // //dataHandle().testFunction();
-   // connect(this, SIGNAL(testFunction2()), vmmDataHandler, SLOT(testFunction2()));
-   // //emit testFunction2();
-
-   // QString one = "ONE";
-   // QString two = "TWO";
-   // QString three = "THREE";
-
-   // connect(this, SIGNAL(testMultiARG(QString,QString,QString)),
-   //                         vmmDataHandler, SLOT(testMultiARG(QString,QString,QString)));
-   // //emit testMultiARG(one, two, three);
-
-
-   // delete dummySocket;
-
 }
 
 // ------------------------------------------------------------------------- //
@@ -1920,7 +1893,8 @@ void MainWindow::writeConfigurationToFile()
 void MainWindow::setAndSendEventHeaders()
 {
     runModule().setEventHeaders(ui->evbld_infodata->currentIndex(),
-                                ui->evbld_mode->currentIndex());
+                                ui->evbld_mode->currentIndex(),
+                                ui->timeStampResCheckBox->isChecked());
     ui->appRB->setChecked(1);
 }
 // ------------------------------------------------------------------------- //
@@ -2025,9 +1999,19 @@ void MainWindow::setS6Resets()
     ui->s6RB->setChecked(true);
     runModule().setS6Resets(ui->s6_tkPulses->value(),
                             ui->s6_autoReset->isChecked(),
-                            ui->s6_FECReset->isChecked());
+                            ui->s6_FECReset->isChecked(),
+                            ui->fecPeriodReset->value());
 }
 // ------------------------------------------------------------------------- //
+void MainWindow::set_s6resetStatus(bool ok)
+{
+    if(ok) {
+        ui->setck_s6_resets->setStyleSheet("background-color: green");
+    }
+    else {
+        ui->setck_s6_resets->setStyleSheet("background-color: red");
+    }
+}
 // ------------------------------------------------------------------------- //
 void MainWindow::triggerHandler()
 

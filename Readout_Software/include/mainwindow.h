@@ -257,6 +257,7 @@ class MainWindow : public QMainWindow
         void triggerHandler();
         void setS6clocks();
         void setS6Resets();
+        void set_s6resetStatus(bool);
         void configureTP();
         void updateLogScreen();
         void toggleDebug();

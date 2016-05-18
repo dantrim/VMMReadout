@@ -62,7 +62,7 @@ class RunModule : public QObject
         //////////////////////////////////////////////////////
         // Misc. methods
         //////////////////////////////////////////////////////
-        void setEventHeaders(const int evbld_info, const int evbld_mode);
+        void setEventHeaders(const int evbld_info, const int evbld_mode, bool highRes=false);
         void resetASICs();
         void resetFEC(bool do_reset);
         void setMask();
@@ -70,7 +70,8 @@ class RunModule : public QObject
         void checkLinkStatus();
         void resetLinks();
         void s6clocks(int cktk, int ckbc, int ckbc_skew);
-        void setS6Resets(int s6_tk_pulses, bool set_s6_autoReset, bool set_s6_fecReset);
+        void setS6Resets(int s6_tk_pulses, bool set_s6_autoReset, bool set_s6_fecReset,
+                                int s6_fec_periodReset);
         void configTP(int tpskew, int tpwidth, int tppolarity);
 
     private :
@@ -87,6 +88,7 @@ class RunModule : public QObject
     signals :
         void EndRun();
         void checkLinks();
+        void s6resetStatus(bool);
 
     public slots :
         void Run();
