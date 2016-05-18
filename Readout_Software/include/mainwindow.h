@@ -187,6 +187,8 @@ class MainWindow : public QMainWindow
         void stopCalibrationLoop();
 
         // DataHandler related
+        void monitorDataSignal(bool);
+        void clearSharedMemory(int);
         void setUseChannelMap(bool);
         void loadELxChannelMapping(QString);
         void setWriteNtuple(bool);

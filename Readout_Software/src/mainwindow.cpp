@@ -123,6 +123,10 @@ MainWindow::MainWindow(QWidget *parent) :
     // connect DataHandler functions
     //------------------------------------------------------------------//
     //////////////////////////////////////////////////////////////////////
+
+    connect(this, SIGNAL(monitorDataSignal(bool)), vmmDataHandler, SLOT(set_monitorData(bool)), Qt::DirectConnection);
+    connect(this, SIGNAL(clearSharedMemory(int)), vmmDataHandler, SLOT(clearSharedMemory(int)), Qt::DirectConnection);
+    connect(ui->doMonitoring, SIGNAL(stateChanged(int)), vmmDataHandler, SLOT(clearSharedMemory()), Qt::DirectConnection);
     connect(this, SIGNAL(setUseChannelMap(bool)), vmmDataHandler, SLOT(setUseChannelMap(bool)));
     connect(this, SIGNAL(loadELxChannelMapping(QString)), vmmDataHandler, SLOT(loadELxChannelMapping(QString)));
     connect(this, SIGNAL(setWriteNtuple(bool)), vmmDataHandler, SLOT(setWriteNtuple(bool)));
@@ -375,7 +379,6 @@ void MainWindow::keepButtonState(bool)
             ui->trgPulser->setDown(true);
         }
     }
-
 }
 // ------------------------------------------------------------------------- //
 MainWindow::~MainWindow()
@@ -2044,6 +2047,14 @@ void MainWindow::triggerHandler()
 
         //spin up the DAQ
         daqThread->start();
+        delay();
+
+        //shared memory
+        if(ui->doMonitoring->isChecked()) {
+            emit clearSharedMemory(1);
+            delay();
+        }
+        emit monitorDataSignal(ui->doMonitoring->isChecked());
         delay();
 
         //mapping
