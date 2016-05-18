@@ -45,6 +45,7 @@ class DataHandler : public QObject
 
         void setDebug(bool dbg) { m_dbg = dbg; }
         bool dbg() { return m_dbg; }
+        bool monitoring() { return m_doMonitoring; }
         void LoadMessageHandler(MessageHandler& msg);
         MessageHandler& msg() { return *m_msg; }
 
@@ -102,6 +103,7 @@ class DataHandler : public QObject
 
     private :
         bool m_dbg;
+        bool m_doMonitoring;
         bool m_calibRun;
         bool m_write;
         bool m_ignore16;
@@ -235,6 +237,8 @@ class DataHandler : public QObject
         void readEvent();
         void EndRun();
         void writeAndCloseDataFile();
+        void set_monitorData(bool);
+        void clearSharedMemory();
         void setUseChannelMap(bool);
         void loadELxChannelMapping(QString);
         void setWriteNtuple(bool);

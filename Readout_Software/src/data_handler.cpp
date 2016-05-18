@@ -29,6 +29,7 @@ using namespace std;
 DataHandler::DataHandler(QObject *parent) :
     QObject(parent),
     m_dbg(false),
+    m_doMonitoring(false),
     m_calibRun(false),
     m_write(false),
     n_daqCnt(0),
@@ -160,17 +161,6 @@ void DataHandler::connectDAQSocket()
             }
         } // bnd ok
     }
-
-    //qDebug() << "CONNECT DAQ SOCKET THREAD : " << QThread::currentThreadId();
-
-
-
-//    bool bind = testDAQSocket->bind(6006);
-//    if(bind){ }
-//        //msg()("DAQ SOCKET BOUND SUCCESS");
-//    else {
-//        msg()("DAQ SOCKET FAIL TO BIND");
-//    }
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::closeDAQSocket()
@@ -235,6 +225,31 @@ void DataHandler::testDAQSocketRead()
 void DataHandler::LoadMessageHandler(MessageHandler& m)
 {
     m_msg = &m;
+}
+// ------------------------------------------------------------------------ //
+void DataHandler::set_monitorData(bool doit)
+{
+    if(dbg()) {
+        stringstream sx;
+        if(doit)
+            sx << "Setting monitoring on...";
+        else {
+            sx << "Setting monitoring off...";
+        }
+        msg()(sx, "DataHandler::set_monitorData");
+    }
+    m_doMonitoring = doit;
+}
+// ------------------------------------------------------------------------ //
+void DataHandler::clearSharedMemory(/*int*/ /*dummy*/)
+{
+    cout << "CLEARING SHARED MEMORY" << endl;
+    if(dbg()) {
+        stringstream sx;
+        sx << "Clearing shared memory...";
+        msg()(sx, "DataHandler::clearSharedMemory");
+    }
+    m_sh->clearSharedMemory();
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::setUseChannelMap(bool useMap)
@@ -1036,9 +1051,6 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
 
     QString frameCounterStr = datagram.mid(0,4).toHex(); //Frame Counter
 
-    //shared
-    vector<string> outvector;
-
     ///////////////////////////////////////
     //event data incoming from chip
     ///////////////////////////////////////
@@ -1187,19 +1199,18 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                     //msg()(sx,"DataHandler::decodeAndWriteData");
                     //msg()(" "," ");
                 } // dbg
-        //shared
-        //string x = "10 TL2 0 0 X 45 1 20 60 40 40 40 40";
-        string x = "";
-        x = m_ce->getEvent(chipNumberStr.toInt(&ok,16), channel_no, outBCID_, outCharge_, outTac_, outCharge_, outTac_); 
-        cout << "-------------------------------" << endl;
-        cout << "DataHandler::decodeAndWriteData RETURN FROM GET EVENT: " << x << endl; 
-        cout << "-------------------------------" << endl;
-        m_sharedDataStrips.push_back(x);
 
                 //shared
-                //cout << "BLAH : " << m_ce->getEvent(chipNumberStr.toInt(&ok,16), channel_no, outBCID_, outCharge_, outTac_, outCharge_, outTac_, outCharge_, outTac_) << endl;
-                //m_sharedDataStrips->push_back(m_ce->getEvent(chipNumberStr.toInt(&ok,16), channel_no, outBCID_, outCharge_, outTac_, outCharge_, outTac_, outCharge_, outTac_));
-                
+                if(monitoring()) {
+                    //string x = "10 TL2 0 0 X 45 1 20 60 40 40 40 40";
+                    string x = "";
+                    x = m_ce->getEvent(chipNumberStr.toInt(&ok,16), channel_no, outBCID_, outCharge_, outTac_, outCharge_, outTac_); 
+                    cout << "-------------------------------" << endl;
+                    cout << "DataHandler::decodeAndWriteData RETURN FROM GET EVENT: " << x << endl; 
+                    cout << "-------------------------------" << endl;
+                    m_sharedDataStrips.push_back(x);
+                }
+
                 // move to next channel (8 bytes forward)
                 i += 8;
             } // i
@@ -1326,8 +1337,10 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
         // clear the data containers for this chip before the next one
         // is read int
 
-        m_sh->publishEvent(m_sharedDataStrips);
-        m_sharedDataStrips.clear();
+        if(monitoring()) {
+            m_sh->publishEvent(m_sharedDataStrips);
+            m_sharedDataStrips.clear();
+        }
         //shared
         //out << "BLAH SIZE OF STRIPS TO SHARED : " << m_sharedDataStrips->size();
         //m_sh->publishEvent(*m_sharedDataStrips);
