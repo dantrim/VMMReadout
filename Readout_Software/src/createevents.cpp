@@ -49,34 +49,26 @@ void CreateEvents::createEvents()
                     for(vector<tuple<int, int, int, string, int>>::iterator it = getDetector().m_chamberArray[i]->m_chamberSpecs->m_connectorArray[k]->data.begin();
                                 it != getDetector().m_chamberArray[i]->m_chamberSpecs->m_connectorArray[k]->data.end(); ++it) {
 
-                        cout << "ceonnectSepc" << endl;
-                        cout << "coo " << get<0>(*it) << " " << get<1>(*it) << " " << get<2>(*it) << " " << get<3>(*it) << " " << get<4>(*it) << endl;
-
                         // map the chamber pin to the connector/chip pint
                         tuple<int, int, int> myTuple = getDetector().m_chamberArray[i]->m_connectorArray[j]->getPin(get<0>(*it));
-                        cout << "PIN: " << endl;
-                        cout << "   chip name: " << chip_name << "  cham: " << get<0>(*it) << "  con: " << get<0>(myTuple) << "  1: " << get<1>(myTuple) << "  2: " << get<2>(myTuple) << endl;
 
                         // { connector strip : Event() }
-                        cout << "BLAH" << endl;
                         // channels 0-63 of VMM are odd # VMMs
                         if(boost::lexical_cast<int>(get<0>(*it)) < 64) {
                             channels[get<1>(myTuple)] = new Event( chamber_name, to_string(get<1>(*it)), to_string(get<2>(*it)), get<3>(*it), to_string(get<4>(*it)), fec_name,
                                                                         "NaN", to_string(get<1>(myTuple)));
-                            cout << "yep  " << chamber_name << "  " << to_string(get<1>(*it)) << "  " << to_string(get<2>(*it)) << "  " << get<3>(*it) << "  " << to_string(get<4>(*it)) << "  " << fec_name << "  " << "NaN" << "  " << to_string(get<1>(myTuple)) << endl;
                         }
                         // channels 64-127 are even # VMMs
                         else if(boost::lexical_cast<int>(get<0>(*it)) >=64) {
                             channels[get<2>(myTuple)] = new Event( chamber_name, to_string(get<1>(*it)), to_string(get<2>(*it)), get<3>(*it), to_string(get<4>(*it)), fec_name,
                                                                         "NaN", to_string(get<2>(myTuple)));
-                            cout << "yep  " <<  chamber_name << "  " << to_string(get<1>(*it)) << "  " << to_string(get<2>(*it)) << "  " << get<3>(*it) << "  " << to_string(get<4>(*it)) << "  " << fec_name << "  " << "NaN" << "  " << to_string(get<2>(myTuple)) << endl;
+                            //cout << "yep  " <<  chamber_name << "  " << to_string(get<1>(*it)) << "  " << to_string(get<2>(*it)) << "  " << get<3>(*it) << "  " << to_string(get<4>(*it)) << "  " << fec_name << "  " << "NaN" << "  " << to_string(get<2>(myTuple)) << endl;
                         }
                         
                     } // it
                 } // this connector is attached to this chamber element
             } // k
             // { chip name : { connector strip : Event() } }
-            cout << __LINE__ << endl;
             m_chips_map[chip_name] = channels;
         } // j
     }//i
