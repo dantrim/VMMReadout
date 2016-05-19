@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	This is the configuration file of the detector,
+	list of chambers and connections to electronics.
+	A part of mmDAQ configuration
+	generated automatically by mmdaq3
+	-->
+
+<detector name = "TestBeam_setup_down">
+   <comment> Dummy detector comment</comment>
+   <position> <x>0.0</x> <y>0.0</y> <z>10.0</z> </position>
+   <rotation> <x>0.0</x> <y>0.0</y> <z> 0.0</z> </rotation>
+
+     <chamber name = "Tmm2">
+       <!-- config file describes chamber type-->
+       <config_file>Tmm-chamber.xml</config_file>
+       <drift_gap> 5.0 </drift_gap>
+       <voltage>  <drift> 300</drift> <mesh> 0</mesh> <strips> 500</strips> </voltage>
+       <position> <x>0.0</x> <y>0.0</y> <z> 0.0</z> </position> <!-- in mm -->
+       <rotation> <x>0.0</x> <y>0.0</y> <z> 0.0</z> </rotation> <!-- in deg-->
+       <!-- Connectors in chamber, repeat for each chip plugged -->
+		<connector name = "C1"> <chip> <name>APV.1.00</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+		<connector name = "C4"> <chip> <name>APV.1.02</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+     </chamber>
+
+     <chamber name = "Tmm3">
+       <!-- config file describes chamber type-->
+       <config_file>Tmm-chamber.xml</config_file>
+       <drift_gap> 5.0 </drift_gap>
+       <voltage>  <drift> 300</drift> <mesh> 0</mesh> <strips> 500</strips> </voltage>
+       <position> <x>0.0</x> <y>0.0</y> <z> 0.0</z> </position> <!-- in mm -->
+       <rotation> <x>0.0</x> <y>0.0</y> <z> 0.0</z> </rotation> <!-- in deg-->
+       <!-- Connectors in chamber, repeat for each chip plugged -->
+		<connector name = "C1"> <chip> <name>APV.1.01</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+		<connector name = "C4"> <chip> <name>APV.1.03</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+     </chamber>
+    
+    
+     <chamber name = "T2">
+        <!-- config file describes chamber type-->
+        <config_file>T-chamber.xml</config_file>
+        <drift_gap> 5.0 </drift_gap>
+        <voltage>  <drift> 300</drift> <mesh> 0</mesh> <strips> 500</strips> </voltage>
+        <position> <x>0.0</x> <y>0.0</y> <z> 0.0</z> </position> <!-- in mm -->
+        <rotation> <x>0.0</x> <y>0.0</y> <z> 0.0</z> </rotation> <!-- in deg-->
+        <!-- Connectors in chamber, repeat for each chip plugged -->
+        	 <connector name = "C0"> <chip> <name>APV.1.06</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+        	 <connector name = "C1"> <chip> <name>APV.1.07</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+     </chamber>
+     
+     <chamber name = "TQF">
+        <!-- config file describes chamber type-->
+        <config_file>T-chamber.xml</config_file>
+        <drift_gap> 5.0 </drift_gap>
+        <voltage>  <drift> 300</drift> <mesh> 0</mesh> <strips> 500</strips> </voltage>
+        <position> <x>0.0</x> <y>0.0</y> <z> 0.0</z> </position> <!-- in mm -->
+        <rotation> <x>0.0</x> <y>0.0</y> <z> 0.0</z> </rotation> <!-- in deg-->
+        <!-- Connectors in chamber, repeat for each chip plugged -->
+        	 <connector name = "C0"> <chip> <name>APV.1.04</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+        	 <connector name = "C1"> <chip> <name>APV.1.05</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+     </chamber>
+     
+     <chamber name = "Tmm5">
+       <!-- config file describes chamber type-->
+       <config_file>Tmm-chamber.xml</config_file>
+       <drift_gap> 5.0 </drift_gap>
+       <voltage>  <drift> 300</drift> <mesh> 0</mesh> <strips> 500</strips> </voltage>
+       <position> <x>0.0</x> <y>0.0</y> <z> 0.0</z> </position> <!-- in mm -->
+       <rotation> <x>0.0</x> <y>0.0</y> <z> 0.0</z> </rotation> <!-- in deg-->
+       <!-- Connectors in chamber, repeat for each chip plugged -->
+		<connector name = "C1"> <chip> <name>APV.1.08</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+		<connector name = "C4"> <chip> <name>APV.1.10</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+     </chamber>
+ 
+     <chamber name = "Tmm6">
+       <!-- config file describes chamber type-->
+       <config_file>Tmm-chamber.xml</config_file>
+       <drift_gap> 5.0 </drift_gap>
+       <voltage>  <drift> 300</drift> <mesh> 0</mesh> <strips> 500</strips> </voltage>
+       <position> <x>0.0</x> <y>0.0</y> <z> 0.0</z> </position> <!-- in mm -->
+       <rotation> <x>0.0</x> <y>0.0</y> <z> 0.0</z> </rotation> <!-- in deg-->
+       <!-- Connectors in chamber, repeat for each chip plugged -->
+		<connector name = "C1"> <chip> <name>APV.1.09</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+		<connector name = "C4"> <chip> <name>APV.1.11</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+     </chamber>
+	
+	
+	
+       <chamber name = "MMSW">
+       <!-- config file describes chamber type-->
+       <config_file>MMSW-chamber.xml</config_file>
+       <drift_gap> 5.0 </drift_gap>
+       <voltage>  <drift> 300</drift> <mesh> 0</mesh> <strips> 500</strips> </voltage>
+       <position> <x>0.0</x> <y>0.0</y> <z> 0.0</z> </position> <!-- in mm -->
+       <rotation> <x>0.0</x> <y>0.0</y> <z> 0.0</z> </rotation> <!-- in deg-->
+       <!-- Connectors in chamber, repeat for each chip plugged -->
+		<connector name = "L0_C0"> <chip> <name>APV.2.00</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+		<connector name = "L0_C1"> <chip> <name>APV.2.01</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+		<connector name = "L0_C2"> <chip> <name>APV.2.02</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+		<connector name = "L0_C3"> <chip> <name>APV.2.03</name> </chip> <map_file>apv-map.txt</map_file> </connector> 
+		<connector name = "L1_C0"> <chip> <name>APV.2.04</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+		<connector name = "L1_C1"> <chip> <name>APV.2.05</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+		<connector name = "L1_C2"> <chip> <name>APV.2.06</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+		<connector name = "L1_C3"> <chip> <name>APV.2.07</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+		<connector name = "L2_C0"> <chip> <name>APV.2.08</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+		<connector name = "L2_C1"> <chip> <name>APV.2.09</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+		<connector name = "L2_C2"> <chip> <name>APV.2.10</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+		<connector name = "L2_C3"> <chip> <name>APV.2.11</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+		<connector name = "L3_C0"> <chip> <name>APV.2.12</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+		<connector name = "L3_C1"> <chip> <name>APV.2.13</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+		<connector name = "L3_C2"> <chip> <name>APV.2.14</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+		<connector name = "L3_C3"> <chip> <name>APV.2.15</name> </chip> <map_file>apv-map.txt</map_file> </connector> 
+							    
+     </chamber> 					    
+
+     <chamber name = "Tmm4">
+       <!-- config file describes chamber type-->
+       <config_file>Tmm-chamber.xml</config_file>
+       <drift_gap> 5.0 </drift_gap>
+       <voltage>  <drift> 300</drift> <mesh> 0</mesh> <strips> 500</strips> </voltage>
+       <position> <x>0.0</x> <y>0.0</y> <z> 0.0</z> </position> <!-- in mm -->
+       <rotation> <x>0.0</x> <y>0.0</y> <z> 0.0</z> </rotation> <!-- in deg-->
+       <!-- Connectors in chamber, repeat for each chip plugged -->
+		<connector name = "C1"> <chip> <name>APV.1.12</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+		<connector name = "C4"> <chip> <name>APV.1.13</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+     </chamber>
+							    
+     <chamber name = "ExMe1">
+       <!-- config file describes chamber type-->
+       <config_file>ExMe-chamber.xml</config_file>
+       <drift_gap> 5.0 </drift_gap>
+       <voltage>  <drift> 300</drift> <mesh> 0</mesh> <strips> 500</strips> </voltage>
+
+       <position> <x>0.0</x> <y>0.0</y> <z> 0.0</z> </position> <!-- in mm -->
+       <rotation> <x>0.0</x> <y>0.0</y> <z> 0.0</z> </rotation> <!-- in deg-->
+       <!-- Connectors in chamber, repeat for each chip plugged -->
+		<connector name = "C5"> <chip> <name>APV.1.14</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+		<connector name = "C6"> <chip> <name>APV.1.15</name> </chip> <map_file>apv-map.txt</map_file> </connector>
+     </chamber>
+			
+					    
+</detector>						    
+	
