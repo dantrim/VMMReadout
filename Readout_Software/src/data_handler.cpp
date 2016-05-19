@@ -81,21 +81,10 @@ DataHandler::DataHandler(QObject *parent) :
 void DataHandler::testSharedMem()
 {
 
-
-   // m_daqConf = new DaqConfig();
-
-   // DaqConfig* daqConf = new DaqConfig();
-   // std::string config = "DAQ_config.xml";
-   // daq->loadXml(config);
-   // CreateEvents* ce = new CreateEvents();
-   // ce->setDaq(daq);
-   // ce->createEvents();
-
-    //SharedMemoryWriter* sh = new SharedMemoryWriter();
-    //sh->initializeSharedMemory();
+    if(!m_monitoringSetup)
+        setupMonitoring();
 
     int n = 1000;
-    //vector<string> outvector;
     for (int i = 0; i < n; i++){
         //if(n>10) break;
         int chip_number = 1;
@@ -104,23 +93,12 @@ void DataHandler::testSharedMem()
         int charge = 720;
         int time = 70;
         string x = "10 TL2 0 0 X 45 1 20 60 40 40 40 40";
-        //    outvector.push_back(m_ce->getEvent(chip_number, channel, event, charge, time, charge, time));
-        //cout << "BLAH getEvent [" << n << "] : " << m_ce->getEvent(chip_number, channel, event, charge, time, charge, time) << endl;
-        //m_sh->publishEvent(outvector);
         for(int i = 0; i < 10; i++) {
-            //string data = "1 23 87 74 X X X"; 
-            //outvector.push_back(data);
             m_sharedDataStrips.push_back(x);
-            //outvector.push_back(x);
             //outvector.push_back(m_ce->getEvent(chip_number, channel, event, charge, time, charge, time));
         }
-
-
-       // usleep(100*1000);
     m_sh->publishEvent(m_sharedDataStrips);
-    //m_sh->publishEvent(outvector);
     m_sharedDataStrips.clear();
-    //outvector.clear();
     }
 
 }
