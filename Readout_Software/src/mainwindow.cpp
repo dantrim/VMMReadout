@@ -126,7 +126,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(this, SIGNAL(monitorDataSignal(bool)), vmmDataHandler, SLOT(set_monitorData(bool)), Qt::DirectConnection);
     connect(this, SIGNAL(clearSharedMemory(int)), vmmDataHandler, SLOT(clearSharedMemory(int)), Qt::DirectConnection);
-    connect(ui->doMonitoring, SIGNAL(stateChanged(int)), vmmDataHandler, SLOT(clearSharedMemory()), Qt::DirectConnection);
+    //connect(ui->doMonitoring, SIGNAL(stateChanged(int)), vmmDataHandler, SLOT(clearSharedMemory()), Qt::DirectConnection);
     connect(this, SIGNAL(setUseChannelMap(bool)), vmmDataHandler, SLOT(setUseChannelMap(bool)));
     connect(this, SIGNAL(loadELxChannelMapping(QString)), vmmDataHandler, SLOT(loadELxChannelMapping(QString)));
     connect(this, SIGNAL(setWriteNtuple(bool)), vmmDataHandler, SLOT(setWriteNtuple(bool)));
@@ -2034,10 +2034,8 @@ void MainWindow::triggerHandler()
         delay();
 
         //shared memory
-        if(ui->doMonitoring->isChecked()) {
-            emit clearSharedMemory(1);
-            delay();
-        }
+        ui->doMonitoring->setEnabled(false);
+        dataHandle().set_monitorData(ui->doMonitoring->isChecked());
         emit monitorDataSignal(ui->doMonitoring->isChecked());
         delay();
 
@@ -2192,6 +2190,7 @@ void MainWindow::triggerHandler()
             ui->checkTriggers->setEnabled(false);
             ui->stopTriggerCnt->setEnabled(true);
 
+            ui->doMonitoring->setEnabled(false);
         } // not writing data
 
         ui->runNumber->setEnabled(false);
@@ -2217,6 +2216,11 @@ void MainWindow::triggerHandler()
             emit stopCalibrationLoop();
             delay();
         }
+        //shared
+        //emit clearSharedMemory(1);
+        ui->doMonitoring->setEnabled(true);
+        dataHandle().clearSharedMemory();
+        delay();
 
         ui->runStatusField->setText("Run:"+ui->runNumber->text()+" finished");
         ui->runStatusField->setStyleSheet("background-color: lightGray");

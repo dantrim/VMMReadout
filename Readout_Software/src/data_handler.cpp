@@ -243,7 +243,6 @@ void DataHandler::set_monitorData(bool doit)
 // ------------------------------------------------------------------------ //
 void DataHandler::clearSharedMemory(/*int*/ /*dummy*/)
 {
-    cout << "CLEARING SHARED MEMORY" << endl;
     if(dbg()) {
         stringstream sx;
         sx << "Clearing shared memory...";
@@ -1183,8 +1182,8 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                 uint gray = DataHandler::grayToBinary(outBCID_);
                 _gray.push_back(gray);
 
-              //  if(dbg() && verbose) {
-                if(true) {
+                if(dbg() && verbose) {
+                //if(true) {
                     sx.str("");
                     sx << "channel          : " << channel_no << "\n"
                        << "flag             : " << flag << "\n"
@@ -1202,12 +1201,13 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
 
                 //shared
                 if(monitoring()) {
+                //if(true){
                     //string x = "10 TL2 0 0 X 45 1 20 60 40 40 40 40";
                     string x = "";
                     x = m_ce->getEvent(chipNumberStr.toInt(&ok,16), channel_no, outBCID_, outCharge_, outTac_, outCharge_, outTac_); 
-                    cout << "-------------------------------" << endl;
-                    cout << "DataHandler::decodeAndWriteData RETURN FROM GET EVENT: " << x << endl; 
-                    cout << "-------------------------------" << endl;
+                    //cout << "-------------------------------" << endl;
+                    //cout << "DataHandler::decodeAndWriteData RETURN FROM GET EVENT: " << x << endl; 
+                    //cout << "-------------------------------" << endl;
                     m_sharedDataStrips.push_back(x);
                 }
 
@@ -1338,6 +1338,7 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
         // is read int
 
         if(monitoring()) {
+        //if(true) {
             m_sh->publishEvent(m_sharedDataStrips);
             m_sharedDataStrips.clear();
         }

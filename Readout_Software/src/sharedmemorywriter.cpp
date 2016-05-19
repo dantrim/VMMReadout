@@ -18,12 +18,7 @@ SharedMemoryWriter::SharedMemoryWriter() :
     m_createEvents(0),
     m_service(0)
 {
-    cout << "INIT SHAREDMEMORY WRITER" << endl;
 }
-//SharedMemoryWriter::~SharedMemoryWriter()
-//{
-//    removeSharedMemory();
-//}
 
 void SharedMemoryWriter::initializeSharedMemory()
 {
@@ -44,8 +39,10 @@ void SharedMemoryWriter::initializeSharedMemory()
 
 void SharedMemoryWriter::clearSharedMemory()
 {
-    boost::interprocess::shared_memory_object::remove("mmDaqSharedMemory");
-    boost::interprocess::named_condition::remove("mmDaqSharedCondition");
+    delete m_shm_manager;
+    delete m_shm_condition;
+
+    this->initializeSharedMemory();
 }
 
 void SharedMemoryWriter::run()
@@ -72,12 +69,19 @@ void SharedMemoryWriter::stopThread()
 
 void SharedMemoryWriter::publishEvent()
 {
-
-    cout << "EHLLO WORLD" << endl;
+    // dummy function
+    return;
 }
+
 void SharedMemoryWriter::publishEvent(vector<string> event)
 {
     int counter = 0;
+  //  cout << "-------------------------------------" << endl;
+  //  cout << "  shmem manager size: " << m_shm_manager->get_size() << endl;
+  //  cout << "  shmem manager free: " << m_shm_manager->get_free_memory() << endl;
+  //  cout << "-------------------------------------" << endl;
+
+    
 
 //    // initialize the lock on the shared memory
 //    static boost::interprocess::named_mutex shm_mutex(boost::interprocess::open_or_create, "mmDaqSharedMutex");
@@ -114,8 +118,8 @@ void SharedMemoryWriter::publishEvent(vector<string> event)
 void SharedMemoryWriter::publish_event_info()
 {
     *m_shm_event_id = n_event_counterNum;
-    cout << "SharedMemoryWriter::publish_event_info    event number: " << n_event_counterNum
-                << "  shm_event_id: " << *m_shm_event_id << endl;
+  //  cout << "SharedMemoryWriter::publish_event_info    event number: " << n_event_counterNum
+  //              << "  shm_event_id: " << *m_shm_event_id << endl;
     n_event_counterNum++;
 }
 
@@ -141,14 +145,15 @@ void SharedMemoryWriter::publish_event_strips(vector<string> event)
 {
     ShmemCharString local_string(m_shm_manager->get_allocator<ShmemCharAllocator>());
     int nev = 0;
-    cout << "SharedMemoryWriter::publish_event_strips  strips size: " << m_shm_event_strings->size() << endl;
+//    cout << "+++++++++++++++++++++++++++++++++++++++++++++++++++++" << endl;
+//    cout << "SharedMemoryWriter::publish_event_strips  strips size: " << m_shm_event_strings->size() << endl;
+//    cout << "+++++++++++++++++++++++++++++++++++++++++++++++++++++" << endl;
     if(m_shm_event_strings->size()>1000){
-        cout << "SharedMemoryWriter::publish_event_strips    CLEARING EVENT STRIPS" << endl;
          m_shm_event_strings->clear();
     }
     for(auto ev : event) {
         local_string = ev.c_str();
-        cout << "SharedMmeoryWriter::publish_event_strips: strip[" << nev << "] : " << local_string << endl;
+        //cout << "SharedMmeoryWriter::publish_event_strips: strip[" << nev << "] : " << local_string << endl;
         m_shm_event_strings->push_back(local_string);
         nev++;
     } // ev
