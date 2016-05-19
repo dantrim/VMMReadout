@@ -288,6 +288,9 @@ class MainWindow : public QMainWindow
         void setCalibrationACQoff();
         void endCalibrationRun();
 
+        //monitoring
+        void setupMonitoring(int);
+
 };
 
 

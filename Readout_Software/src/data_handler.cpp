@@ -30,6 +30,7 @@ DataHandler::DataHandler(QObject *parent) :
     QObject(parent),
     m_dbg(false),
     m_doMonitoring(false),
+    m_monitoringSetup(false),
     m_calibRun(false),
     m_write(false),
     n_daqCnt(0),
@@ -55,16 +56,14 @@ DataHandler::DataHandler(QObject *parent) :
     m_runProperties(NULL),
     m_artTree(NULL)
 {
-    m_sharedDataStrips.clear();
-    m_daqConf = new DaqConfig();
-    m_daqConf->loadXml("DAQ_config.xml");
-    m_ce = new CreateEvents();
-    m_ce->setDaq(m_daqConf);
-    m_ce->createEvents();
-    m_sh = new SharedMemoryWriter();
-    m_sh->initializeSharedMemory();
-  //  m_daqConf = new DaqConfig();
-  //  m_daqConf->loadXml("DAQ_config.xml");
+   // m_sharedDataStrips.clear();
+   // m_daqConf = new DaqConfig();
+   // m_daqConf->loadXml("DAQ_config.xml");
+   // m_ce = new CreateEvents();
+   // m_ce->setDaq(m_daqConf);
+   // m_ce->createEvents();
+   // m_sh = new SharedMemoryWriter();
+   // m_sh->initializeSharedMemory();
 
     //thread
    // testDAQSocket = new QUdpSocket();
@@ -124,6 +123,38 @@ void DataHandler::testSharedMem()
     //outvector.clear();
     }
 
+}
+// ------------------------------------------------------------------------ //
+void DataHandler::setupMonitoring()
+{
+    stringstream sx;
+    if(!m_monitoringSetup) {
+        //if(dbg()) {
+        if(true){
+            sx.str("");
+            sx << "Initializing SharedMemory and Monitoring tools...";
+            msg()(sx, "DataHandler::setupMonitoring");sx.str("");
+        }
+        m_sharedDataStrips.clear();
+        m_daqConf = new DaqConfig();
+        m_daqConf->loadXml("DAQ_config.xml");
+        m_ce = new CreateEvents();
+        m_ce->setDaq(m_daqConf);
+        m_ce->createEvents();
+        m_sh = new SharedMemoryWriter();
+        m_sh->initializeSharedMemory();
+
+        m_monitoringSetup = true;
+    }
+
+    //m_sharedDataStrips.clear();
+    //m_daqConf = new DaqConfig();
+    //m_daqConf->loadXml("DAQ_config.xml");
+    //m_ce = new CreateEvents();
+    //m_ce->setDaq(m_daqConf);
+    //m_ce->createEvents();
+    //m_sh = new SharedMemoryWriter();
+    //m_sh->initializeSharedMemory();
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::connectDAQSocket()
@@ -243,12 +274,14 @@ void DataHandler::set_monitorData(bool doit)
 // ------------------------------------------------------------------------ //
 void DataHandler::clearSharedMemory(/*int*/ /*dummy*/)
 {
-    if(dbg()) {
-        stringstream sx;
-        sx << "Clearing shared memory...";
-        msg()(sx, "DataHandler::clearSharedMemory");
+    if(m_monitoringSetup) {
+        if(dbg()) {
+            stringstream sx;
+            sx << "Clearing shared memory...";
+            msg()(sx, "DataHandler::clearSharedMemory");
+        }
+        m_sh->clearSharedMemory();
     }
-    m_sh->clearSharedMemory();
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::setUseChannelMap(bool useMap)
@@ -992,7 +1025,9 @@ void DataHandler::readEvent()
   //  while(daqSocket().hasPendingDatagrams()){
   //      datagram.resize(daqSocket().socket().pendingDatagramSize());
   //      daqSocket().socket().readDatagram(datagram.data(), datagram.size(), &vmmip);
-    m_sharedDataStrips.clear();
+
+    if(monitoring())
+        m_sharedDataStrips.clear();
     while(testDAQSocket->hasPendingDatagrams()) {
         //shared
 
@@ -1342,10 +1377,6 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
             m_sh->publishEvent(m_sharedDataStrips);
             m_sharedDataStrips.clear();
         }
-        //shared
-        //out << "BLAH SIZE OF STRIPS TO SHARED : " << m_sharedDataStrips->size();
-        //m_sh->publishEvent(*m_sharedDataStrips);
-
 
         clearData();
 

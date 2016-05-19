@@ -126,7 +126,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(this, SIGNAL(monitorDataSignal(bool)), vmmDataHandler, SLOT(set_monitorData(bool)), Qt::DirectConnection);
     connect(this, SIGNAL(clearSharedMemory(int)), vmmDataHandler, SLOT(clearSharedMemory(int)), Qt::DirectConnection);
-    //connect(ui->doMonitoring, SIGNAL(stateChanged(int)), vmmDataHandler, SLOT(clearSharedMemory()), Qt::DirectConnection);
+    connect(ui->doMonitoring, SIGNAL(stateChanged(int)), this, SLOT(setupMonitoring(int)));
     connect(this, SIGNAL(setUseChannelMap(bool)), vmmDataHandler, SLOT(setUseChannelMap(bool)));
     connect(this, SIGNAL(loadELxChannelMapping(QString)), vmmDataHandler, SLOT(loadELxChannelMapping(QString)));
     connect(this, SIGNAL(setWriteNtuple(bool)), vmmDataHandler, SLOT(setWriteNtuple(bool)));
@@ -2013,6 +2013,12 @@ void MainWindow::set_s6resetStatus(bool ok)
     }
 }
 // ------------------------------------------------------------------------- //
+void MainWindow::setupMonitoring(int /*doit*/)
+{
+    if(ui->doMonitoring->isChecked())
+        dataHandle().setupMonitoring();
+}
+// ------------------------------------------------------------------------- //
 void MainWindow::triggerHandler()
 
 {
@@ -2036,8 +2042,6 @@ void MainWindow::triggerHandler()
         //shared memory
         ui->doMonitoring->setEnabled(false);
         dataHandle().set_monitorData(ui->doMonitoring->isChecked());
-        emit monitorDataSignal(ui->doMonitoring->isChecked());
-        delay();
 
         //mapping
         if(ui->useMapping->isChecked()) {
@@ -2217,10 +2221,8 @@ void MainWindow::triggerHandler()
             delay();
         }
         //shared
-        //emit clearSharedMemory(1);
         ui->doMonitoring->setEnabled(true);
         dataHandle().clearSharedMemory();
-        delay();
 
         ui->runStatusField->setText("Run:"+ui->runNumber->text()+" finished");
         ui->runStatusField->setStyleSheet("background-color: lightGray");

@@ -5,7 +5,7 @@
     <position> <x>0.0</x> <y>0.0</y> <z>0.0</z> </position>
     <rotation> <x>0.0</x> <y>0.0</y> <z>0.0</z> </rotation>
 
-    <chamber name = "TL2">
+    <chamber name = "T6">
         <!-- config file describes the chamber -->
         <config_file>T-chamber.xml</config_file>
         <drift_gap>5.0</dfig_gap> <!-- mm -->
