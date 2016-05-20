@@ -92,7 +92,7 @@ void DataHandler::testSharedMem()
         int event = 12;
         int charge = 720;
         int time = 70;
-        string x = "10 TL2 0 0 X 45 1 20 60 40 40 40 40";
+        string x = "10 T6 0 0 X 45 1 20 60 40 40 40 40";
         for(int i = 0; i < 10; i++) {
             m_sharedDataStrips.push_back(x);
             //outvector.push_back(m_ce->getEvent(chip_number, channel, event, charge, time, charge, time));
