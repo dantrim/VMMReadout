@@ -443,8 +443,8 @@ void CDaqServerConfig::read_config_file(const std::string& filename)
       
 //   m_srs_config_file = m_daq_cfg.get("daq_config.srs_file", "");
 //   m_det_config_file = m_daq_cfg.get("daq_config.detector_file", "");
-   m_srs_config_file = m_daq_cfg.get("server_config.srs_file", "");
-   m_det_config_file = m_daq_cfg.get("server_config.detector_file", "");
+   m_srs_config_file = m_daq_cfg.get("daq_config.srs_file", "");
+   m_det_config_file = m_daq_cfg.get("daq_config.detector_file", "");
       
 //   qDebug("m_srs_config_file  = %s".m_srs_config_file);
    boost::filesystem::path daq_path(m_config_path);
