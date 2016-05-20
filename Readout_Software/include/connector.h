@@ -29,6 +29,7 @@ class Connector {
         std::string getMapFileName() { return m_map_filename; }
 
         #warning the data here is different for VMM than with APV
+        std::tuple<int, int, int> getChannel(int chamberStrip, int chip_number);
         std::tuple<int, int, int> getPin(int pin); // pinstr, chipstr, chanstr
         std::vector<std::tuple<int,int,int>> data; // pin, chip, chan
 

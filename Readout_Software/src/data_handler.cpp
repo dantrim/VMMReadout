@@ -118,7 +118,8 @@ void DataHandler::setupMonitoring()
         m_daqConf->loadXml("DAQ_config.xml");
         m_ce = new CreateEvents();
         m_ce->setDaq(m_daqConf);
-        m_ce->createEvents();
+        m_ce->buildMaps();
+        //m_ce->createEvents();
         m_sh = new SharedMemoryWriter();
         m_sh->initializeSharedMemory();
 
@@ -1138,7 +1139,7 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                         _neighbor.push_back(!(m_channel_for_calib == channel_no));
                     }
                 }
-
+                int unmapped_channel = channel_no;
                 if(useChannelMap()) {
                     int chan_test = channelToStrip(chipNumberStr.toInt(&ok,16),
                                 channel_no);
@@ -1217,7 +1218,7 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                 //if(true){
                     //string x = "10 TL2 0 0 X 45 1 20 60 40 40 40 40";
                     string x = "";
-                    x = m_ce->getEvent(chipNumberStr.toInt(&ok,16), channel_no, outBCID_, outCharge_, outTac_, outCharge_, outTac_); 
+                    x = m_ce->getEvent(chipNumberStr.toInt(&ok,16), unmapped_channel, outBCID_, outCharge_, outTac_, outCharge_, outTac_); 
                     //cout << "-------------------------------" << endl;
                     //cout << "DataHandler::decodeAndWriteData RETURN FROM GET EVENT: " << x << endl; 
                     //cout << "-------------------------------" << endl;

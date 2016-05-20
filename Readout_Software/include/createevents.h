@@ -26,7 +26,11 @@ class CreateEvents {
     public :
         CreateEvents();
         void setDaq(DaqConfig* daq);
+        void buildMaps();
         void createEvents();
+
+        void setDebug(bool doit = true) { m_dbg = doit; }
+        bool dbg() { return m_dbg; }
 
         DaqConfig& getDaq() { return *m_daq; }
         SRSConfig& getSrs() { return *m_srs; }
@@ -37,6 +41,7 @@ class CreateEvents {
         std::string getEvent(int chip, int channel, int event, int charge, int time, int charge2, int time2);
 
     private :
+        bool m_dbg;
         int n_eventCounter;
         DaqConfig* m_daq;
         SRSConfig* m_srs;

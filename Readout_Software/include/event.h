@@ -19,6 +19,16 @@ class Event {
         //void constructEvent(int event, int charge, int time, int charge2, int time2);
         std::string msg();
 
+        std::string getEventNumber() { return m_eventNumberStr; }
+        std::string getChamberName() { return m_chamberStr; }
+        std::string getMultiLayer() { return m_multilayerStr; }
+        std::string getLayer() { return m_layerStr; }
+        std::string getReadout() { return m_readoutStr; }
+        std::string getStrip() { return m_stripStr; }
+        std::string getFecName() { return m_fecStr; }
+        std::string getChipName() { return m_chipStr; }
+        std::string getChannel() { return m_channelStr; }
+
     private :
         int n_eventCounter;
 

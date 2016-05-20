@@ -124,6 +124,50 @@ bool Connector::readMapFile(string filename)
 
     int line_counter = 0;
 
+    // assuming tap separated columns:
+    // | vmmchannel | chip number (0 or 1) | T chamber strip |
+    while(getline(infile, line)){
+        line_counter++;
+        boost::trim(line);
+        if(boost::starts_with(line, "#") || line.empty()) { continue; } // avoid comments and empty lines
+        typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+        boost::char_separator<char> sep(", \t");
+        tokenizer tokens(line, sep);
+
+        string chanstr;
+        string chipnumstr;
+        string stripstr;
+
+        enum { state_chan, state_chip, state_strip } parse_state;
+        parse_state = state_chan;
+
+        for(tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter) {
+            // grab the first column info
+            if(parse_state == state_chan) {
+                chanstr = boost::trim_copy(*tok_iter);
+                parse_state = state_chip;
+            }
+            // grab the second column info
+            else if(parse_state == state_chip) {
+                chipnumstr = boost::trim_copy(*tok_iter);
+                parse_state = state_strip;
+            }
+            // grab the third column info
+            else if(parse_state == state_strip) {
+                stripstr = boost::trim_copy(*tok_iter);
+            }
+        } // tok_iter
+        if(parse_state != state_strip) {
+            ok = false;
+            stringstream sx;
+            sx << "Connector::readMapFile    ERROR reading map file '" << filename << "' at line " << line_counter << endl;
+            throw std::runtime_error(sx.str().c_str());
+        }
+        //cout << "readMapFile: " << chanstr << "  " << chipnumstr << "  " << stripstr << endl;
+        data.push_back( make_tuple(stoi(chanstr), stoi(chipnumstr), stoi(stripstr)) );
+    } // while  version2
+
+/*
     while(getline(infile, line)) {
         line_counter++;
         boost::trim(line);
@@ -167,12 +211,26 @@ bool Connector::readMapFile(string filename)
         data.push_back( make_tuple(stoi(pinstr), stoi(even_chanstr), stoi(odd_chanstr)) );
 
     } // while
+*/
     infile.close();
     sort(data.begin(), data.end(), dataCompare);
 
     return ok;
 }
+tuple<int, int, int> Connector::getChannel(int chamberStrip, int chip_number)
+{
+    // assuming that the VMM channel to chamber strip mapping is as follows:
+    // space separated columns:
+    // | vmm channel | chip number (0 or 1) | T chamber strip |
+    int chip_number_on_mini2 = ( (chip_number%2==0) ? 0 : 1);
+    for(tuple<int, int, int> t : data) {
+        if(chip_number_on_mini2==get<1>(t) && chamberStrip==get<2>(t)) {
+            return t;
+        }
+    }
+    return make_tuple(-1,-1,-1);
 
+}
 tuple<int, int, int> Connector::getPin(int pin)
 {
     #warning SUBTRACTING 2 FROM CHAMBER MAP PIN --  CHECK THAT THIS IS CORRECT FOR MINI2
