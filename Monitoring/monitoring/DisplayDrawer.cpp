@@ -68,7 +68,6 @@ DisplayDrawer::~DisplayDrawer()
 
 void DisplayDrawer::NotifyFill(QVector<std::pair<QString, QVector<int> > > rawData, std::vector <std::string> stripData, int eventNumber)
 {
-    qDebug("NOTIFY FILL");
     mem_rawData = rawData; //na figoun ta raw TODO
 
 
@@ -94,7 +93,6 @@ void DisplayDrawer::NotifyDraw()
 
 void DisplayDrawer::drawSharedData()
 {
-    qDebug("IN: DisplayDrawer::drawSharedData()");
     while(!service->stopping()) {
         QMutexLocker locker(&drawMutex);
         if(fillCondition.wait(&drawMutex,1000))   {
@@ -111,7 +109,6 @@ void DisplayDrawer::drawSharedData()
 
 void DisplayDrawer::changeActiveTab(int tabIndex)
 {
-    qDebug("ACTIVE TAB CHANGED!)");
     if(monitoringMainWindow->mainTabs->currentIndex()==0)   {
         drawEventHistos();
         //monitoringMainWindow->eventDisplayFrame->show();
@@ -167,7 +164,6 @@ void DisplayDrawer::apvRawHistoFiller()
 
 void DisplayDrawer::readoutHistoFiller()
 {
-    qDebug("readoutHistoFiller");
     if(!service->stopping())
         resetEventHistos_slot();//clearing event display histograms for new event
     for(int iLine = 0; iLine<mem_stripData.size(); iLine++)
@@ -205,7 +201,6 @@ void DisplayDrawer::fill_chip_raw(QString name, QVector<int> rawVector)
 //Data buffer reader (SLOT)
 int DisplayDrawer::handleBufferedEvent(QString line_qstr)
 {
-    qDebug("handleBufferedEvent");
     std::string line_str = line_qstr.toStdString();
     int column=0;
     int processedEventNumber=-1000;
@@ -216,8 +211,6 @@ int DisplayDrawer::handleBufferedEvent(QString line_qstr)
     tokenizer::iterator tok_iter = tokens.begin();
 
     //aikoulou: debug
-    qDebug() << "handleBufferedEvent -->";
-    qDebug() << line_str.c_str();
     //    std::cout << "<--\n";
     //containers for reading .bin file elements
     //elements' names
@@ -626,7 +619,6 @@ void DisplayDrawer::drawPedestalsHistos()
                             chipvecptr->getChipPedestalSigma()->GetBinCenter(chipvecptr->getChipPedestalSigma()->FindFirstBinAbove(0.0000001,2))-20,
                             chipvecptr->getChipPedestalSigma()->GetBinCenter(chipvecptr->getChipPedestalSigma()->FindLastBinAbove(0.000001,2))+20
                             );
-                qDebug("HERE%%%");
                 //                chipvecptr->getChipPedestalSigma()->GetYaxis()->SetRangeUser(
                 //                            chipvecptr->getChipPedestalSigma()->GetMean(2)-2*chipvecptr->getChipPedestalSigma()->GetRMS(2),
                 //                            chipvecptr->getChipPedestalSigma()->GetMean(2)+2*chipvecptr->getChipPedestalSigma()->GetRMS(2)

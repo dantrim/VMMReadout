@@ -63,14 +63,11 @@ ShmemReader::ShmemReader(std::vector<uint32_t> apvList, std::vector<std::string>
     //    std::cout << "call ShmemReader constractor" << std::endl;
     eventDisplayed = 0; // angelos
     if(m_shm_manager.check_sanity())    {
-//        qDebug("mmDaqSharedMemory==sane");
         //terminate=false;
         fillApvChipsList(apvList,apvChips);
         //        connect_shared_memory();		ANGELOS
-//        qDebug("mmDaqSharedMemory...new DisplayDrawer");
         mainDrawer = new DisplayDrawer(mainWindow);
 
-//        qDebug("mmDaqSharedMemory==qRegisterMetaType");
         qRegisterMetaType< QString >("QVector<int>");
         qRegisterMetaType< QVector<int> >("QVector<int>");
         qRegisterMetaType< QVector<QString> >("QVector<QString>");
@@ -92,12 +89,8 @@ ShmemReader::ShmemReader(std::vector<uint32_t> apvList, std::vector<std::string>
         connect(this, SIGNAL(drawHistograms()),
                 mainDrawer,SLOT(NotifyDraw()),Qt::DirectConnection);
 
-//        qDebug("mmDaqSharedMemory==MainLoopFunction");
-        //aikoulou: debug
-        //        std::cout << "create f CAsioService" << std::endl;
         online::display::CAsioService::MainLoopFunction f = boost::bind(&ShmemReader::handleSharedData, this);
         service->post(f);
-//        qDebug("mmDaqSharedMemory==posted");
     }else
         std::cout<<"Shared Memory not found.../n mmDaq-server probably not running"<<std::endl;
 }
@@ -228,7 +221,6 @@ void ShmemReader::read_event_number()
 
 
 
-    //        qDebug("");
     //std::cout << "RES int = " << res.second << std::endl;
 //    qDebug(">>> going to grab event No");
     realEvent=false;
@@ -238,21 +230,17 @@ void ShmemReader::read_event_number()
 //        qDebug(">>> Here is event number");
         if(eventDisplayed!=eventDisplayed_lastdisplayed)
         {
-            qDebug("EVENTDISPLAYED= hERE");
             std::cout << "eventDisplayed -->" << eventDisplayed << "<--" << std::endl;    //angelos
             eventDisplayed_lastdisplayed=eventDisplayed;
         }
         //            std::cout << "*res.first -->" << *res.first << "<--" << std::endl;
 
-//        qDebug("AAAAAAAA");
         if((((int)(*res.first))!=eventDisplayed) && (((int)(*res.first))!=0))   { //angelos
-//            qDebug("BBBBBBBBBBBB");
             eventDisplayed = *res.first;
             realEvent=true;
             std::cout<<"Trigger # : "<<(int)*res.first<<std::endl;
             //emit drawHistograms();
             //                read_raw_data(); //den xriazete
-            qDebug("GOING FOR read_event_strips");
 
             read_event_strips();
             //emit newEventReceived(QString::number(*res.first));
@@ -321,17 +309,14 @@ std::string ShmemReader::msg() {
 void ShmemReader::read_event_strips()
 {
 
-//    qDebug(">>> READ_EVENT_STRIPS");
     std::pair<ShmemCharStringVector*, size_t> res_str;
     res_str = m_shm_manager.find<ShmemCharStringVector> ("mmDaqSharedEventData");
     qDebug() << "void ShmemReader::read_event_strips RES vec = " << res_str.second;
     std::string line_str;
     if(res_str.second == 1)
     {
-        qDebug("111");
         stripDataEvent.clear();
         ShmemCharStringVector* vec = res_str.first;
-        qDebug("222");
         //std::cout<<"number of strips with data : "<<vec->size()<<std::endl;
         std::cout<<"Strip data vector size is "<<vec->size()<<std::endl;
         for (size_t ii = 0; ii < vec->size(); ++ii) {
@@ -353,7 +338,6 @@ void ShmemReader::read_event_strips()
     }
 
     else {
-        qDebug("NOPENOPENOPENOPE");
         std::cout << "ERR: mmDaqSharedEventData resvec.second=" << res_str.second << std::endl;
     }
 }

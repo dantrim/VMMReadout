@@ -795,7 +795,6 @@ void CDaqServerConfig::updateFrameCanvasesDivision_slot(QTreeWidgetItem* parentT
 
     if(parentTreeItem->parent()->text(0) == "Chamber Elements") //changing canvas divisions for readout histos
     {
-//        qDebug("DESELECTING === Chamber");
        //numberOfChamberElements = mainWindow->getElementsNumberOfCheckedChildren(parentTreeItem->parent());
        selectDeselectChamberChildren(parentTreeItem);
        numberOfChipElements = mainWindow->getElementsNumberOfCheckedChambersApvChips(parentTreeItem);
@@ -812,7 +811,6 @@ void CDaqServerConfig::updateFrameCanvasesDivision_slot(QTreeWidgetItem* parentT
     }
     else //changing canvas divisions for chip histos
     {
-//        qDebug("DESELECTING === APVs/VMMs");
        numberOfChipElements = mainWindow->getElementsNumberOfCheckedChambersApvChips(parentTreeItem->parent());
        //std::cout<<"Selecting - Deselecting Chips from chamber "<<parentTreeItem->parent()->text(0).toStdString()<<std::endl;
        //std::cout<<"Number of Chips Elements : "<<numberOfChipElements<<std::endl;
@@ -825,7 +823,6 @@ void CDaqServerConfig::updateFrameCanvasesDivision_slot(QTreeWidgetItem* parentT
 
     //aikoulou: let's try pausing monitoring here, and start again in the end of this function
     //in order to avoid crash during checking or unchecking.
-    qDebug("Continuing");
     usleep(100*1000);
 //    transmitStartSignal();
 
@@ -924,7 +921,6 @@ int CDaqServerConfig::numberOfReadoutsToDisplay(QTreeWidgetItem* parentTreeWidge
 
 void CDaqServerConfig::selectDeselectChamberChildren(QTreeWidgetItem* parentTreeWidget)
 {
-    qDebug("DESELECTING");
     for(int i=0; i<parentTreeWidget->childCount(); i++)
     {
         if(parentTreeWidget->checkState(0)==2)

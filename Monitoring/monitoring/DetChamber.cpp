@@ -105,10 +105,8 @@ void CDetChamber::configure_connector_connection(const boost::shared_ptr<CDetCon
    std::vector<DetConnPtr> ::iterator found = std::find_if(m_connectors.begin(), m_connectors.end(),
                                                            CDetBase::NameEquals<CDetConnector>(conn->name()));
 
-   qDebug()<<"********************************************IN configure_connector_connection: found=";
 
    if (found != m_connectors.end()) {
-       qDebug("found != m_connectors.end()");
       (*found)->set_chip_connection_from(conn, (*found));
       //chip?
    }

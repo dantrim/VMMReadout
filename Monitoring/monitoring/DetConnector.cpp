@@ -218,14 +218,12 @@ void CDetConnector::read_strip_map_file(const std::string& filename)
 
 void CDetConnector::read_chip_connection_map_file(const std::string& filename, const CDaqServerConfig* )
 {
-   std::cout << "CDetConnector::read_chip_connection_map_file for "  << name()  << std::endl;
-qDebug("IN: read_chip_connection_map_file");
+   std::cout << "CDetConnector::read_chip_connection_map_file (" << filename << ") for "  << name()  << std::endl;
    
    struct stat stFileInfo;
    if (stat(filename.c_str(), &stFileInfo)) {
       std::stringstream ss;
       ss << "CDetConnector::read_chip_connection_map_file(): '"<< filename << "' does not exist.";
-      qDebug("THE FUKING FILE DOES NOT EXIST");
       throw ss.str().c_str();
    }
 
@@ -287,9 +285,15 @@ qDebug("IN: read_chip_connection_map_file");
       
       try {
          size_t pin = boost::numeric_cast<size_t>(boost::lexical_cast<size_t>( pinstr ));
-         qDebug()<<"chipstr ==  "<<chipstr.c_str();
          size_t chipseq = boost::numeric_cast<size_t>(boost::lexical_cast<size_t>(chipstr));
          size_t chan = boost::numeric_cast<size_t>(boost::lexical_cast<size_t>( chanstr ));
+
+            //dantrim
+         //for(auto c : m_connected_chips) {
+         //   std::cout << "c.first : " << c.first << "  c.second : " << c.second.lock()->name() << std::endl;
+         //}
+         #warning dantrim forcing chip seq to 0 for monitoring --> I don't think monitoring needs all of this infomration!!!!
+        chipseq = 0;
          
          std::vector<ConnectedChipSeqPair>::iterator found = std::find_if(m_connected_chips.begin(),
                                                                           m_connected_chips.end(),
@@ -310,12 +314,10 @@ qDebug("IN: read_chip_connection_map_file");
          
       } catch( boost::bad_lexical_cast const& ) {
          std::stringstream ss;
-         qDebug("not valid entry in line");
          ss << "ERROR: CDetConnector::read_chip_connection_map_file '" << filename 
          << "' not valid entry in line " << lineCounter;
          throw std::runtime_error(ss.str().c_str());
       } catch( boost::bad_numeric_cast const& ) {
-          qDebug("value out of range in line");
           std::cout << "ERROR: CDetConnector::read_chip_connection_map_file '" << filename
           << "' value out of range in line " << lineCounter;
          std::stringstream ss;
@@ -323,7 +325,6 @@ qDebug("IN: read_chip_connection_map_file");
          << "' value out of range in line " << lineCounter;
          throw std::runtime_error(ss.str().c_str());
       } catch (std::range_error& re ) {
-          qDebug("sth else");
          throw;
       }
 

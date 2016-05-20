@@ -109,7 +109,6 @@ void CPropertyTreeParserChamber::parse_ptree_chamber_node(const boost::property_
             DetConnPtr conn = parse_ptree_chamber_connector_node(v, chamber);
             
          } catch (std::exception& e) {
-              qDebug("$$$$$$$$$$$$$$$ ERROR creating chamber");
             std::cout << "ERROR creating chamber in " << name << " :\n";
             std::cout << e.what() << std::endl;
          }

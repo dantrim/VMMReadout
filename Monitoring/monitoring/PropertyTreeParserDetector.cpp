@@ -63,14 +63,10 @@ boost::shared_ptr<CDetBase> CPropertyTreeParserDetector::parse_ptree_det_detecto
    
    boost::shared_ptr<CDetBase> detector(new CDetDetector(name, size, pos, rot));
    
-   qDebug("parse_ptree_det_detector_node");
-   qDebug()<<"name="<<QString::fromStdString(name);
 
    std::vector<DetBasePtr> chambers;
    Q_FOREACH(const bpt::ptree::value_type &v, mainnode) {
 
-//       qDebug("v.first == %s",(v.first).c_data());
-       qDebug()<<"v.first =="<<QString::fromStdString(v.first);
       if (v.first == "position") {
          double x = v.second.get<double>("x", 0.0);
          double y = v.second.get<double>("y", 0.0);
@@ -94,12 +90,9 @@ boost::shared_ptr<CDetBase> CPropertyTreeParserDetector::parse_ptree_det_detecto
       }
       else if (v.first == "chamber") {
          try {
-//              qDebug("Creating chamber === %s",detector);
-//              qDebug("Creating chamber === %v",v.first);
             boost::shared_ptr<CDetBase> chamber = parse_ptree_det_chamber_node(v, detector);
             chambers.push_back(chamber);
          } catch (std::exception& e) {
-              qDebug(">>>>>>>>>>>>>ERROR creating chamber");
             std::cout << "ERROR creating chamber in " << name << " :\n";
             std::cout << e.what() << std::endl;
          }
@@ -133,17 +126,14 @@ boost::shared_ptr<CDetBase> CPropertyTreeParserDetector::parse_ptree_det_detecto
 
 boost::shared_ptr<CDetBase> CPropertyTreeParserDetector::parse_ptree_det_chamber_node(const bpt::ptree::value_type& node, boost::shared_ptr<CDetBase> det)
 {
-   qDebug("parse_ptree_det_chamber_node");
    std::string name;
    std::string config_file;
    Coord3 pos;
    Coord3 rot;
    Coord3 size;
    
-   qDebug("going for DetChamPtr");
    DetChamPtr chamber(new CDetChamber(det, det, det->get_children().size(), name, size, pos, rot) );
 
-   qDebug("going for QFOREACH");
    std::vector<DetConnPtr> connectors;
    Q_FOREACH(const bpt::ptree::value_type& v, node.second) {
       if (v.first == "position") {
@@ -200,11 +190,8 @@ boost::shared_ptr<CDetBase> CPropertyTreeParserDetector::parse_ptree_det_chamber
    Q_FOREACH(const bpt::ptree::value_type& v, node.second) {
       if (v.first == "connector") {
          try {
-              qDebug("Going for conn===");
             DetConnPtr conn = parse_ptree_det_connector_node(v, chamber);
-            qDebug("DDD_ALL OK");
          } catch (std::exception& e) {
-              qDebug("DDD_THROWING");
             std::cout << "ERROR creating connector in " << node.first << " " << name << ":\n";
             throw;
          }
@@ -228,7 +215,6 @@ boost::shared_ptr<CDetBase> CPropertyTreeParserDetector::parse_ptree_det_chamber
 
 DetConnPtr CPropertyTreeParserDetector::parse_ptree_det_connector_node(const bpt::ptree::value_type& node,  DetChamPtr chamb)
 {
-    qDebug("parse_ptree_det_connector_node");
    std::cout << " ===== parse_ptree_det_connector_node() " << std::endl;
    typedef std::pair<int, boost::shared_ptr<CSrsChip> > SeqChipType;
    std::string name;
@@ -245,12 +231,9 @@ DetConnPtr CPropertyTreeParserDetector::parse_ptree_det_connector_node(const bpt
       else if (v.first == "chip") {
          try {
             std::pair<int, boost::shared_ptr<CSrsChip> > seqchip = parse_ptree_det_chip_node(v);
-            qDebug("AAA111");
             chips.push_back(seqchip);
-            qDebug("AAA222");
          } catch (std::exception& e) {
             std::cout << "ERROR connecting chip in " << node.first << " " << name << ":\n";
-            qDebug("BBB222_EXCEPTION");
             throw;
          }
       }
@@ -267,23 +250,18 @@ DetConnPtr CPropertyTreeParserDetector::parse_ptree_det_connector_node(const bpt
          << "' in node "   <<  node.first << std::endl;
       }
    }
-qDebug("CCC");
    
    
    //set correct path to the map file
    boost::filesystem::path map_path(connection_map_file);
-   qDebug("CCC111");
    //make absolute paths for included config files
    if (!map_path.has_parent_path()) {
-       qDebug("CCC333333");
       map_path = daqconfig_.get_config_path().parent_path() / map_path;
    }
 
-   qDebug("CCC222");
    if (chips.size() > 1) {
       Q_FOREACH(SeqChipType chip, chips) {
          if (chip.first < 0) {
-             qDebug("CCC_THROWING");
                std::stringstream ss;
                ss << "Chip sequence number not specified for " << chip.second->name() <<  " on more than 1 chip connector";
                throw std::range_error(ss.str().c_str());
@@ -291,26 +269,25 @@ qDebug("CCC");
       }
    }
 
-   qDebug("CCC666");
    boost::shared_ptr<CDetConnector> conn;//(new CDetConnector(chamb->detector(), chamb, 0, name)) ;
 
-   qDebug("CCC777");
    if (boost::shared_ptr<CDetConnector> conn = chamb->get_connector(name)) {
-       qDebug("CCC88");
       Q_FOREACH(SeqChipType schip, chips) {
-          qDebug("CCC99");
          size_t seq = schip.first<0 ? 0 : schip.first;
-         qDebug("CCC_AAA");
+
+        #warning forcing sequence number
+        //dantrim
+        std::vector<std::string> chip_name_split;
+        boost::split(chip_name_split, schip.second->name(), boost::is_any_of("."));
+        int chip_number = stoi(chip_name_split.back());
+        if(chip_number%2==0) { seq = 0; }
+        else { seq = 1; }
          conn->connect_chip(seq, schip.second);
-         qDebug("CCC_BBB");
          schip.second->connect_to_connector(conn); 
-         qDebug("CCC_CCC");
       }
       conn->read_chip_connection_map_file(map_path.string(), &daqconfig_);
-      qDebug("CCC_DFDFDF");
    }
    else {
-       qDebug("CCC_THROWING MAAAN");
       std::stringstream ss;
       ss << "CONNECTOR FAIL No connector " << name << " on chamber " << chamb->name();
       throw std::range_error(ss.str().c_str());
@@ -318,7 +295,6 @@ qDebug("CCC");
    }
       
 
-   qDebug("CCC1000");
    return conn;
    
 }
@@ -341,10 +317,7 @@ qDebug("CCC");
  */
 std::pair<int, boost::shared_ptr<CSrsChip> > CPropertyTreeParserDetector::parse_ptree_det_chip_node(const bpt::ptree::value_type& node)
 {
-    qDebug("parse_ptree_det_chip_node");
    typedef std::pair<int, boost::shared_ptr<CSrsChip> > SeqChipType;
-   
-   std::cout << "-----------------------------------------------------------------------" << node.first << std::endl;
    
    std::string idstr;
    std::string namestr;
@@ -355,11 +328,7 @@ std::pair<int, boost::shared_ptr<CSrsChip> > CPropertyTreeParserDetector::parse_
 
 
    Q_FOREACH(const boost::property_tree::ptree::value_type &v, node.second) {
-       qDebug()<<"v.first    ="<<QString::fromStdString(v.first);
       if (v.first == "name") {
-          qDebug("dsads");
-          qDebug() << "name ==== " << QString::fromStdString(v.second.get("name",""));
-          qDebug("dsads");
          namestr = v.second.data();
       }
       else if (v.first == "id") {
@@ -370,6 +339,7 @@ std::pair<int, boost::shared_ptr<CSrsChip> > CPropertyTreeParserDetector::parse_
       }
       else if (v.first == "sequence") {
          seqstr = v.second.data();
+        
       }
       else if (v.first == "<xmlcomment>") {
          //         std::cout << "comment in SRU section: " << v.second.data() << std::endl;
@@ -379,7 +349,6 @@ std::pair<int, boost::shared_ptr<CSrsChip> > CPropertyTreeParserDetector::parse_
          std::string fecstr2 = v.second.get("fec", "");
          std::string namestr2 = v.second.get("name", "");
          std::string seqstr2 = v.second.get("sequence", "");
-qDebug("in xlmattr");
          if (!idstr2.empty()) {  
             idstr = idstr2;
          }
@@ -399,30 +368,23 @@ qDebug("in xlmattr");
       }
    }
    
-   qDebug("chip_id = id_number_from_string(idstr)");
    long chip_id = -1;
    if(!idstr.empty()) {
       chip_id = id_number_from_string(idstr);  
    }
-   qDebug("22");
    long seq = -1;
    if (!seqstr.empty()) {
       seq = id_number_from_string(seqstr);
    }
 
-   qDebug("33");
    if (!fecidstr.empty()) {
       long fec_id = id_number_from_string(fecidstr);
 
-      qDebug("44");
       //locate specified fec or fail
       SrsFecPtr srsfec = daqconfig_.locate_srs<CSrsFec>(fec_id);
       if (srsfec) {
-          qDebug("55");
          boost::shared_ptr<CSrsChip> chip = srsfec->locate_chip(chip_id, namestr);
-//         qDebug()<<"chip="<<chip;
          if(!chip) {
-             qDebug("66");
             std::stringstream ss;
             qDebug() << "Config error: chip (" << chip_id << " " << QString::fromStdString(namestr)<< ") not found in FEC id=" << fec_id;
             throw std::range_error(ss.str().c_str());
@@ -430,7 +392,6 @@ qDebug("in xlmattr");
          return SeqChipType(seq, chip);
       }
       else {
-          qDebug("77");
          std::stringstream ss;
          ss << "Config error: detector config has FEC id=" << fec_id
          << " that does not exist in srs configuration";
@@ -438,10 +399,8 @@ qDebug("in xlmattr");
       }
    }
    else {
-       qDebug("88");
       //locate chip in any fec in system  or throw
       SrsChipPtr chip = daqconfig_.locate_srs<CSrsChip>(chip_id, namestr);
-      qDebug("99");
       return SeqChipType(seq, chip);
    }
    
