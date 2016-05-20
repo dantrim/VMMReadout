@@ -5,7 +5,7 @@
  generated automatically by mmdaq3
  -->
 
-<server_config>
+<daq_config>
    <!-- UDP data receiver TODO MULTI option: make mutliple receivers and define accepted remote addresses for each -->
    <udp_receiver>
       <ip>10.0.0.3:6006</ip>
@@ -50,4 +50,4 @@
     	<!-- n/a could we ask a DB for detector_file and srs_file ?-->
     </config_db>
    
-</server_config>
+</daq_config>
