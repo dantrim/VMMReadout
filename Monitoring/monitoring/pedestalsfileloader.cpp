@@ -47,23 +47,23 @@ void pedestalsFileLoader::definePedestalsFileName(std::string file)
 
 void pedestalsFileLoader::pedestalsDataHandler(std::vector< boost::shared_ptr<online::display::CSrsChip> > chipvec)
 {
-    m_pedestals_file = new TFile(m_pedestalsFileName.c_str());
-    //TH2D* h_temp;
-    m_pedestalTree  = new apv_raw_ped((TTree*)m_pedestals_file->Get("apv_raw_ped"));
-    if(m_pedestalTree==NULL) std::cout<<"Not valid pedestal file"<<std::endl;
-    else    {
-        int nentries = (m_pedestalTree->fChain)->GetEntries();
-        std::cout<<"Loaded file "<<m_pedestalsFileName<<" as pedestals file"<<std::endl;
-        std::cout<<"Number of entries : "<<nentries<<std::endl;
-        std::string chipName;
-        (m_pedestalTree->fChain)->GetEntry(0);
+//    m_pedestals_file = new TFile(m_pedestalsFileName.c_str());
+//    //TH2D* h_temp;
+//    m_pedestalTree  = new apv_raw_ped((TTree*)m_pedestals_file->Get("apv_raw_ped"));
+//    if(m_pedestalTree==NULL) std::cout<<"Not valid pedestal file"<<std::endl;
+//    else    {
+//        int nentries = (m_pedestalTree->fChain)->GetEntries();
+//        std::cout<<"Loaded file "<<m_pedestalsFileName<<" as pedestals file"<<std::endl;
+//        std::cout<<"Number of entries : "<<nentries<<std::endl;
+//        std::string chipName;
+//        (m_pedestalTree->fChain)->GetEntry(0);
 
-        for(size_t i=0; i<m_pedestalTree->srsChip->size(); ++i)
-        {
-            chipName = getChipNameFromNumber(m_pedestalTree->srsFec->at(i),m_pedestalTree->srsChip->at(i));
-            fillChipPedestals(QString(chipName.c_str()),m_pedestalTree->srsChan->at(i),m_pedestalTree->ped_mean->at(i),m_pedestalTree->ped_stdev->at(i));
-        }
-    }
+//        for(size_t i=0; i<m_pedestalTree->srsChip->size(); ++i)
+//        {
+//            chipName = getChipNameFromNumber(m_pedestalTree->srsFec->at(i),m_pedestalTree->srsChip->at(i));
+//            fillChipPedestals(QString(chipName.c_str()),m_pedestalTree->srsChan->at(i),m_pedestalTree->ped_mean->at(i),m_pedestalTree->ped_stdev->at(i));
+//        }
+//    }
 }
 
 std::string pedestalsFileLoader::getChipNameFromNumber(int fecNumber, int chipNumber)

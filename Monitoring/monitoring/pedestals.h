@@ -15,11 +15,6 @@
 
 // Header file for the classes stored in the TTree if any.
 #include <vector>
-#include <vector>
-#include <vector>
-
-// Fixed size dimensions of array or collections stored in the TTree if any.
-
 class pedestals {
 public :
    TTree          *fChain;   //!pointer to the analyzed TTree or TChain

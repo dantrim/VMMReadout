@@ -55,7 +55,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(vmmMessageHandler, SIGNAL(logReady()), this, SLOT(readLog()));
 
     ui->setupUi(this);
-    this->setFixedSize(1200*1.03,720); // 1400, 725
+    this->setFixedSize(1200*1.15,720*1.12); // 1400, 725
+    //this->setFixedSize(1200*1.03,720); // 1400, 725
     //this->setFixedSize(1200,720); // 1400, 725
     //this->setMinimumHeight(720);
     //this->setMinimumWidth(1200);
@@ -66,8 +67,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->tabWidget->setStyleSheet("QTabBar::tab { height: 18px; width: 100px; }");
     ui->tabWidget->setTabText(0,"Channel Registers");
-    ui->tabWidget->setTabText(1,"Calibration");
-    ui->tabWidget->setTabText(2,"Response");
+    ui->tabWidget->setTabText(1,"Response");
+    ui->tabWidget->setTabText(2,"Calibration");
 
     /////////////////////////////////////////////////////////////////////
     //-----------------------------------------------------------------//

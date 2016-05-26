@@ -37,10 +37,13 @@ CONFIG+=c++11
 #QMAKE_CXXFLAGS_PRECOMPILE        = -x c++-header -c ${QMAKE_PCH_INPUT} -o ${QMAKE_PCH_OUTPUT}
 #QMAKE_CXXFLAGS_USE_PRECOMPILE    = $$QMAKE_CFLAGS_USE_PRECOMPILE
 
-boostinclude="/Users/dantrim/boost_1_60_0/"
+#boostinclude=../../Readout_Software/include/boost
+boostinclude=/Software/boost/boost_1_60_0/include
 rootincludepath="/Users/dantrim/root/include"
 
 INCLUDEPATH += $$boostinclude
+INCLUDEPATH += /opt/rh/devtoolset-1.1/root/usr/include
+DEPENDPATH += $$boostinclude
 
 INCLUDEPATH += $(ROOTSYS)/include
 win32:LIBS += -L$(ROOTSYS)/lib -llibCint -llibRIO -llibNet \
@@ -51,11 +54,13 @@ win32:LIBS += -L$(ROOTSYS)/lib -llibCint -llibRIO -llibNet \
 else:LIBS += -L$(ROOTSYS)/lib -lCore -lCint -lRIO -lNet \
         -lHist -lGraf -lGraf3d -lGpad -lTree \
         -lRint -lPostscript -lMatrix -lPhysics \
-        -lGui #-lMathCore \
-             #   -lRIO -lNet -lHist -lTree -lMatrix -lProof -lThread -lCore -lCint -lMathCore  -lTree -lm -ldl  -rdynamic
+        -lGui \ #-lMathCore \
+        -lRIO -lNet -lHist -lTree -lMatrix -lProof -lThread -lCore -lCint -lMathCore  -lTree -lm -ldl  -rdynamic
 
 
-LIBS += -L/usr/local/opt/boost/lib -lboost_program_options -lboost_thread-mt -lboost_system -lboost_filesystem -lboost_date_time -lpthread
+LIBS += -L/Software/boost/boost_1_60_0/lib -lboost_program_options -lboost_thread -lboost_system -lboost_filesystem -lboost_date_time -lpthread -lrt
+
+QMAKE_CXX_FLAGS += -std=c++11 
 
 HEADERS += canvas.h \
     #TQRootCanvas.h \
@@ -110,8 +115,8 @@ HEADERS += canvas.h \
 #    UDPFrame.h \
     Logger.h \
     pedestalsfileloader.h \
-    pedestals.h \
-    apv_raw_ped.h \
+    #pedestals.h \
+    #apv_raw_ped.h \
     filereader.h \
     AsioService.h \
     ShmemReader.h \
@@ -168,8 +173,8 @@ SOURCES += canvas.cxx main.cpp \
 #    UDPFrame.cpp \
     Logger.cpp \
     pedestalsfileloader.cpp \
-    pedestals.C \
-    apv_raw_ped.C \
+    #pedestals.C \
+    #apv_raw_ped.C \
     filereader.cpp \
     AsioService.cpp \
     ShmemReader.cpp \

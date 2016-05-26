@@ -255,56 +255,6 @@ void ShmemReader::read_event_number()
 
 
 
-std::string ShmemReader::msg() {
-
-
-    bool whatever=true;
-    std::stringstream oss;
-    oss << std::to_string(FAKE_EVENT_NO) << " ";
-    if(rand()%2==0)
-        /*chamber*/    oss << "Tmm2" << " ";
-    else
-        /*chamber*/    oss << "TL2" << " ";
-
-    /*multilayer*/oss << "X" << " ";
-
-    /*layer*/      oss<< "X" << " ";
-    if(rand()%2==0)
-    {
-        /*readout*/    oss<< "X" << " ";
-        whatever=true;
-    }
-    else
-    {
-        /*readout*/   oss << "Y" << " ";
-        whatever=false;
-    }
-    //    /*strip no*/  oss << std::to_string(rnd_strip_no)<< " ";
-    /*strip no*/  oss << std::to_string(  (rand()%100)/2  +   (rand())%100/2    +50   )<< " ";
-
-    /*fec no*/     oss<< "2" << " ";
-
-
-
-    if(whatever)
-        /*chip string*/oss<< "APV.1.00" << " ";
-    else
-        /*chip string*/oss<< "APV.1.02" << " ";
-
-
-
-    /*channel*/    oss<< std::to_string(0 + ( rand() % ( 64 - 0 + 1 ) )) << " ";
-
-    //        /*charge!!!*/  oss<< std::to_string(100) << " ";
-    /*charge!!!*/  oss<< std::to_string(0 + ( rand() % ( 2173 - 0 + 1 ) )) << " ";
-
-    /* TIME */     oss<< std::to_string(0 + ( rand() % ( 750 - 0 + 1 ) ));
-    //    /* TIME */     oss<< std::to_string(100) << " ";
-    std::string var = oss.str();
-
-    //    std::cout << (var);
-    return var;
-}
 
 void ShmemReader::read_event_strips()
 {

@@ -57,7 +57,8 @@ QRootCanvas::QRootCanvas(QWidget *parent) :
 
 void QRootCanvas::mouseMoveEvent(QMouseEvent *e)
 {
-//   if (fCanvas) {
+   if (fCanvas) {
+      fCanvas->Update();
 //      if (e->buttons() & Qt::LeftButton) {
 //         fCanvas->HandleInput(kButton1Motion, e->x(), e->y());
 //      } else if (e->buttons() & Qt::MidButton) {
@@ -67,7 +68,7 @@ void QRootCanvas::mouseMoveEvent(QMouseEvent *e)
 //      } else {
 //         fCanvas->HandleInput(kMouseMotion, e->x(), e->y());
 //      }
-//   }
+   }
 }
 
 void QRootCanvas::mousePressEvent( QMouseEvent *e )
@@ -136,10 +137,10 @@ void QRootCanvas::resizeEvent( QResizeEvent * )
 
 void QRootCanvas::paintEvent( QPaintEvent * )
 {
-//   if (fCanvas) {
-//      fCanvas->Resize();
-//      //fCanvas->Update();
-//   }
+   if (fCanvas) {
+      fCanvas->Resize();
+      fCanvas->Update();
+   }
 }
 
 

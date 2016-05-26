@@ -4,9 +4,10 @@
 #
 #-------------------------------------------------
 
-sourcepath= "../src"
-includepath="../include"
-boostinclude="../include/boost"
+sourcepath= ../src
+includepath=../include
+#boostinclude=../include/boost
+boostinclude=/Software/boost/boost_1_60_0/include/boost
 #boostinclude="/Users/dantrim/boost_1_60_0/"
 
 QT       += core gui
@@ -29,7 +30,8 @@ else:LIBS += -L$(ROOTSYS)/lib -lCore -lCint -lRIO -lNet \
        -lHist -lGraf -lGraf3d -lGpad -lTree \
        -lRint -lPostscript -lMatrix -lPhysics \
        -lGui -lMathCore #-lRGL -lMathCore
-LIBS +=  -L/usr/local/opt/boost/lib -lboost_thread-mt -lboost_filesystem  -lboost_system
+#LIBS +=  -L/usr/local/opt/boost/lib -lboost_thread-mt -lboost_filesystem  -lboost_system
+LIBS += -L/Software/boost/boost_1_60_0/lib -lboost_filesystem -lboost_system -lboost_thread -lrt
 
 LIBS += -L./objects -lMylib
 
@@ -43,9 +45,9 @@ MOC_DIR     += ./moc/
 RCC_DIR     += ./rcc/
 UI_DIR      += ./ui/
 
-QMAKE_CXXFLAGS += -stdlib=libc++
+#QMAKE_CXXFLAGS += -stdlib=libc++
 QMAKE_CXXFLAGS += -std=c++11
-QMAKE_LFLAGS   += -stdlib=libc++
+#QMAKE_LFLAGS   += -stdlib=libc++
 
 SOURCES += $$sourcepath/main.cpp\
            $$sourcepath/mainwindow.cpp\

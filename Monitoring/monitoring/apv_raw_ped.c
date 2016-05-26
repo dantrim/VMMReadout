@@ -9,9 +9,9 @@
 
 #define apv_raw_ped_cxx
 #include "apv_raw_ped.h"
-#include <TH2.h>
-#include <TStyle.h>
-#include <TCanvas.h>
+//#include <TH2.h>
+//#include <TStyle.h>
+///#include <TCanvas.h>
 
 void apv_raw_ped::Loop()
 {

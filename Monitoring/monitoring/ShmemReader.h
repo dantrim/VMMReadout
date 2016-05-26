@@ -197,7 +197,6 @@ public slots:
 
     void handleSharedData();
     void read_event_number();
-    std::string msg();
     void read_raw_data();
     void read_event_strips();
 
