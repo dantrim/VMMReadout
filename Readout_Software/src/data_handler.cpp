@@ -1148,7 +1148,8 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                         msg()("Not using channel map");
                     }
                 }
-                _channelNo.push_back(channel_no);
+                //_channelNo.push_back(channel_no);
+		_channelNo.push_back(unmapped_channel);
 
                 // use QString methods instead of using bytes1 (for now)
                 QString bytes1_str = "00000000000000000000000000000000"; // 32bit 
@@ -1199,7 +1200,8 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                 if(dbg() && verbose) {
                 //if(true) {
                     sx.str("");
-                    sx << "channel          : " << channel_no << "\n"
+                    sx << "channel          : " << unmapped_channel << "\n"
+                    //sx << "channel          : " << channel_no << "\n"
                        << "flag             : " << flag << "\n"
                        << "threshold        : " << threshold << "\n"
                        << "charge           : " << outCharge_ << "\n"
@@ -1207,7 +1209,7 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                        << "q_2              : " << q_2.toStdString() << "\n"
                        << "q_final          : " << q_final.toStdString() << "\n"
                        << "tac              : " << outTac_ << "\n"
-                       << "bcid             : " << outBCID_;
+                       << "bcid             : " << outBCID_ << "\n";
                     cout << sx.str() << endl;
                     //msg()(sx,"DataHandler::decodeAndWriteData");
                     //msg()(" "," ");
@@ -1284,9 +1286,9 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                     m_art.push_back(art2);
                     m_artFlag.push_back(art2_flag);
 
-                    if(m_art.size()>2 || m_artFlag.size()>2) {
-                        cout << "storing more than 2 ART data" << endl;
-                    }
+//                    if(m_art.size()>2 || m_artFlag.size()>2) {
+//                        cout << "storing more than 2 ART data" << endl;
+//                    }
                 }
 
                 if(dbg() && test_art) {
