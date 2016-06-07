@@ -43,6 +43,7 @@ class SocketHandler : public QObject
         QStringList& ipList() { return m_iplist; }
         bool ping();
         bool pinged() { return m_pinged; }
+        void setPingedStatus(bool status) { m_pinged = status; }
 
         // update global command counter
         void updateCommandCounter();
