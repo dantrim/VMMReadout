@@ -752,7 +752,7 @@ void RunModule::setMask()
 
 }
 // ------------------------------------------------------------------------ //
-void RunModule::enableART(bool enabling)
+void RunModule::enableART(bool enabling, bool holdoff)
 {
     if(enabling)
         msg()("Enabling ART...","RunModule::enableART");
@@ -770,6 +770,9 @@ void RunModule::enableART(bool enabling)
     QString cmd, msbCounter;
     cmd = "AAAAFFFF";
     msbCounter = "0x80000000"; 
+
+    int holdoff_enable = 233;
+    if(holdoff) holdoff_enable = 232;
 
     for(const auto& ip : socket().ipList()) {
         datagram.clear();
@@ -790,7 +793,7 @@ void RunModule::enableART(bool enabling)
         ////////////////////////////
         out << (quint32) 0 //[12,15]
             << (quint32) 1 //[19,19]
-            << (quint32) 233; //[20,23]
+            << (quint32) holdoff_enable; //[20,23]
 
 
         socket().SendDatagram(datagram, ip, send_to_port, "fec",

@@ -546,7 +546,9 @@ void MainWindow::Connect()
         ui->connectionLabel->setStyleSheet("background-color: lightGray");
     }
 
-    m_commOK = pingOK;
+    m_commOK = true;
+
+    //m_commOK = pingOK;
 
     emit checkFSM();
 
@@ -670,11 +672,28 @@ void MainWindow::prepareAndSendBoardConfig()
         ch.leakage_current  = VMMSLBool[i];
         ch.test_pulse       = VMMSTBool[i];
         ch.hidden_mode      = VMMSMBool[i];
-        ch.trim             = VMMSDValue[i];
+	ch.trim = 0;
+        //ch.trim             = VMMSDValue[i];
         ch.monitor          = VMMSMXBool[i];
         ch.s10bitADC        = VMMSZ010bValue[i];
         ch.s8bitADC         = VMMSZ08bValue[i];
         ch.s6bitADC         = VMMSZ06bValue[i];
+
+	std::cout << std::endl;
+	std::cout << "chan " << i << std::endl;
+        std::cout << "ch.number         "<<   ch.number          << std::endl;
+        std::cout << "ch.polarity       "<<   ch.polarity        << std::endl;
+        std::cout << "ch.capacitance    "<<   ch.capacitance     << std::endl;
+        std::cout << "ch.leakage_current"<<   ch.leakage_current << std::endl;
+        std::cout << "ch.test_pulse     "<<   ch.test_pulse      << std::endl;
+        std::cout << "ch.hidden_mode    "<<   ch.hidden_mode     << std::endl;
+        std::cout << "ch.trim           "<<   ch.trim            << std::endl;
+        std::cout << "ch.monitor        "<<   ch.monitor         << std::endl;
+        std::cout << "ch.s10bitADC      "<<   ch.s10bitADC       << std::endl;
+        std::cout << "ch.s8bitADC       "<<   ch.s8bitADC        << std::endl;
+        std::cout << "ch.s6bitADC       "<<   ch.s6bitADC        << std::endl;
+
+	
         channels.push_back(ch);
     } // i
 
@@ -1942,8 +1961,9 @@ void MainWindow::setHDMIMask()
 void MainWindow::setART()
 {
     bool enabling = true;
+    bool enableHoldOff = ui->holdOffCheckBox->isChecked();
     if(!(ui->enableART->isChecked())) enabling = false;
-    runModule().enableART(enabling);
+    runModule().enableART(enabling, enableHoldOff);
     ui->s6RB->setChecked(true);
 }
 // ------------------------------------------------------------------------- //
@@ -2109,7 +2129,7 @@ void MainWindow::triggerHandler()
             ui->triggerCntLabel->setText(cnt.number(dataHandle().getDAQCount(), 10));
 
             //thread
-            delay(); delay();
+            //delay(); delay();
             emit startDAQSocket();
 
             // gui stuff
@@ -2123,6 +2143,7 @@ void MainWindow::triggerHandler()
             /////////////////////////////////////////////////
             //if(ui->calibration->isChecked()) {
             if(ui->doCalib->isChecked() && ui->doPDOCalib->isChecked()) {
+                msg()("do calib is checked (pdo)");
 
                 if(ui->autoCalib->isChecked()) {
 
@@ -2158,6 +2179,7 @@ void MainWindow::triggerHandler()
             } // PDO calibration
 
             else if(ui->doCalib->isChecked() && ui->doTDOCalib->isChecked()) {
+                msg()("do calib is checked (tdo)");
                 if(ui->autoCalib->isChecked()) {
 
                     /////////////////////////////////////////
