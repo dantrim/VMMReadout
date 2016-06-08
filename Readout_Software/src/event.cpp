@@ -56,7 +56,7 @@ std::string Event::constructEvent(int event, int charge, int time, int charge2, 
        << m_timeStr                      << spacer
        << m_pdoStr                       << spacer
        << m_tdoStr;
-    cout << "====> Event::constructEvent returns: " << ss.str() << endl;
+    //cout << "====> Event::constructEvent returns: " << ss.str() << endl;
     return ss.str();
 }
 

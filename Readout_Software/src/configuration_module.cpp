@@ -427,6 +427,11 @@ void Configuration::fillChannelRegisters(std::vector<QString>& registers)
 
     bool do_check = false;
     for(int i = 0; i < 64; ++i){
+
+	if(do_check) {
+		std::cout << std::endl;
+		std::cout << "CHAN: " << i << std::endl;
+	}
         sequence=8;
         reg = "00000000000000000000000000000000";
 

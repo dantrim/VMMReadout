@@ -969,11 +969,16 @@ void DataHandler::readEvent()
 {
     stringstream sx;
 
+   // sx << "DATAHANLDER:READEVENT";
+   // msg()(sx);
+   // sx.str("");
+
     bool ok_to_read = true;
  
     if(!m_fileOK) ok_to_read = false;
     if(m_write && !m_rootFileOK) ok_to_read = false;
     if(!ok_to_read) return;
+
 
     //if(dbg()) msg()("Receiving event packet...", "DataHandler::readEvent");
 
@@ -1064,6 +1069,11 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
 
     QString frameCounterStr = datagram.mid(0,4).toHex(); //Frame Counter
 
+    //qDebug() << "---------------------------------------------";
+    //qDebug() << "receivd: " << datagram.toHex();
+    //qDebug() << "  > frame counter: " << frameCounterStr;
+    //qDebug() << "  > " << datagram.mid(4,3).toHex();
+
     ///////////////////////////////////////
     //event data incoming from chip
     ///////////////////////////////////////
@@ -1081,6 +1091,7 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
             trigTimeStampStr = datagram.mid(10,2).toHex();
 
             if(dbg() && verbose) {
+            //if(true){
                 sx.str("");
                 headerStr        = datagram.mid(4,4).toHex();
                 fullEventDataStr = datagram.mid(12, datagram.size()).toHex();
@@ -1093,11 +1104,11 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                 //msg()(sx,"DataHandler::decodeAndWriteData");
             } //dbg
 
-            if(datagram.size()==12 && dbg()) {
+            if(datagram.size()==12){// && dbg()) {
                 sx.str("");
                 sx << "Empty event from chip #: " << chipNumberStr.toInt(&ok,16);
                 cout << sx.str() << endl;
-                msg()(sx,"DataHandler::decodeAndWriteData"); sx.str("");
+                //msg()(sx,"DataHandler::decodeAndWriteData"); sx.str("");
             }
 
             // data containers for this chip
@@ -1197,8 +1208,8 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                 uint gray = DataHandler::grayToBinary(outBCID_);
                 _gray.push_back(gray);
 
-                if(dbg() && verbose) {
-                //if(true) {
+                //if(dbg() && verbose) {
+                if(true) {
                     sx.str("");
                     sx << "channel          : " << unmapped_channel << "\n"
                     //sx << "channel          : " << channel_no << "\n"

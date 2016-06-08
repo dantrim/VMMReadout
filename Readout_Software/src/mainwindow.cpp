@@ -132,6 +132,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(loadELxChannelMapping(QString)), vmmDataHandler, SLOT(loadELxChannelMapping(QString)));
     connect(this, SIGNAL(setWriteNtuple(bool)), vmmDataHandler, SLOT(setWriteNtuple(bool)));
     connect(this, SIGNAL(setIgnore16(bool)), vmmDataHandler, SLOT(setIgnore16(bool)));
+    //msg()("DISCONECTING CALIBRATION RUN BUTTON");
     connect(this, SIGNAL(setCalibrationRun(bool)), vmmDataHandler, SLOT(setCalibrationRun(bool)));
     connect(this, SIGNAL(setupOutputFiles(QString,QString)),
                     vmmDataHandler, SLOT(setupOutputFiles(QString,QString)));
@@ -525,6 +526,10 @@ void MainWindow::Connect()
 
     configHandle().LoadCommInfo(commInfo);
     bool pingOK = socketHandle().loadIPList(iplist).ping();
+    //socketHandle().loadIPList(iplist);
+    //msg()("FORCING PING STATUS TO BE TRUE");
+    //socketHandle().setPingedStatus(true);
+    //bool pingOK = true;
 
     if(pingOK) {
         msg()("Ping successful");
@@ -719,7 +724,11 @@ void MainWindow::prepareAndSendTDAQConfig()
     daq.trigger_period  = ui->trgPeriod->text();
     daq.acq_sync        = ui->acqSync->value();
     daq.acq_window      = ui->acqWindow->value();
-    daq.run_mode        = "pulser"; // dummy here
+    if(ui->trgPulser->isChecked()) daq.run_mode = "pulser"; 
+    else if(ui->trgExternal->isChecked()) daq.run_mode = "external"; 
+    else{daq.run_mode="pulser";}
+    //daq.run_mode        = runmode_;
+    //daq.run_mode        = "pulser"; // dummy here
     daq.run_count       = 20; // dummy here
     daq.ignore16        = ui->ignore16->isChecked();
     daq.output_path     = ui->runDirectoryField->text();
@@ -2237,6 +2246,7 @@ void MainWindow::triggerHandler()
 
         // daq socket exists in another thread so must call it with signal
         emit closeDAQSocket();
+       // delay();
         //blah
         if(m_inCalibrationLoop) {
             msg()(sx);
@@ -2245,7 +2255,7 @@ void MainWindow::triggerHandler()
         }
         //shared
         ui->doMonitoring->setEnabled(true);
-        dataHandle().clearSharedMemory();
+        //dataHandle().clearSharedMemory();
 
         ui->runStatusField->setText("Run:"+ui->runNumber->text()+" finished");
         ui->runStatusField->setStyleSheet("background-color: lightGray");

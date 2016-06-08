@@ -75,6 +75,30 @@ void SharedMemoryWriter::publishEvent()
 
 void SharedMemoryWriter::publishEvent(vector<string> event)
 {
+    boost::interprocess::named_mutex shm_mutex(boost::interprocess::open_or_create, "mmDaqSharedMutex");
+    boost::interprocess::scoped_lock< boost::interprocess::named_mutex > lock(shm_mutex,
+                    boost::interprocess::defer_lock_type());
+
+    try {
+        boost::posix_time::ptime timeout(boost::posix_time::second_clock::universal_time()+boost::posix_time::seconds(5));
+        if(!lock.timed_lock(timeout)) {
+            std::cout << "SharedMemoryWriter::publishEvent    lock timed out" << std::endl;
+            //return;
+        }
+        else {
+            publish_event_info();
+            publish_event_strips(event);
+            m_shm_condition->notify_all();
+        }
+        if(lock) {
+            lock.unlock();
+        }
+    } // try
+    catch(boost::interprocess::interprocess_exception &e) {
+        std::cout << "SharedMemoryWriter::publishEvent    ERROR: " << e.what() << std::endl;
+    }
+
+/*
     int counter = 0;
   //  cout << "-------------------------------------" << endl;
   //  cout << "  shmem manager size: " << m_shm_manager->get_size() << endl;
@@ -112,6 +136,7 @@ void SharedMemoryWriter::publishEvent(vector<string> event)
 //    catch(boost::interprocess::interprocess_exception &e) {
 //        cout << "SharedMemoryWriter::publishEvent    ERROR: " << e.what() << endl;
 //    }
+*/
 
 }
 

@@ -198,9 +198,9 @@ string CreateEvents::getEvent(int chip, int channel, int event, int charge, int 
 
     //cout << "\n\nHardcoding chip name for mapping ==> fix!\n\n" << endl;
     //chip_str = "VMM2.1.00";
-    cout << "------------------------------------------------------------------" << endl;
-    cout << "CreateEvents::getEvent    event for [" << chip_str << "][" << channel << "]" << endl;
-    cout << "------------------------------------------------------------------" << endl;
+    //cout << "------------------------------------------------------------------" << endl;
+    //cout << "CreateEvents::getEvent    event for [" << chip_str << "][" << channel << "]" << endl;
+    //cout << "------------------------------------------------------------------" << endl;
 
     //returns the formatted string to be sent to the shared memory and parsed
     //by the monitoring tools
