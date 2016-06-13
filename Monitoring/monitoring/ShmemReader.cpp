@@ -146,6 +146,32 @@ void ShmemReader::connect_shared_memory()
 void ShmemReader::handleSharedData()
 {
 
+    ShmemNamedMutexType shm_mutex(bipc::open_only, "mmDaqSharedMutex");
+    int time_ = 5;
+    while(!service->stopping()) {
+        {
+            bptm::ptime timeout(bptm::second_clock::universal_time() + bptm::seconds(time_));
+            ShmemNamedScopedLock lock(shm_mutex);
+            if(m_shm_condition.timed_wait(lock, timeout)) {
+                read_event_number();
+            }
+            else {
+                std::cout << "ShmemReader::handleSharedData    timeout from scoped lock" << std::endl;
+                time_++;
+                continue;
+            }
+        }
+
+        if(realEvent && stripDataEvent.size()!=0) {
+            emit fillHistograms(rawEvent, stripDataEvent, eventDisplayed);
+            emit drawHistograms();
+	    //aikoulou 8-6-2016
+	    stripDataEvent.clear();
+        }
+    }//while
+
+
+/* ORIGINAL
     std::cout << "MONITORING RUNNING...Waiting for data on shared memory." << std::endl;
 
     //    ShmemNamedMutexType shm_mutex(bipc::open_only, "mmDaqSharedMutex");
@@ -192,7 +218,7 @@ void ShmemReader::handleSharedData()
             //            }
         }//unlock
 
-        if(realEvent/* && rawEvent.size()!=0*/ && stripDataEvent.size()!=0) {
+        if(realEvent && stripDataEvent.size()!=0) { // && rawEventData.size()!=0
             std::cout<<"Emitting fill signal from ShmemReader"<<std::endl;
             emit fillHistograms(rawEvent, stripDataEvent, eventDisplayed);
             emit drawHistograms();
@@ -201,7 +227,7 @@ void ShmemReader::handleSharedData()
             stripDataEvent.clear();
         }
     }
-
+*/
 }
 
 void ShmemReader::read_event_number()

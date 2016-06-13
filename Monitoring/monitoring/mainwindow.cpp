@@ -360,7 +360,7 @@ void MainWindow::setUpFrameEnvironment()
     addFrameToTabWidget(mainTabs,daqStatisticsFrameTab,daqStatisticsFrame,"DAQ Statistics");
     apvRawFrame = new frame(apvFrameTab);
     apvRawFrame->frameType ="Apv Raw";
-    addFrameToTabWidget(mainTabs,apvFrameTab,apvRawFrame,"Apv Raw");
+    addFrameToTabWidget(mainTabs,apvFrameTab,apvRawFrame,"VMM2 Raw");
     crossTalksFrame = new frame(crossTalksFrameTab);
     crossTalksFrame->frameType ="CrossTalks";
     addFrameToTabWidget(mainTabs,crossTalksFrameTab,crossTalksFrame,"CrossTalks");
