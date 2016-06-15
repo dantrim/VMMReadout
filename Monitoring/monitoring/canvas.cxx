@@ -58,7 +58,7 @@ QRootCanvas::QRootCanvas(QWidget *parent) :
 void QRootCanvas::mouseMoveEvent(QMouseEvent *e)
 {
    if (fCanvas) {
-      fCanvas->Update();
+//dantrim      fCanvas->Update();
 //      if (e->buttons() & Qt::LeftButton) {
 //         fCanvas->HandleInput(kButton1Motion, e->x(), e->y());
 //      } else if (e->buttons() & Qt::MidButton) {
