@@ -28,6 +28,7 @@
 #include <boost/bind.hpp>
 #include <boost/interprocess/ipc/message_queue.hpp>
 #include <boost/algorithm/string.hpp>
+#include "boost/date_time/posix_time/posix_time.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -146,61 +147,95 @@ void ShmemReader::connect_shared_memory()
 void ShmemReader::handleSharedData()
 {
 
-    std::cout << "MONITORING RUNNING...Waiting for data on shared memory." << std::endl;
+    ShmemNamedMutexType shm_mutex(bipc::open_only, "mmDaqSharedMutex");
+    int time_ = 5;
+    while(!service->stopping()) {
+        {
 
-    //    ShmemNamedMutexType shm_mutex(bipc::open_only, "mmDaqSharedMutex");
+            bptm::ptime timeout(bptm::second_clock::universal_time() + bptm::seconds(time_));
 
-    //new
-    //boost::interprocess::scoped_lock<bipc::interprocess_mutex> ipc_lock(m_shm_shared_data->mutex);
-
-    int timeInt=50;
-    while(!service->stopping() ) //&& m_shm_shared_data)
-    {
-        {//lock
-            //            ShmemNamedScopedLock lock(shm_mutex, bipc::defer_lock_type());
-            //            if (!lock.try_lock()) {
-            //               std::cout << "mmDaqSharedMutex failed lock" << std::endl;
-            //               sleep(1);
-            //               continue;
-            //            }
-            //            bptm::ptime timeout(bptm::second_clock::universal_time() + bptm::seconds(timeInt));
-            //lock
-            // ShmemNamedScopedLock lock(shm_mutex);
-            //new
-            //            if(!m_shm_shared_data->flag_new_event_data){
-            //                     m_shm_shared_data->cond_event.wait(ipc_lock);
-            //                     if(!isProcessing)   {
-            //                                         read_event_number();
-            //                                    }
-            //            }
-
-            //            if(m_shm_condition.timed_wait(lock, timeout))   {
-            usleep(1000*1000);
-            //                std::cout << "notified be daq" <<std::endl;
-            if(!isProcessing)   {
+            ShmemNamedScopedLock lock(shm_mutex);
+            if(m_shm_condition.timed_wait(lock, timeout)) {
+                std::cout << " *** MONITOR : TIMED WAIT PASSED *** " << std::endl;
                 read_event_number();
-                //                }
             }
-            //            else    {
-            //                //timeout
-            //                std::cout << "************************************************" <<std::endl;
-            //                std::cout << "timeout from shmemNamedScopedLock" <<std::endl;
-            //                std::cout << "no new data" <<std::endl;
-            //                std::cout << "************************************************" <<std::endl;
-            //                timeInt++;
-            //                continue;
-            //            }
-        }//unlock
+            else {
+                std::cout << " *** MONITOR : TIMEOUT FROM SCOPED LOCK *** " << std::endl;
+                time_++;
+                continue;
+            }
 
-        if(realEvent/* && rawEvent.size()!=0*/ && stripDataEvent.size()!=0) {
-            std::cout<<"Emitting fill signal from ShmemReader"<<std::endl;
+        }
+
+        if(realEvent && stripDataEvent.size()!=0) {
+            std::cout << " *** MONITOR : EMIT FILL AND DRAW SIGNALS *** " << std::endl;
             emit fillHistograms(rawEvent, stripDataEvent, eventDisplayed);
             emit drawHistograms();
-            //aikoulou
-//            rawEvent.clear();
-            stripDataEvent.clear();
-        }
-    }
+            //rawEvent.clear();
+            //stripDataEvent.clear();
+        } // have data
+
+    } // service not stopped
+
+
+    //ORIGINAL [BEGIN]
+    //std::cout << "MONITORING RUNNING...Waiting for data on shared memory." << std::endl;
+
+    ////    ShmemNamedMutexType shm_mutex(bipc::open_only, "mmDaqSharedMutex");
+
+    ////new
+    ////boost::interprocess::scoped_lock<bipc::interprocess_mutex> ipc_lock(m_shm_shared_data->mutex);
+
+    //int timeInt=50;
+    //while(!service->stopping() ) //&& m_shm_shared_data)
+    //{
+    //    {//lock
+    //        //            ShmemNamedScopedLock lock(shm_mutex, bipc::defer_lock_type());
+    //        //            if (!lock.try_lock()) {
+    //        //               std::cout << "mmDaqSharedMutex failed lock" << std::endl;
+    //        //               sleep(1);
+    //        //               continue;
+    //        //            }
+    //        //            bptm::ptime timeout(bptm::second_clock::universal_time() + bptm::seconds(timeInt));
+    //        //lock
+    //        // ShmemNamedScopedLock lock(shm_mutex);
+    //        //new
+    //        //            if(!m_shm_shared_data->flag_new_event_data){
+    //        //                     m_shm_shared_data->cond_event.wait(ipc_lock);
+    //        //                     if(!isProcessing)   {
+    //        //                                         read_event_number();
+    //        //                                    }
+    //        //            }
+
+    //        //            if(m_shm_condition.timed_wait(lock, timeout))   {
+    //        //usleep(1000*1000);
+    //        //                std::cout << "notified be daq" <<std::endl;
+    //        if(!isProcessing)   {
+    //            read_event_number();
+    //            //                }
+    //        }
+    //        //            else    {
+    //        //                //timeout
+    //        //                std::cout << "************************************************" <<std::endl;
+    //        //                std::cout << "timeout from shmemNamedScopedLock" <<std::endl;
+    //        //                std::cout << "no new data" <<std::endl;
+    //        //                std::cout << "************************************************" <<std::endl;
+    //        //                timeInt++;
+    //        //                continue;
+    //        //            }
+    //    }//unlock
+
+    //    if(realEvent/* && rawEvent.size()!=0*/ && stripDataEvent.size()!=0) {
+    //        std::cout<<"Emitting fill signal from ShmemReader"<<std::endl;
+    //        emit fillHistograms(rawEvent, stripDataEvent, eventDisplayed);
+    //        emit drawHistograms();
+    //        //aikoulou
+//  //          rawEvent.clear();
+    //        stripDataEvent.clear();
+    //    }
+    //}
+
+    /////////////////////// ORIGINAL [END]
 
 }
 

@@ -69,16 +69,18 @@ DisplayDrawer::~DisplayDrawer()
 void DisplayDrawer::NotifyFill(QVector<std::pair<QString, QVector<int> > > rawData, std::vector <std::string> stripData, int eventNumber)
 {
     mem_rawData = rawData; //na figoun ta raw TODO
+    //dantrim origianl edo
+    mem_stripData = stripData;
 
 
-    //aikoulou+ntekas: adjust to slot connection.
-    mem_stripData.clear();
-    for(int i=0;i<stripData.size();i++)
-    {
-        //        QString str = QString::fromUtf8(stripData.at(i).c_str());
+   // //aikoulou+ntekas: adjust to slot connection.
+   // mem_stripData.clear();
+   // for(int i=0;i<stripData.size();i++)
+   // {
+   //     //        QString str = QString::fromUtf8(stripData.at(i).c_str());
 
-        mem_stripData.push_back(QString::fromUtf8(stripData.at(i).c_str()));
-    }
+   //     mem_stripData.push_back(QString::fromUtf8(stripData.at(i).c_str()));
+   // }
 
     //    mem_stripData = stripData;
     mem_eventNumber = eventNumber;
