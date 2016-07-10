@@ -25,16 +25,13 @@ class DaqMonitor : public QObject
         explicit DaqMonitor(QObject *parent = 0);
         virtual ~DaqMonitor();
 
+        void setCheckInterval(int interval /*seconds*/) { n_interval_to_check = interval; }
+
         void setCounter(boost::shared_ptr< int > counter) { n_live_counter = counter; }
 
         //void MonitorThread( boost::shared_ptr< boost::asio::io_service > io);
         void MonitorThread();
-        //void CheckCount(const boost::system::error_code & err);
         void CheckCount();
-
-        //static void CheckCount(const boost::system::error_code & error, //);//,
-        //            boost::shared_ptr< boost::asio::deadline_timer > timer,
-        //            boost::shared_ptr< int > counter );
 
         void OpenThread();
 
@@ -46,6 +43,7 @@ class DaqMonitor : public QObject
 
     private :
         bool m_dbg;
+        int n_interval_to_check;
         int n_previous_counter;
         boost::shared_ptr< int > n_live_counter;
 

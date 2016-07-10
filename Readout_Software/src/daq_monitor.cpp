@@ -20,6 +20,7 @@
 DaqMonitor::DaqMonitor(QObject* parent) :
     QObject(parent),
     m_dbg(true),
+    n_interval_to_check(10),
     n_previous_counter(-1),
     n_live_counter( new int() ),
     m_io_service( new boost::asio::io_service ),
@@ -85,7 +86,7 @@ void DaqMonitor::CheckCount()// const boost::system::error_code & error)
 
 
         // keep this loop going
-        m_timer->expires_from_now(boost::posix_time::seconds(10) );
+        m_timer->expires_from_now(boost::posix_time::seconds(n_interval_to_check) );
         m_timer->async_wait(boost::bind(&DaqMonitor::CheckCount, this));
   //  }
 
@@ -94,7 +95,7 @@ void DaqMonitor::CheckCount()// const boost::system::error_code & error)
 void DaqMonitor::begin()
 {
     std::cout << "DaqMonitor::begin..." << std::endl;
-    m_timer->expires_from_now(boost::posix_time::seconds(10));
+    m_timer->expires_from_now(boost::posix_time::seconds(n_interval_to_check));
     m_timer->async_wait(boost::bind(&DaqMonitor::CheckCount, this));
     
 }
