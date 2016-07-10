@@ -119,9 +119,9 @@
     <widget class="QPushButton" name="writeDAQXMLFile">
      <property name="geometry">
       <rect>
-       <x>200</x>
+       <x>193</x>
        <y>500</y>
-       <width>104</width>
+       <width>111</width>
        <height>32</height>
       </rect>
      </property>
@@ -2101,8 +2101,8 @@
       <string/>
      </property>
      <property name="icon">
-      <iconset>
-       <normaloff>:/pics/directory.png</normaloff>:/pics/directory.png</iconset>
+      <iconset resource="../images/icons.qrc">
+       <normaloff>:/images/directory.png</normaloff>:/images/directory.png</iconset>
      </property>
     </widget>
     <widget class="QLabel" name="label_7">
@@ -2118,7 +2118,7 @@
       <string/>
      </property>
      <property name="pixmap">
-      <pixmap>:/pics/logo.png</pixmap>
+      <pixmap resource="../images/icons.qrc">:/images/logo.png</pixmap>
      </property>
      <property name="scaledContents">
       <bool>true</bool>
@@ -2460,29 +2460,11 @@
       <bool>true</bool>
      </property>
     </widget>
-    <widget class="QPushButton" name="testSharedMemory">
-     <property name="geometry">
-      <rect>
-       <x>450</x>
-       <y>40</y>
-       <width>115</width>
-       <height>32</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>9</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>Test Shared Memory</string>
-     </property>
-    </widget>
     <widget class="QCheckBox" name="doMonitoring">
      <property name="geometry">
       <rect>
        <x>450</x>
-       <y>20</y>
+       <y>0</y>
        <width>101</width>
        <height>20</height>
       </rect>
@@ -2517,7 +2499,6 @@
     <zorder>checkTriggers</zorder>
     <zorder>readTrigger</zorder>
     <zorder>writeData</zorder>
-    <zorder>testSharedMemory</zorder>
     <zorder>doMonitoring</zorder>
    </widget>
    <widget class="QGroupBox" name="groupBox">
@@ -4403,22 +4384,6 @@
       <string>Set</string>
      </property>
     </widget>
-    <zorder>cktk_s6</zorder>
-    <zorder>cktkLabel</zorder>
-    <zorder>ckbcLabel</zorder>
-    <zorder>ckbc_s6</zorder>
-    <zorder>ckbcLabel_2</zorder>
-    <zorder>ckbc_skew_s6</zorder>
-    <zorder>label_34</zorder>
-    <zorder>s6_tkPulses</zorder>
-    <zorder>setck_s6_resets</zorder>
-    <zorder>s6_autoReset</zorder>
-    <zorder>s6_FECReset</zorder>
-    <zorder>fecPeriodReset</zorder>
-    <zorder>label_32</zorder>
-    <zorder>fecPeriodReset</zorder>
-    <zorder>label_32</zorder>
-    <zorder>setck_s6</zorder>
    </widget>
    <widget class="QTabWidget" name="tabWidget">
     <property name="geometry">
@@ -6357,6 +6322,8 @@
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources/>
+ <resources>
+  <include location="../images/icons.qrc"/>
+ </resources>
  <connections/>
 </ui>
