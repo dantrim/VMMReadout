@@ -60,6 +60,7 @@ SOURCES += $$sourcepath/main.cpp\
            $$sourcepath/data_handler.cpp\
            $$sourcepath/calibration_module.cpp\
            $$sourcepath/message_handler.cpp\
+           $$sourcepath/daq_monitor.cpp\
            ## monitoring related below
            $$sourcepath/monitoring/daqconfig.cpp\
            $$sourcepath/monitoring/srsconfig.cpp\
@@ -88,6 +89,7 @@ HEADERS  += $$includepath/mainwindow.h\
             $$includepath/data_handler.h\
             $$includepath/calibration_module.h\
             $$includepath/message_handler.h\
+            $$includepath/daq_monitor.h\
             ## monitoring related below
             $$includepath/monitoring/daqconfig.h\
             $$includepath/monitoring/srsconfig.h\
