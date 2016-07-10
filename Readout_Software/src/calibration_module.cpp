@@ -94,7 +94,7 @@ bool CalibModule::setChannelRange(int start, int end)
     if( (m_chan_end > 63 || m_chan_start < 0) ) {
         ok = false;
         sx << "ERROR Ending channel number is invalid.\n>>Must be between (inclusive)"
-           << "1 and 64";
+           << "0 and 63";
         msg()(sx,"CalibModule::setChannelRange"); sx.str("");
     }
     if( m_chan_end < m_chan_start ) {
@@ -118,20 +118,24 @@ bool CalibModule::loadPDOCalibrationRecipe(pdoCalibration& calib)
         msg()(sx,"CalibModule::loadPDOCalibrationRecipe"); sx.str("");
     }
 
-
     if(calib.gain_start > calib.gain_end) {
-        msg()("ERROR Invalid gain range","CalibModule::loadPDOCalibrationRecipe");
+        sx << "ERROR Invalid gain range. Starting gain (" << calib.gain_start
+           << ") is larger than ending gain (" << calib.gain_end << ").";
+        msg()(sx,"CalibModule::loadPDOCalibrationRecipe"); sx.str("");
         ok = false;
     } 
     if(calib.threshold_start > calib.threshold_end) {
-        msg()("ERROR Invalid threshold range","CalibModule::loadPDOCalibrationRecipe");
+        sx << "ERROR Invalid threshold range. Starting threshold (" << calib.threshold_start
+           << ") is larger than ending threshold (" << calib.threshold_end << ").";
+        msg()(sx,"CalibModule::loadPDOCalibrationRecipe"); sx.str("");
         ok = false;
     }
     if(calib.pulser_start > calib.pulser_end) {
-        msg()("ERROR Invalid pulser amplitude range","CalibModule::loadPDOCalibrationRecipe");
+        sx << "ERROR Invalid pulser amplitude range. Starting amplitude (" << calib.pulser_start
+           << ") is larger than ending pulser amplitude (" << calib.pulser_end << ").";
+        msg()(sx,"CalibModule::loadPDOCalibrationRecipe"); sx.str("");
         ok = false;
     }
-
 
     // gain ranges
     m_pdoCalib.gain_start = calib.gain_start;
@@ -148,7 +152,6 @@ bool CalibModule::loadPDOCalibrationRecipe(pdoCalibration& calib)
     m_pdoCalib.pulser_step = calib.pulser_step;
 
     return ok;
-
 }
 // ------------------------------------------------------------------------ //
 bool CalibModule::loadTDOCalibrationRecipe(tdoCalibration& calib)
@@ -192,7 +195,6 @@ void CalibModule::quitLoop()
 void CalibModule::beginPDOCalibration()
 {
     stringstream sx;
-
 
     bool ok;
 
