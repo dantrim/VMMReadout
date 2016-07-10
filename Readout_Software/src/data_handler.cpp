@@ -13,11 +13,6 @@
 #include <QDir>
 #include <QThread>
 
-//mmdaq
-//#include "createevents.h"
-//#include "sharedmemorywriter.h"
-//#include "daqconfig.h"
-
 using namespace std;
 
 
@@ -56,15 +51,6 @@ DataHandler::DataHandler(QObject *parent) :
     m_runProperties(NULL),
     m_artTree(NULL)
 {
-   // m_sharedDataStrips.clear();
-   // m_daqConf = new DaqConfig();
-   // m_daqConf->loadXml("DAQ_config.xml");
-   // m_ce = new CreateEvents();
-   // m_ce->setDaq(m_daqConf);
-   // m_ce->createEvents();
-   // m_sh = new SharedMemoryWriter();
-   // m_sh->initializeSharedMemory();
-
     //thread
    // testDAQSocket = new QUdpSocket();
    // bool bind = testDAQSocket->bind(6006, QAbstractSocket::DefaultForPlatform); 
