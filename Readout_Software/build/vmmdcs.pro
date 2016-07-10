@@ -8,6 +8,7 @@ sourcepath= "../src"
 includepath="../include"
 boostinclude="../include/boost"
 #boostinclude="/Users/dantrim/boost_1_60_0/"
+imagepath="../images"
 
 QT       += core gui
 QT       += network
@@ -35,6 +36,8 @@ LIBS += -L./objects -lMylib
 
 INCLUDEPATH += $$includepath
 DEPENDPATH  += $$includepath
+INCLUDEPATH += $$includepath/monitoring
+DEPENDPATH  += $$includepath/monitoring
 INCLUDEPATH += $$boostinclude
 DEPENDPATH  += $$boostinclude
 
@@ -57,23 +60,24 @@ SOURCES += $$sourcepath/main.cpp\
            $$sourcepath/data_handler.cpp\
            $$sourcepath/calibration_module.cpp\
            $$sourcepath/message_handler.cpp\
-           $$sourcepath/daqconfig.cpp\
-           $$sourcepath/srsconfig.cpp\
-           $$sourcepath/detectorconfig.cpp\
-           $$sourcepath/fec.cpp\
-           $$sourcepath/chip.cpp\
-           $$sourcepath/multilayer.cpp\
-           $$sourcepath/readout.cpp\
-           $$sourcepath/layer.cpp\
-           $$sourcepath/chamberspecs.cpp\
-           $$sourcepath/chamber.cpp\
-           $$sourcepath/connectorspecs.cpp\
-           $$sourcepath/connector.cpp\
-           $$sourcepath/AsioService.cpp\
-           $$sourcepath/sharedmemorywriter.cpp\
-           $$sourcepath/createevents.cpp\
-           $$sourcepath/event.cpp\
-           $$sourcepath/coordinates.cpp
+           ## monitoring related below
+           $$sourcepath/monitoring/daqconfig.cpp\
+           $$sourcepath/monitoring/srsconfig.cpp\
+           $$sourcepath/monitoring/detectorconfig.cpp\
+           $$sourcepath/monitoring/fec.cpp\
+           $$sourcepath/monitoring/chip.cpp\
+           $$sourcepath/monitoring/multilayer.cpp\
+           $$sourcepath/monitoring/readout.cpp\
+           $$sourcepath/monitoring/layer.cpp\
+           $$sourcepath/monitoring/chamberspecs.cpp\
+           $$sourcepath/monitoring/chamber.cpp\
+           $$sourcepath/monitoring/connectorspecs.cpp\
+           $$sourcepath/monitoring/connector.cpp\
+           $$sourcepath/monitoring/AsioService.cpp\
+           $$sourcepath/monitoring/sharedmemorywriter.cpp\
+           $$sourcepath/monitoring/createevents.cpp\
+           $$sourcepath/monitoring/event.cpp\
+           $$sourcepath/monitoring/coordinates.cpp
 
 HEADERS  += $$includepath/mainwindow.h\
             $$includepath/run_module.h\
@@ -84,27 +88,29 @@ HEADERS  += $$includepath/mainwindow.h\
             $$includepath/data_handler.h\
             $$includepath/calibration_module.h\
             $$includepath/message_handler.h\
-            $$includepath/daqconfig.h\
-            $$includepath/srsconfig.h\
-            $$includepath/detectorconfig.h\
-            $$includepath/fec.h\
-            $$includepath/chip.h\
-            $$includepath/multilayer.h\
-            $$includepath/readout.h\
-            $$includepath/layer.h\
-            $$includepath/chamberspecs.h\
-            $$includepath/chamber.h\
-            $$includepath/connectorspecs.h\
-            $$includepath/connector.h\
-            $$includepath/AsioService.h\
-            $$includepath/sharedmemorywriter.h\
-            $$includepath/createevents.h\
-            $$includepath/event.h\
-            $$includepath/coordinates.h 
+            ## monitoring related below
+            $$includepath/monitoring/daqconfig.h\
+            $$includepath/monitoring/srsconfig.h\
+            $$includepath/monitoring/detectorconfig.h\
+            $$includepath/monitoring/fec.h\
+            $$includepath/monitoring/chip.h\
+            $$includepath/monitoring/multilayer.h\
+            $$includepath/monitoring/readout.h\
+            $$includepath/monitoring/layer.h\
+            $$includepath/monitoring/chamberspecs.h\
+            $$includepath/monitoring/chamber.h\
+            $$includepath/monitoring/connectorspecs.h\
+            $$includepath/monitoring/connector.h\
+            $$includepath/monitoring/AsioService.h\
+            $$includepath/monitoring/sharedmemorywriter.h\
+            $$includepath/monitoring/createevents.h\
+            $$includepath/monitoring/event.h\
+            $$includepath/monitoring/coordinates.h 
 
 FORMS    += $$sourcepath/mainwindow.ui
 
-#RESOURCES += \
+RESOURCES += \
+    $$imagepath/icons.qrc
 #    $$sourcepath_/icons.qrc \
 #    $$sourcepath_/calibration_data.qrc
 
