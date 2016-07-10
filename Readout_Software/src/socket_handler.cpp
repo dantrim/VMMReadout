@@ -28,8 +28,6 @@ SocketHandler::SocketHandler(QObject* parent) :
     m_fecSetup(false),
     m_vmmappSocket(0),
     m_vmmappSetup(false)
-    //m_daqSocket(0),
-    //m_daqSetup(false)
 {
 }
 // ---------------------------------------------------------------------- //
@@ -53,8 +51,12 @@ SocketHandler& SocketHandler::loadIPList(const QString& ipstring)
     m_iplist.clear();
     m_iplist << ipstring.split(",");
     stringstream sx;
-    sx << "Loaded " << m_iplist.size() << " IP addresses";
-    msg()(sx, "SocketHandler::loadIPList");
+    sx << "Loaded " << m_iplist.size() << " IP addresses:";
+    msg()(sx, "SocketHandler::loadIPList"); sx.str("");
+    for(const auto& ip : m_iplist) {
+        sx << "    > " << ip.toStdString() << "\n";
+        msg()(sx,"SocketHandler::loadIPList"); sx.str("");
+    }
     return *this;
 }
 // ---------------------------------------------------------------------- //
@@ -67,6 +69,7 @@ bool SocketHandler::ping()
         stringstream sx;
         sx << "ERROR There are no IP addresses loaded. Please use method 'loadIPList'";
         msg()(sx,"SocketHandler::ping");
+        m_pinged = false;
     }
     for(const auto& ip : m_iplist) {
         #ifdef __linux__
@@ -96,6 +99,12 @@ bool SocketHandler::ping()
 void SocketHandler::updateCommandCounter()
 {
     n_globalCommandCounter++;
+    emit commandCounterUpdated();
+}
+// ---------------------------------------------------------------------- //
+void SocketHandler::resetCommandCounter()
+{
+    n_globalCommandCounter = 0;
     emit commandCounterUpdated();
 }
 // ---------------------------------------------------------------------- //
@@ -170,13 +179,6 @@ bool SocketHandler::vmmappSocketOK()
     return status;
 }
 // ---------------------------------------------------------------------- //
-//bool SocketHandler::daqSocketOK()
-//{
-//    bool status = true;
-//    if(!m_daqSocket) status = false;
-//    return status;
-//}
-// ---------------------------------------------------------------------- //
 void SocketHandler::SendDatagram(const QByteArray& datagram, const QString& ip,
             const quint16& destPort, const QString& whichSocket, const QString& callingFn)
 {
@@ -214,9 +216,6 @@ void SocketHandler::SendDatagram(const QByteArray& datagram, const QString& ip,
     }
     if(!dryrun())
         socket.writeDatagram(datagram, QHostAddress(ip), destPort);
-
-    #warning does closing socket here prevent reply processing???
-    //socket.closeAndDisconnect();
 }
 // ---------------------------------------------------------------------- //
 bool SocketHandler::waitForReadyRead(std::string name, int msec)
@@ -235,9 +234,6 @@ QByteArray SocketHandler::processReply(std::string name, const QString& ip_to_ch
 {
     QByteArray outbuffer;
     quint32 count = commandCounter();
-    //stringstream sx;
-    //sx << "HANDLER: delay = " << cmd_delay << " global: " << count;
-    //msg()(sx, "SocketHandler::processReply");
 
     if(dryrun() || m_skipProcessing) {
         msg()("NOT PROCESSING REPLIES!", "SocketHandler::processReply");
@@ -282,13 +278,6 @@ VMMSocket& SocketHandler::getSocket(std::string whichSocket)
             exit(1);
         }
     }
-//    else if(lname=="daq") {
-//        if(m_daqSocket) return *m_daqSocket;
-//        else {
-//            msg()("Requested socket (daq) is null!","SocketHandler::getSocket",true);
-//            exit(1);
-//        }
-//    }
     else if(lname=="vmmapp") {
         if(m_vmmappSocket) return *m_vmmappSocket;
         else {
@@ -314,8 +303,6 @@ void SocketHandler::Print()
     }
     if(m_fecSocket)
         fecSocket().Print();
-//    if(m_daqSocket)
-//        daqSocket().Print();
     if(m_vmmappSocket)
         vmmappSocket().Print();
 }
