@@ -99,9 +99,6 @@ void VMMSocket::readyRead()
 
     if     (getName()=="fec" || getName()=="FEC")
         emit dataReady();
-//    else if(getName()=="DAQ" || getName()=="daq") {
-//        emit dataReady();
-//    }
 }
 // ----------------------------------------------------------------------- //
 quint64 VMMSocket::writeDatagram(const QByteArray& datagram,
@@ -246,7 +243,7 @@ QByteArray VMMSocket::processReply(const QString &ip_to_check, quint32 cmd_delay
 
     if(replies.size()>0) {
         for(const auto& ip : replies) {
-            // unexpected ip has replied
+            // unexpected ip has replied -- let us know which IP's are bad
             if(ip != ip_to_check) {
                 sx.str("");
                 sx << "VMM with IP [" << ip.toStdString() << " has sent a reply"
@@ -258,13 +255,10 @@ QByteArray VMMSocket::processReply(const QString &ip_to_check, quint32 cmd_delay
             } // unexpected ip
         } // ip
     } // replies > 0
-    //sx.str("");
-    //sx << "replies size : " << replies.size() << endl;
-    //msg()(sx);
 
     if(!replies.contains(ip_to_check)) {
         sx.str("");
-        sx << "VMM with IP: " << ip_to_check.toStdString() << " did not"
+        sx << "VMM with IP " << ip_to_check.toStdString() << " did not"
            << " acknowledge command number: " << cmd_cnt_to_check;
         msg()(sx,"VMMSocket::processReply",true);
         //debug
