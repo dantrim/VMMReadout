@@ -69,6 +69,7 @@ void Configuration::SendConfig()
 
     bool ok;
 
+    // configuration of the VMMs
     int send_to_port = config().commSettings().vmmasic_port;
 
     ///////////////////////////////////////////////////
@@ -430,37 +431,37 @@ void Configuration::fillChannelRegisters(std::vector<QString>& registers)
         sequence=8;
         reg = "00000000000000000000000000000000";
 
-        //SP
+        //SP [8]
         reg.replace(sequence,1,
             QString::number(config().channelSettings(i).polarity));
         sequence++; 
         if(do_check) std::cout << " SP : " << reg.toStdString() << std::endl;
 
-        //SC
+        //SC [9]
         reg.replace(sequence,1,
             QString::number(config().channelSettings(i).capacitance));
         sequence++;
         if(do_check) std::cout << " SC : " << reg.toStdString() << std::endl;
 
-        //SL
+        //SL [10]
         reg.replace(sequence,1,
             QString::number(config().channelSettings(i).leakage_current));
         sequence++;
         if(do_check) std::cout << " SL : " << reg.toStdString() << std::endl;
 
-        //ST
+        //ST [11]
         reg.replace(sequence,1,
             QString::number(config().channelSettings(i).test_pulse));
         sequence++;
         if(do_check) std::cout << " ST : " << reg.toStdString() << std::endl;
 
-        //SM
+        //SM [12]
         reg.replace(sequence,1,
             QString::number(config().channelSettings(i).hidden_mode));
         sequence++;
         if(do_check) std::cout << " SM : " << reg.toStdString() << std::endl;
 
-        //trim
+        //trim [13,16]
         tmp = "0000";
         tmp = QString("%1").arg(config().channelSettings(i).trim,
                                                     4,2,QChar('0'));
@@ -469,27 +470,27 @@ void Configuration::fillChannelRegisters(std::vector<QString>& registers)
         sequence += tmp.size();
         if(do_check) std::cout << " TRIM : " << reg.toStdString() << std::endl;
 
-        //SMX
+        //SMX [17]
         reg.replace(sequence,1,
             QString::number(config().channelSettings(i).monitor));
         sequence++;
         if(do_check) std::cout << " SMX : " << reg.toStdString() << std::endl;
 
-        //10 bit adc lsb
+        //10 bit adc lsb [18,22]
         tmp = QString("%1").arg(config().channelSettings(i).s10bitADC,
                                                     5,2,QChar('0'));
         reg.replace(sequence,tmp.size(),tmp);
         sequence += tmp.size();
         if(do_check) std::cout << " 10bit : " << reg.toStdString() << std::endl;
 
-        //8 bit adc lsb
+        //8 bit adc lsb [23,26]
         tmp = QString("%1").arg(config().channelSettings(i).s8bitADC,
                                                     4,2,QChar('0'));
         reg.replace(sequence,tmp.size(),tmp);
         sequence += tmp.size();
         if(do_check) std::cout << " 8bit : " << reg.toStdString() << std::endl;
 
-        //6 bit adc lsb
+        //6 bit adc lsb [27,29]
         tmp = QString("%1").arg(config().channelSettings(i).s6bitADC,
                                                     3,2,QChar('0'));
         reg.replace(sequence,tmp.size(),tmp);
