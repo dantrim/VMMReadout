@@ -115,7 +115,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // testing shared memory
     // make it direct connection (which means the daq thread will not be the thread in which it is processed
     // but this will not be needed when actually processing shared memory)
-    connect(ui->testSharedMemory, SIGNAL(pressed()), vmmDataHandler, SLOT(testSharedMem()), Qt::DirectConnection);
+    //connect(ui->testSharedMemory, SIGNAL(pressed()), vmmDataHandler, SLOT(testSharedMem()), Qt::DirectConnection);
 
 
     //////////////////////////////////////////////////////////////////////
@@ -2362,17 +2362,17 @@ void MainWindow::setCalibrationACQon(int events_for_loop)
     emit ui->onACQ->click();
 
     stringstream sx;
-    sx << "loop with intiial : " << initial_number_of_events
-       << "  and total tot loop: " << events_for_loop;
-    msg()(sx);
+    //sx << "loop with intiial : " << initial_number_of_events
+    //   << "  and total tot loop: " << events_for_loop;
+    //msg()(sx);
 
     //int x = 0;
     while((int(ui->triggerCntLabel->text().toUInt(&ok,10) - initial_number_of_events)
                     <= events_for_loop) && calibModule().continueLoop()) {
-        msg()(" * Waiting for event collecting * ");
-        sx.str("");
-        sx << ui->triggerCntLabel->text().toUInt(&ok,10);
-        msg()(sx);
+        //msg()(" * Waiting for event collecting * ");
+        //sx.str("");
+        //sx << ui->triggerCntLabel->text().toUInt(&ok,10);
+        //msg()(sx);
         delay();
         delay();
         delay();
