@@ -2100,7 +2100,6 @@ void MainWindow::triggerHandler()
             // things should be OK by now
             sx << " * Starting DAQ run *";
             msg()(sx); sx.str("");
-            m_daqInProgress = true;
 
             //reset DAQ count for this run
             dataHandle().resetDAQCount();
@@ -2110,6 +2109,7 @@ void MainWindow::triggerHandler()
             //thread
             delay(); delay();
             emit startDAQSocket();
+            m_daqInProgress = true;
 
             // gui stuff
             ui->runStatusField->setText("Run:"+ui->runNumber->text()+" ongoing");
@@ -2214,7 +2214,9 @@ void MainWindow::triggerHandler()
 
         // daq socket exists in another thread so must call it with signal
         emit closeDAQSocket();
-        //blah
+
+        m_daqInProgress = false;
+
         if(m_inCalibrationLoop) {
             msg()(sx);
             emit stopCalibrationLoop();

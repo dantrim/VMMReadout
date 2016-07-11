@@ -16,6 +16,7 @@ class QUdpSocket;
 // vmm
 #include "config_handler.h"
 #include "message_handler.h"
+#include "daq_monitor.h"
 class VMMSocket;
 
 // ROOT
@@ -28,6 +29,9 @@ class VMMSocket;
 #include "daqconfig.h"
 #include "sharedmemorywriter.h"
 #include "createevents.h"
+
+//boost
+#include <boost/shared_ptr.hpp>
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -49,6 +53,9 @@ class DataHandler : public QObject
         void setupMonitoring();
         void LoadMessageHandler(MessageHandler& msg);
         MessageHandler& msg() { return *m_msg; }
+
+        void startDAQMonitor();//daqmon
+        void closeDAQMonitor();//daqmon
 
         bool calibRun() { return m_calibRun; }
         bool ignore16() { return m_ignore16; }
@@ -90,13 +97,15 @@ class DataHandler : public QObject
         /////////////////////////////////////////
         VMMSocket& daqSocket() { return *m_daqSocket; }
         void decodeAndWriteData(const QByteArray& datagram);
-        void resetDAQCount() { n_daqCnt = 0; }
-        int getDAQCount() { return n_daqCnt; } 
-        void updateDAQCount() { n_daqCnt++; }
+        void resetDAQCount() { (*n_daqCnt) = 0; }
+        int getDAQCount() { return (*n_daqCnt); } 
+        void updateDAQCount() { (*n_daqCnt)++; }
         void fillEventData();
         
 
-        int n_daqCnt;
+        //int n_daqCnt;
+        //daqmon
+        boost::shared_ptr< int > n_daqCnt;
 
         //thread
         void testFunction();
@@ -126,6 +135,9 @@ class DataHandler : public QObject
 
         VMMSocket *m_daqSocket;
         MessageHandler *m_msg;
+
+        // for monitoring daq daqmon
+        DaqMonitor m_daqMonitor; 
 
         QFile m_daqFile;
         bool m_fileOK;
@@ -252,6 +264,9 @@ class DataHandler : public QObject
         void setupOutputTrees();
         void connectDAQSocket();
         void closeDAQSocket();
+
+        //daqmon
+        void daqHanging();
 
 
         void testMultiARG(QString,QString,QString);

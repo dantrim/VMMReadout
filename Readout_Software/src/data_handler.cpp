@@ -28,7 +28,9 @@ DataHandler::DataHandler(QObject *parent) :
     m_monitoringSetup(false),
     m_calibRun(false),
     m_write(false),
-    n_daqCnt(0),
+    //n_daqCnt(0),
+    //daqmon
+    n_daqCnt(new int()),
     m_ignore16(false),
     m_use_channelmap(false),
     //test shared
@@ -51,6 +53,7 @@ DataHandler::DataHandler(QObject *parent) :
     m_runProperties(NULL),
     m_artTree(NULL)
 {
+
     //thread
    // testDAQSocket = new QUdpSocket();
    // bool bind = testDAQSocket->bind(6006, QAbstractSocket::DefaultForPlatform); 
@@ -62,6 +65,7 @@ DataHandler::DataHandler(QObject *parent) :
    // //testDAQSocket->bind(QHostAddress::LocalHost, 1235);
     //connect(testDAQSocket, SIGNAL(readyRead()), this, SLOT(testDAQSocketRead()));
    // connect(testDAQSocket, SIGNAL(readyRead()), this, SLOT(readEvent()));
+    connect(&m_daqMonitor, SIGNAL(daqHangObserved()), this, SLOT(daqHanging()));
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::testSharedMem()
@@ -151,6 +155,10 @@ void DataHandler::connectDAQSocket()
             testDAQSocket->disconnectFromHost();
         } // not bnd correctly
         else {
+
+            //daqmon
+            startDAQMonitor();
+
             if(dbg()) {
                 sx << "DAQ socket successfully bound to port " << daqport;
                 msg()(sx,"DataHandler::connectDAQSocket"); sx.str("");
@@ -165,6 +173,9 @@ void DataHandler::closeDAQSocket()
     if(dbg()) msg()("Closing DAQ socket", "DataHandler::closeDAQSocket");
     testDAQSocket->close();
     testDAQSocket->disconnectFromHost();
+
+    //daqmon
+    closeDAQMonitor();
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::testFunction2()
@@ -221,6 +232,49 @@ void DataHandler::testDAQSocketRead()
 void DataHandler::LoadMessageHandler(MessageHandler& m)
 {
     m_msg = &m;
+}
+// ------------------------------------------------------------------------ //
+void DataHandler::startDAQMonitor()
+{
+    stringstream sx;
+    if(dbg()) {
+        sx << "Starting DaqMonitor...";
+        msg()(sx, "DataHandler::startDAQMonitor"); sx.str("");
+    }
+
+    //daqmon
+    //boost::shared_ptr< int > daq_mon_counter = &n_daqCnt; 
+    sx << "Sending DAQMonitor counter at address: " << n_daqCnt;
+    //sx << "Sending daq_mon_counter at address: " << daq_mon_counter 
+    //    << "    from origina n_daqCnt at address: " << &n_daq_count;
+    msg()(sx, "DataHandler::startDAQMonitor"); sx.str("");
+    //m_daqMonitor.setCounter(daq_mon_counter);
+    m_daqMonitor.setCounter(n_daqCnt);
+    m_daqMonitor.begin();
+}
+// ------------------------------------------------------------------------ //
+void DataHandler::closeDAQMonitor()
+{
+    stringstream sx;
+    if(dbg()) {
+        sx << "Closing DaqMonitor...";
+        msg()(sx, "DataHandler::closeDAQMonitor"); sx.str("");
+    }
+    m_daqMonitor.stop();
+
+}
+// ------------------------------------------------------------------------ //
+//daqmon
+void DataHandler::daqHanging()
+{
+
+    stringstream sx;
+    sx << "WARNING    DAQ hang observed. Toggling DAQ socket.";
+    msg()(sx, "DataHandler::daqHanging"); sx.str("");
+
+    closeDAQSocket();
+    connectDAQSocket();
+    
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::set_monitorData(bool doit)
