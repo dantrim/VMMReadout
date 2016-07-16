@@ -47,6 +47,8 @@ class SocketHandler : public QObject
         // update global command counter
         void updateCommandCounter();
         quint32 commandCounter() { return n_globalCommandCounter; }
+        // reset global command counter
+        void resetCommandCounter();
 
         // add sockets
         void addSocket(std::string name = "",
