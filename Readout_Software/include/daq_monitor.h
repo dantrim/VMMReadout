@@ -2,47 +2,37 @@
 #ifndef DAQ_MONITOR_H
 #define DAQ_MONITOR_H
 
-// std/stl
-
-// vmm
-
-// qt
+//qt
 #include <QObject>
+#include <QTimer>
 
-// boost
-#include <boost/asio.hpp>
+//boost
 #include <boost/shared_ptr.hpp>
-#include <boost/thread.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/bind.hpp>
+
+//vmm
+#include "message_handler.h"
+
 
 
 class DaqMonitor : public QObject
 {
+
     Q_OBJECT
 
     public :
         explicit DaqMonitor(QObject *parent = 0);
-        virtual ~DaqMonitor();
+        virtual ~DaqMonitor(){};
+        void LoadMessageHandler(MessageHandler& msg);
+        MessageHandler& msg() { return *m_msg; }
+        void setDebug(bool doit) { m_dbg = doit; }
+        bool dbg() { return m_dbg; }
 
-        void setCheckInterval(int interval = 10 /*seconds*/) { n_interval_to_check = interval; }
 
-        // provide the counter from the outside world
-        void setCounter(boost::shared_ptr< int > counter);// { n_live_counter = counter; }
-
-        //void MonitorThread( boost::shared_ptr< boost::asio::io_service > io);
-        void MonitorThread();
-        void CheckCount();
-
-        void OpenThread();
-
-        void begin();
+        void setInterval(int interval = 5) { n_interval_to_check = interval; }
+        void setTimer();
+        void setCounter(boost::shared_ptr< int > counter);
 
         bool isOn() { return m_is_monitoring; }
-
-
-        // shut down the io_service and threads
-        void close_daq_monitor();
 
     private :
         bool m_dbg;
@@ -52,19 +42,18 @@ class DaqMonitor : public QObject
         int n_stuck_count;
         boost::shared_ptr< int > n_live_counter;
 
-        boost::shared_ptr< boost::asio::io_service > m_io_service;
-        boost::shared_ptr< boost::asio::io_service::work > m_worker;
-        boost::shared_ptr< boost::asio::deadline_timer > m_timer;
+        QTimer* m_timer;
 
-        boost::thread_group m_worker_threads;
-
+        MessageHandler *m_msg;
 
     signals :
         void daqHangObserved();
 
     public slots :
-        void stop();
+        void checkCount();
+        void startTimer();
+        void stopTimer();
 
-}; // class
+}; //class
 
 #endif

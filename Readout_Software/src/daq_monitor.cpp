@@ -1,16 +1,12 @@
-
-// vmm
 #include "daq_monitor.h"
 
-// boost
-#include <boost/asio.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/thread.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/bind.hpp>
 
 // std/stl
 #include <iostream>
+#include <sstream>
+
+// qt
+#include <QThread>
 
 //////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------ //
@@ -21,109 +17,82 @@ DaqMonitor::DaqMonitor(QObject* parent) :
     QObject(parent),
     m_dbg(true),
     m_is_monitoring(false),
-    n_interval_to_check(10),
+    n_interval_to_check(2),
     n_previous_counter(-1),
     n_stuck_count(0),
     n_live_counter( new int() ),
-    m_io_service( new boost::asio::io_service ),
-    m_worker( new boost::asio::io_service::work(*m_io_service) ),
-    m_timer( new boost::asio::deadline_timer(*m_io_service) )
-    
+    m_timer(0),
+    m_msg(0)
 {
     (*n_live_counter) = 0;
 }
-DaqMonitor::~DaqMonitor()
+// ------------------------------------------------------------------------ //
+void DaqMonitor::LoadMessageHandler(MessageHandler& msg)
 {
-    close_daq_monitor();
+    m_msg = &msg;
 }
 // ------------------------------------------------------------------------ //
-void DaqMonitor::close_daq_monitor()
+void DaqMonitor::setTimer()
 {
-    std::cout << "DaqMonitor::close_daq_monitor()" << std::endl;
-    m_io_service->stop();
-    m_worker_threads.join_all();
-    return;
-}
-// ------------------------------------------------------------------------ //
-void DaqMonitor::OpenThread()
-{
-    m_worker_threads.create_thread(boost::bind(&DaqMonitor::MonitorThread, this));//, _1, m_io_service));
+    std::stringstream sx;
+    if(dbg()) {
+        sx << "DaqMonitor::setTimer()";
+        msg()(sx,"DaqMonitor::setTimer"); sx.str("");
+    }
+    if(m_timer) delete m_timer;
+
+    m_timer = new QTimer();
+    connect(m_timer, SIGNAL(timeout()), this, SLOT(checkCount()));
 }
 // ------------------------------------------------------------------------ //
 void DaqMonitor::setCounter(boost::shared_ptr< int > counter)
 {
     n_live_counter = counter;
-    std::cout << "DaqMonitor::setCounter    " << counter << "   " << (*counter) << std::endl;
+    //std::cout << "DaqMonitor::setCounter   " <<  n_live_counter << "  " << (*n_live_counter) << std::endl;
 }
 // ------------------------------------------------------------------------ //
-//void DaqMonitor::MonitorThread( boost::shared_ptr< boost::asio::io_service > io_service )
-void DaqMonitor::MonitorThread()
+void DaqMonitor::startTimer()
 {
-    while(true) {
-        try {
-            boost::system::error_code ec;
-            m_io_service->run( ec );
-            if( ec ) {
-                std::cout << "DaqMonitor::MonitorThread [" << boost::this_thread::get_id()
-                        << "] ERROR : " << ec << std::endl;
-            }
-            break;
-        }//try
-        catch( std::exception & ex ) {
-            std::cout << "DaqMonitor::MonitorThread [" << boost::this_thread::get_id()
-                    << "] Exception : " << ex.what() << std::endl;
-        }// catch
-
-    }// while
-    std::cout << "DaqMonitor::MonitorThread [" << boost::this_thread::get_id()
-            << "]  Thread finished" << std::endl;
-
+    if(dbg()) {
+        msg()("Timer started...", "DaqMonitor::startTimer");
+    }
+    if(!m_timer) {
+        msg()("Timer is null!","DaqMonitor::startTimer");
+        return;
+    }
+    m_timer->start(n_interval_to_check*1000); // timer is in milliseconds
 }
 // ------------------------------------------------------------------------ //
-void DaqMonitor::CheckCount()// const boost::system::error_code & error)
+void DaqMonitor::stopTimer()
 {
-
- //   if(error) {
- //       std::cout << "DaqMonitor::CheckCount [" << boost::this_thread::get_id()
- //           << "] ERROR : " << error << std::endl;
- //   } // error
- //   else {
-        int count_to_check = (*n_live_counter);
-        std::cout << "DaqMonitor::CheckCount [" << boost::this_thread::get_id()
-            << "]    counter_to_check: " << count_to_check << std::endl;
-
-        if(count_to_check == n_previous_counter) {
-            n_stuck_count++; 
-        }
-        if(n_stuck_count >= 2) {
-            std::cout << "DaqMonitor::CheckCount [" << boost::this_thread::get_id()
-                << "]    DAQ HANG OBSERVED" << std::endl;
-
-            //send signal
-            emit daqHangObserved();
-        }
-        
-
-        // keep this loop going
-        m_timer->expires_from_now(boost::posix_time::seconds(n_interval_to_check) );
-        m_timer->async_wait(boost::bind(&DaqMonitor::CheckCount, this));
-  //  }
-
+    if(dbg()) {
+        msg()("Stopping timer...", "DaqMonitor::stopTimer");
+    }
+    if(!m_timer) {
+        msg()("Timer is null!","DaqMonitor::stopTimer");
+        return;
+    }
+    m_timer->stop();
 }
 // ------------------------------------------------------------------------ //
-void DaqMonitor::begin()
+void DaqMonitor::checkCount()
 {
-    std::cout << "DaqMonitor::begin..." << std::endl;
-    OpenThread();
+    int count_to_check = (*n_live_counter);
+    //std::cout << "DaqMonitor::checkCount [" << QThread::currentThreadId()
+    //         << "]  counter_to_check: " << count_to_check
+    //         << "   previous: " << n_previous_counter << std::endl;
 
-    m_timer->expires_from_now(boost::posix_time::seconds(n_interval_to_check));
-    m_timer->async_wait(boost::bind(&DaqMonitor::CheckCount, this));
+    if(count_to_check == n_previous_counter)
+        n_stuck_count++;
+    else
+        n_stuck_count = 0;
 
-    m_is_monitoring = true;
-}
-// ------------------------------------------------------------------------ //
-void DaqMonitor::stop()
-{
-    close_daq_monitor();
-    m_is_monitoring = false;
+    if(n_stuck_count>=2) {
+        std::cout << "DaqMonitor::checkCount [" << QThread::currentThreadId()
+                << "]   DAQ HANG OBSERVED" << std::endl;
+
+        emit daqHangObserved();
+        //stopTimer();
+    }
+    n_previous_counter = count_to_check;
 }
