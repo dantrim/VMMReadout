@@ -13,6 +13,9 @@
 #include <QDir>
 #include <QThread>
 
+//boost
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 using namespace std;
 
 
@@ -42,6 +45,9 @@ DataHandler::DataHandler(QObject *parent) :
     m_mapping_file(""),
     m_daqSocket(0),
     m_msg(0),
+    m_eventCountStop(-1),
+    //daqmon
+    m_daqMonitor(0),
     m_fileOK(false),
     m_outDir(""),
     m_channel_for_calib(-1),
@@ -63,9 +69,18 @@ DataHandler::DataHandler(QObject *parent) :
    //     msg()("DAQ SOCKET NOT BOUND");
    // }
    // //testDAQSocket->bind(QHostAddress::LocalHost, 1235);
-    //connect(testDAQSocket, SIGNAL(readyRead()), this, SLOT(testDAQSocketRead()));
    // connect(testDAQSocket, SIGNAL(readyRead()), this, SLOT(readEvent()));
-    connect(&m_daqMonitor, SIGNAL(daqHangObserved()), this, SLOT(daqHanging()));
+    //connect(&m_daqMonitor, SIGNAL(daqHangObserved()), this, SLOT(daqHanging()));
+
+    m_daqMonitor = new DaqMonitor();
+    connect(m_daqMonitor, SIGNAL(daqHangObserved()), this, SLOT(daqHanging()), Qt::QueuedConnection);
+
+}
+// ------------------------------------------------------------------------ //
+void DataHandler::setDebug(bool doit)
+{
+    m_dbg = doit;
+    m_daqMonitor->setDebug(doit);
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::testSharedMem()
@@ -175,106 +190,38 @@ void DataHandler::closeDAQSocket()
     testDAQSocket->disconnectFromHost();
 
     //daqmon
-    closeDAQMonitor();
-}
-// ------------------------------------------------------------------------ //
-void DataHandler::testFunction2()
-{
-
-    qDebug() << "+++++++++++++++++++++++++++++++";
-    qDebug() << "  test call of function 2      ";
-    qDebug() << "  > thread: " << QThread::currentThreadId();
-    qDebug() << "+++++++++++++++++++++++++++++++";
-
-    stringstream sx;
-    sx << "FROM MESSAGE HANDLER, THREAD = " << QThread::currentThreadId();
-    msg()(sx,"DataHandler::testFunction");
-}
-// ------------------------------------------------------------------------ //
-void DataHandler::testFunction()
-{
-    qDebug() << "+++++++++++++++++++++++++++++++";
-    qDebug() << "  test call of function        ";
-    qDebug() << "  > thread: " << QThread::currentThreadId();
-    qDebug() << "+++++++++++++++++++++++++++++++";
-
-   // string thID = QThread::currentThreadId().toString().toStdString();
-
-    stringstream sx;
-    sx << "FROM MESSAGE HANDLER, THREAD = " << QThread::currentThreadId();
-    msg()(sx,"DataHandler::testFunction");
-
-}
-// ------------------------------------------------------------------------ //
-void DataHandler::testDAQSocketRead()
-{
-    QByteArray buffer;
-    buffer.resize(testDAQSocket->pendingDatagramSize());
-    QHostAddress sender;
-    quint16 senderPort;
-   
-    testDAQSocket->readDatagram(buffer.data(), buffer.size(), &sender, &senderPort); 
-    //QString sender_port = senderPort.toIPv4Address().toString();
-
-    qDebug() << "--------------------------------";
-    qDebug() << "--------------------------------";
-    qDebug() << " TEST DAQ SOCKET RECEIVING DATA ";
-    qDebug() << "   message   : " << buffer;
-    qDebug() << "   from      : " << sender.toString();
-    qDebug() << "   from port : " << senderPort;
-    qDebug() << "- - - - - - - - - - - - - - - - ";
-    qDebug() << "   IN THREAD : " << QThread::currentThreadId();
-    qDebug() << "--------------------------------";
-    qDebug() << "--------------------------------";
-
+    //closeDAQMonitor();
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::LoadMessageHandler(MessageHandler& m)
 {
     m_msg = &m;
+    m_daqMonitor->LoadMessageHandler(msg());
 }
 // ------------------------------------------------------------------------ //
+//daqmon
 void DataHandler::startDAQMonitor()
 {
     stringstream sx;
-    if(dbg()) {
-        sx << "Starting DaqMonitor...";
-        msg()(sx, "DataHandler::startDAQMonitor"); sx.str("");
-    }
-
-    //daqmon
-    //boost::shared_ptr< int > daq_mon_counter = &n_daqCnt; 
-    sx << "Sending DAQMonitor counter at address: " << n_daqCnt;
-    //sx << "Sending daq_mon_counter at address: " << daq_mon_counter 
-    //    << "    from origina n_daqCnt at address: " << &n_daq_count;
+    sx << "Starting DaqMonitor...";
     msg()(sx, "DataHandler::startDAQMonitor"); sx.str("");
-    //m_daqMonitor.setCounter(daq_mon_counter);
-    m_daqMonitor.setCounter(n_daqCnt);
-    m_daqMonitor.begin();
-}
-// ------------------------------------------------------------------------ //
-void DataHandler::closeDAQMonitor()
-{
-    stringstream sx;
-    if(dbg()) {
-        sx << "Closing DaqMonitor...";
-        msg()(sx, "DataHandler::closeDAQMonitor"); sx.str("");
-    }
-    m_daqMonitor.stop();
 
+    m_daqMonitor->setTimer();
+    m_daqMonitor->setCounter(n_daqCnt);
+    m_daqMonitor->startTimer();
 }
 // ------------------------------------------------------------------------ //
 //daqmon
 void DataHandler::daqHanging()
 {
-
     stringstream sx;
-    sx << "WARNING    DAQ hang observed. Toggling DAQ socket.";
+    sx << "DAQ observed to be hanging. Toggling DAQ socket.";
     msg()(sx, "DataHandler::daqHanging"); sx.str("");
 
     closeDAQSocket();
+    // wait a second
+    boost::this_thread::sleep(boost::posix_time::seconds(1));
     connectDAQSocket();
-    
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::set_monitorData(bool doit)
@@ -460,14 +407,6 @@ void DataHandler::updateCalibrationState(int gainIdx, int threshDAC, int ampDAC,
         sx << "     peak/int. time : " << m_peakTime_calib << endl;
         cout << sx.str() << endl;
     }
-}
-// ------------------------------------------------------------------------ //
-void DataHandler::testMultiARG(QString x, QString y, QString z)
-{
-    stringstream sx;
-    sx << "MULTI ARG : " << x.toStdString() << " " << y.toStdString() << " " << z.toStdString();
-    msg()(sx, "DataHandler::testMultiARG");
-
 }
 // ------------------------------------------------------------------------ //
 int DataHandler::channelToStrip(int chipNumber, int channelNumber)
@@ -1356,7 +1295,7 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
     else if(frameCounterStr == "fafafafa") {
 
         if((int)getDAQCount()%100==0) {
-            emit checkDAQCount();
+            emit checkDAQCount(false);
         }
         m_eventNumberFAFA = getDAQCount() - 1;
 
@@ -1398,6 +1337,12 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
         }
 
         clearData();
+
+        // if we've reached the limit for events, trigger a stop
+        if( (m_eventCountStop > 0) && ((*n_daqCnt) >= m_eventCountStop) ) {
+            emit checkDAQCount(true);
+            emit eventCountStopReached();
+        }
 
     } // == fafafafa
 
@@ -1543,8 +1488,3 @@ uint DataHandler::grayToBinary(uint num)
     return num;
 }
 // ------------------------------------------------------------------------ //
-void DataHandler::daqThreadWhere(QString name)
-{
-    qDebug() << "DATAHANDLE THREAD WHERE   : " << QThread::currentThreadId();
-    qDebug() << "DATAHANDLE THREAD WHERE fname : " << name;
-}

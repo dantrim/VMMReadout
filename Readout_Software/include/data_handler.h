@@ -47,12 +47,14 @@ class DataHandler : public QObject
         explicit DataHandler(QObject *parent = 0);
         virtual ~DataHandler(){};
 
-        void setDebug(bool dbg) { m_dbg = dbg; }
+        void setDebug(bool dbg);
         bool dbg() { return m_dbg; }
         bool monitoring() { return m_doMonitoring; }
         void setupMonitoring();
         void LoadMessageHandler(MessageHandler& msg);
         MessageHandler& msg() { return *m_msg; }
+
+        void setEventCountStop(int count_to_this) { m_eventCountStop = count_to_this; }
 
         void startDAQMonitor();//daqmon
         void closeDAQMonitor();//daqmon
@@ -107,10 +109,6 @@ class DataHandler : public QObject
         //daqmon
         boost::shared_ptr< int > n_daqCnt;
 
-        //thread
-        void testFunction();
-
-
     private :
         bool m_dbg;
         bool m_doMonitoring;
@@ -136,8 +134,11 @@ class DataHandler : public QObject
         VMMSocket *m_daqSocket;
         MessageHandler *m_msg;
 
+        // if >0 this will be the number of events to read before stopping
+        int m_eventCountStop;
+
         // for monitoring daq daqmon
-        DaqMonitor m_daqMonitor; 
+        DaqMonitor* m_daqMonitor; 
 
         QFile m_daqFile;
         bool m_fileOK;
@@ -242,8 +243,9 @@ class DataHandler : public QObject
         
 
     signals :
-        void checkDAQCount();
+        void checkDAQCount(bool);
         void setRunDirOK(bool);
+        void eventCountStopReached();
 
     public slots :
         //testing sharted memory
@@ -267,15 +269,6 @@ class DataHandler : public QObject
 
         //daqmon
         void daqHanging();
-
-
-        void testMultiARG(QString,QString,QString);
-        //void setUseChannelMap(bool doit) { m_use_channelmap = doit; }
-
-        //thread
-        void testDAQSocketRead();
-        void daqThreadWhere(QString);
-        void testFunction2();
 
     private slots :
 
