@@ -42,6 +42,7 @@ class VMMSocket : public QObject
         quint64 writeDatagram(const QByteArray& data, const QHostAddress& host,
                     quint16 port);
 
+        // dummy function to send string datagram to specific port on local host
         void TestUDP();
 
         bool checkAndReconnect(std::string fromWhere="");

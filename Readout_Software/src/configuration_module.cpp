@@ -123,7 +123,6 @@ void Configuration::SendConfig()
         QDataStream out (&datagram, QIODevice::WriteOnly);
         out.device()->seek(0); //rewind
     
-      //  out << (quint32)(1 + msbCounter.toUInt(&ok,16)) //debug
         out << (quint32)(socket().commandCounter() + msbCounter.toUInt(&ok,16)) //[0,3]
             << (quint32)config().getHDMIChannelMap() //[4,7]
             << (quint32)cmd.toUInt(&ok,16) //[8,11]
