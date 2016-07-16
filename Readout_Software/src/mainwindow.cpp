@@ -143,6 +143,8 @@ MainWindow::MainWindow(QWidget *parent) :
                                 SLOT(closeDAQSocket()));
 
     connect(this, SIGNAL(EndRun()), vmmDataHandler, SLOT(writeAndCloseDataFile()));
+    connect(vmmDataHandler, SIGNAL(eventCountStopReached()), this,
+                                SLOT(eventCountReached()));
 
     channelGridLayout = new QGridLayout(this);
     dummy = new QWidget(this);
@@ -225,8 +227,8 @@ MainWindow::MainWindow(QWidget *parent) :
                                     this, SLOT(triggerHandler()));
 
     // update trigger count
-    connect(vmmDataHandler, SIGNAL(checkDAQCount()),
-                                    this, SLOT(updateTriggerCount()));
+    connect(vmmDataHandler, SIGNAL(checkDAQCount(bool)),
+                                    this, SLOT(updateTriggerCount(bool)));
 
     // ------------------------------------------------------ //
     // ------------- remaining buttons/widgets -------------- //
@@ -383,7 +385,7 @@ void MainWindow::selectOutputDirectory()
     int run_number = DataHandler::checkForExistingFiles(dirStr.toStdString(),
                                             ui->runNumber->value());
     if( !(run_number == ui->runNumber->value()) ) {
-        sx << "WARNING Re-setting run number to: " << run_number;    
+        sx << "Re-setting run number to: " << run_number;    
         msg()(sx); sx.str("");
     }
     ui->runNumber->setValue(run_number);
@@ -2019,6 +2021,11 @@ void MainWindow::setupMonitoring(int /*doit*/)
         dataHandle().setupMonitoring();
 }
 // ------------------------------------------------------------------------- //
+void MainWindow::eventCountReached()
+{
+    ui->stopTriggerCnt->click();
+}
+// ------------------------------------------------------------------------- //
 void MainWindow::triggerHandler()
 
 {
@@ -2034,6 +2041,10 @@ void MainWindow::triggerHandler()
   //  }
 
     if(QObject::sender() == ui->checkTriggers) {
+        ui->clearTriggerCnt->setEnabled(false);
+
+        dataHandle().setEventCountStop(ui->eventCountStop->text().toInt());//toInt());
+        ui->eventCountStop->setEnabled(false);
 
         //spin up the DAQ
         daqThread->start();
@@ -2098,7 +2109,9 @@ void MainWindow::triggerHandler()
                          tp_skew);
 
             // things should be OK by now
-            sx << " * Starting DAQ run *";
+            sx << " -------------------------------- \n";
+            sx << " *** Starting DAQ run " << ui->runNumber->value() << " *** \n";
+            sx << " -------------------------------- ";
             msg()(sx); sx.str("");
 
             //reset DAQ count for this run
@@ -2183,8 +2196,12 @@ void MainWindow::triggerHandler()
 
         } // writeData
         else {
+            ui->clearTriggerCnt->setEnabled(false);
+            ui->eventCountStop->setEnabled(false);
 
-            sx << " * Starting DAQ run *";
+            sx << " -------------------------------- \n";
+            sx << " *** Starting DAQ run " << ui->runNumber->value() << " ***\n";
+            sx << " -------------------------------- ";
             msg()(sx); sx.str("");
             m_daqInProgress = true;
 
@@ -2208,9 +2225,13 @@ void MainWindow::triggerHandler()
     } // clearTriggerCnt
 
     if(QObject::sender() == ui->stopTriggerCnt) {
-        sx << " * Ending DAQ run " << ui->runNumber->value() << " *";
+        ui->clearTriggerCnt->setEnabled(true);
+        sx << " -------------------------------- \n";
+        sx << " *** Ending DAQ run " << ui->runNumber->value() << " ***\n";
+        sx << " -------------------------------- ";
         msg()(sx); sx.str("");
         ui->useMapping->setEnabled(true);
+        ui->eventCountStop->setEnabled(true);
 
         // daq socket exists in another thread so must call it with signal
         emit closeDAQSocket();
@@ -2248,7 +2269,7 @@ void MainWindow::calibrationLoopState(bool calib_on)
     m_inCalibrationLoop = calib_on;
 }
 // ------------------------------------------------------------------------- //
-void MainWindow::updateTriggerCount()
+void MainWindow::updateTriggerCount(bool fine)
 {
     QString cnt_;
     int count = dataHandle().getDAQCount();
@@ -2260,8 +2281,13 @@ void MainWindow::updateTriggerCount()
     // (be sure to adjust this if you begin changing
     // the increment of the counter update)
 
-    count = (count + 50) / 100 * 100;
-    ui->triggerCntLabel->setText(cnt_.number(count,10));
+    if(fine) {
+        ui->triggerCntLabel->setText(cnt_.number(count,10));
+    }
+    else {
+        count = (count + 50) / 100 * 100;
+        ui->triggerCntLabel->setText(cnt_.number(count,10));
+    }
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::setPDOCalibrationState(int gain, int threshold_daq, int pulser_daq)

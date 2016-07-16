@@ -218,6 +218,9 @@ class MainWindow : public QMainWindow
         // counter
         void updateCounter();
 
+        // event count for run has been reached
+        void eventCountReached();
+
         // send the board configuration
         void prepareAndSendBoardConfig();
 
@@ -272,7 +275,7 @@ class MainWindow : public QMainWindow
         void updateChannelADCs(int);
 
         // trigger count
-        void updateTriggerCount();
+        void updateTriggerCount(bool);
 
         // connect to IP
         void Connect();
