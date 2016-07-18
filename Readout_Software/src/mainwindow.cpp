@@ -307,7 +307,6 @@ MainWindow::MainWindow(QWidget *parent) :
     //  calibration
     //-----------------------------------------------------------------//
     /////////////////////////////////////////////////////////////////////
-    //frack
     connect(vmmCalibModule, SIGNAL(calibrationLoopState(bool)),
                         this, SLOT(calibrationLoopState(bool)));
     connect(this, SIGNAL(stopCalibrationLoop()),
@@ -343,6 +342,11 @@ MainWindow::MainWindow(QWidget *parent) :
     //thread
     //msg()("NOT MOVING TO DAQ THREAD");
     vmmDataHandler->moveToThread(daqThread);
+
+    // for now disable the ability to set the online monitoring ON
+    // will wait until this is robus
+    msg()(" *** Disabling online monitoring *** ");
+    ui->doMonitoring->setEnabled(false);
 }
 
 // ------------------------------------------------------------------------- //
