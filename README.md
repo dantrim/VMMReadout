@@ -17,3 +17,8 @@ cd Readout_Software
 source install.sh
 make
 ```
+
+# Tagging in SVN
+```
+svn cp svn+ssh://${USER}@svn.cern.ch/reps/NSWELX/Readout_Software/trunk/ svn+ssh://${USER}@svn.cern.ch/reps/NSWELX/Readout_Software/tags/Readout_Software-XX-YY-ZZ
+```
