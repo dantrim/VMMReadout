@@ -79,9 +79,16 @@ MOC_DIR     += ./moc/
 RCC_DIR     += ./rcc/
 UI_DIR      += ./ui/
 
-QMAKE_CXXFLAGS += -stdlib=libc++
-QMAKE_CXXFLAGS += -std=c++11
-QMAKE_LFLAGS   += -stdlib=libc++
+linux {
+    QMAKE_CXXFLAGS += -std=c++11
+} else {
+    QMAKE_CXXFLAGS += -stdlib=libc++
+    QMAKE_CXXFLAGS += -std=c++11
+    QMAKE_LFLAGS   += -stdlib=libc++
+}
+#QMAKE_CXXFLAGS += -stdlib=libc++
+#QMAKE_CXXFLAGS += -std=c++11
+#QMAKE_LFLAGS   += -stdlib=libc++
 
 SOURCES += $$sourcepath/main.cpp\
            $$sourcepath/mainwindow.cpp\
