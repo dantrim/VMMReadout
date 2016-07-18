@@ -384,8 +384,6 @@ void MainWindow::selectOutputDirectory()
     QString check = dirStr;
     if(!ui->runDirectoryField->text().endsWith("/")) check = check + "/";
 
-    //int run_number = dataHandle().checkForExistingFiles(dirStr.toStdString(),
-    //                                        ui->runNumber->value());
     int run_number = DataHandler::checkForExistingFiles(dirStr.toStdString(),
                                             ui->runNumber->value());
     if( !(run_number == ui->runNumber->value()) ) {
@@ -685,7 +683,6 @@ void MainWindow::prepareAndSendBoardConfig()
 
     // global, chMap, channels
     configHandle().LoadBoardConfiguration(global, chMap, channels);
-  //  configModule().LoadConfig(configHandle()).LoadSocket(socketHandle()); 
 
     // send the configuration to the FEC/boards
     //msg()(" !! NOT SENDING SPI CONFIG !! ");
@@ -715,7 +712,6 @@ void MainWindow::prepareAndSendTDAQConfig()
     daq.bcid_reset      = ui->bcid_reset->value();
 
     configHandle().LoadTDAQConfiguration(daq);
-    // configModule().LoadConfig(configHandle());
 
     // send the word
     runModule().setTriggerAcqConstants(); 
@@ -1531,11 +1527,7 @@ void MainWindow::updateChannelState()
                 VMMSPBool[i]=false;
             }
         }
-
     }
-
-
-
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::updateChannelVoltages(int index){
@@ -2090,7 +2082,7 @@ void MainWindow::triggerHandler()
             int run_number = DataHandler::checkForExistingFiles(rootFileDir.toStdString(),
                                                     ui->runNumber->value());
             if( !(run_number==ui->runNumber->value()) ) {
-                sx << "WARNING Re-setting run number to: " << run_number; 
+                sx << "Re-setting run number to: " << run_number; 
                 msg()(sx);sx.str("");
             }
             ui->runNumber->setValue(run_number);
@@ -2401,9 +2393,6 @@ void MainWindow::setCalibrationACQon(int events_for_loop)
     emit ui->onACQ->click();
 
     stringstream sx;
-    //sx << "loop with intiial : " << initial_number_of_events
-    //   << "  and total tot loop: " << events_for_loop;
-    //msg()(sx);
 
     //int x = 0;
     while((int(ui->triggerCntLabel->text().toUInt(&ok,10) - initial_number_of_events)
