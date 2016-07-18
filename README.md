@@ -7,3 +7,13 @@ To checkout the trunk of the NSWELx Readout\_Software repo:
 ```
 svn co svn+ssh://svn.cern.ch/reps/NSWELX/Readout_Software/trunk
 ```
+
+# VMMReadout/Readout_Software
+
+To install the Readout_Software package:
+
+```
+cd Readout_Software
+source install.sh
+make
+```
