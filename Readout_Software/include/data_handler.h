@@ -125,7 +125,7 @@ class DataHandler : public QObject
         std::vector<std::string> m_sharedDataStrips;
 
         //thread
-        QUdpSocket *testDAQSocket;
+        QUdpSocket *m_DAQSocket;
 
         QString m_mapping_file; ///wait... is this needed?
         std::string m_mapping; //type of mapping file/ELx

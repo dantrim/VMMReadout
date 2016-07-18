@@ -40,7 +40,7 @@ DataHandler::DataHandler(QObject *parent) :
     m_ce(0),
     m_sh(0),
     //thread
-    testDAQSocket(0), 
+    m_DAQSocket(0), 
     m_mapping_file(""),
     m_daqSocket(0),
     m_msg(0),
@@ -125,18 +125,18 @@ void DataHandler::connectDAQSocket()
 
     int daqport = 6006;
 
-    if(!testDAQSocket) {
+    if(!m_DAQSocket) {
         msg()("Initializing DAQ socket...","DataHandler::connectDAQSocket");
-        testDAQSocket = new QUdpSocket();
-        connect(testDAQSocket, SIGNAL(readyRead()), this, SLOT(readEvent()));
+        m_DAQSocket = new QUdpSocket();
+        connect(m_DAQSocket, SIGNAL(readyRead()), this, SLOT(readEvent()));
     }
 
-    if(testDAQSocket->state() == QAbstractSocket::UnconnectedState) {
+    if(m_DAQSocket->state() == QAbstractSocket::UnconnectedState) {
         if(dbg()){
             sx << "About to re-bind DAQ socket";
             msg()(sx,"DataHandler::connectDAQSocket"); sx.str("");
         }
-        bool bnd = testDAQSocket->bind(daqport, QUdpSocket::ShareAddress);
+        bool bnd = m_DAQSocket->bind(daqport, QUdpSocket::ShareAddress);
         if(!bnd) {
             sx << "ERROR Unable to re-bind DAQ socket to port " << daqport;
             msg()(sx, "DataHandler::connectDAQSocket"); sx.str(""); 
@@ -144,8 +144,8 @@ void DataHandler::connectDAQSocket()
                 sx << "Closing and disconnecting DAQ socket";
                 msg()(sx,"DataHandler::connectDAQSocket"); sx.str("");
             } 
-            testDAQSocket->close();
-            testDAQSocket->disconnectFromHost();
+            m_DAQSocket->close();
+            m_DAQSocket->disconnectFromHost();
         } // not bnd correctly
         else {
 
@@ -164,8 +164,8 @@ void DataHandler::closeDAQSocket()
 {
     // close the socket
     if(dbg()) msg()("Closing DAQ socket", "DataHandler::closeDAQSocket");
-    testDAQSocket->close();
-    testDAQSocket->disconnectFromHost();
+    m_DAQSocket->close();
+    m_DAQSocket->disconnectFromHost();
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::LoadMessageHandler(MessageHandler& m)
@@ -953,12 +953,12 @@ void DataHandler::readEvent()
 
     if(monitoring())
         m_sharedDataStrips.clear();
-    while(testDAQSocket->hasPendingDatagrams()) {
+    while(m_DAQSocket->hasPendingDatagrams()) {
         //shared
 
         //shared
-        datagram.resize(testDAQSocket->pendingDatagramSize());
-        testDAQSocket->readDatagram(datagram.data(), datagram.size(), &vmmip);
+        datagram.resize(m_DAQSocket->pendingDatagramSize());
+        m_DAQSocket->readDatagram(datagram.data(), datagram.size(), &vmmip);
 
 
         //qDebug() << datagram.toHex();

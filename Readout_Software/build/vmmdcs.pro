@@ -4,19 +4,51 @@
 #
 #-------------------------------------------------
 
-sourcepath= "../src"
-includepath="../include"
-boostinclude="../include/boost"
-#boostinclude="/Users/dantrim/boost_1_60_0/"
-imagepath="../images"
+#####################################################
+# directory and machine specific items here
+#####################################################
+linebreak="---------------------------------------------------------------"
 
-QT       += core gui
-QT       += network
-QT       += widgets
-QT       += xml
-CONFIG       += console
-CONFIG+=declarative_debug
-CONFIG+=c++11
+
+sourcepath=""
+includepath=""
+boostinclude=""
+boostlib=""
+imagepath=""
+type=""
+
+linux {
+    sourcepath="../src"
+    includepath="../include"
+    boostinclude="/Software/boost/boost_1_60_0/include/boost"
+    boostlib="/Software/boost/boost_1_60_0/lib"
+    imagepath="../images"
+} else {
+    sourcepath="../src"
+    includepath="../include"
+    boostinclude="/Users/dantrim/boost_1_60_0/"
+    boostlib="/usr/local/opt/boost/lib"
+    imagepath="../images"
+}
+
+message($$linebreak)
+message("qmake sourcepath:      $$sourcepath")
+message("qmake includepath:     $$includepath")
+message("qmake boostinclude:    $$boostinclude")
+message("qmake boostlib:        $$boostlib")
+message("qmake imagepath:       $$imagepath")
+message("ROOTSYS:               $(ROOTSYS)")
+message($$linebreak)
+
+#####################################################
+
+QT      += core gui
+QT      += network
+QT      += widgets
+QT      += xml
+CONFIG  += console
+CONFIG  +=declarative_debug
+CONFIG  +=c++11
 
 TARGET   = vmmdcs
 TEMPLATE = app
@@ -30,7 +62,8 @@ else:LIBS += -L$(ROOTSYS)/lib -lCore -lCint -lRIO -lNet \
        -lHist -lGraf -lGraf3d -lGpad -lTree \
        -lRint -lPostscript -lMatrix -lPhysics \
        -lGui -lMathCore #-lRGL -lMathCore
-LIBS +=  -L/usr/local/opt/boost/lib -lboost_thread-mt -lboost_filesystem  -lboost_system
+LIBS +=  -L$$boostlib -lboost_thread-mt -lboost_filesystem  -lboost_system
+#LIBS +=  -L/usr/local/opt/boost/lib -lboost_thread-mt -lboost_filesystem  -lboost_system
 
 LIBS += -L./objects -lMylib
 
