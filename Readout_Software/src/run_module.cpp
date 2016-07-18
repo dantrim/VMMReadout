@@ -208,7 +208,7 @@ void RunModule::setTriggerAcqConstants()
         // SOLELY IN SOCKETHANDLER TO WHICH WE PASS
         // THE DATAGRAMS
 
-    socket().updateCommandCounter();
+        socket().updateCommandCounter();
 
         datagram.clear();
         QDataStream out (&datagram, QIODevice::WriteOnly);
@@ -289,7 +289,7 @@ void RunModule::setTriggerMode()
         QDataStream out (&datagram, QIODevice::WriteOnly);
         out.device()->seek(0); // rewind
 
-    socket().updateCommandCounter();
+        socket().updateCommandCounter();
 
         ///////////////////////////
         // header info
@@ -562,8 +562,8 @@ void RunModule::setEventHeaders(const int bld_info, const int bld_mode, bool hig
 // ------------------------------------------------------------------------ //
 void RunModule::resetASICs()
 {
-    msg()("Resetting VMMs...","RunModule::resetASICs");
-    //if(dbg()) msg()("Resetting ASICs...","RunModule::resetASICs");
+    //if(dbg())
+        msg()("Resetting VMMs...","RunModule::resetASICs");
 
     bool ok;
     QByteArray datagram;
@@ -758,7 +758,6 @@ void RunModule::enableART(bool enabling, bool holdoff)
         msg()("Enabling ART...","RunModule::enableART");
     else
         msg()("Disabling ART...","RunModule::enableART");
-    //if(dbg()) msg()("Enabling ART...","RunModule::enableART");
 
     bool ok;
     QByteArray datagram;
