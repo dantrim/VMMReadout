@@ -2052,7 +2052,6 @@ void MainWindow::triggerHandler()
         ui->clearTriggerCnt->setEnabled(false);
 
         dataHandle().setEventCountStop(ui->eventCountStop->text().toInt());//toInt());
-        ui->eventCountStop->setEnabled(false);
 
         //spin up the DAQ
         daqThread->start();
@@ -2100,6 +2099,10 @@ void MainWindow::triggerHandler()
                             run_number);
             bool filesOK = dataHandle().setupOutputFiles(rootFileDir, filename_formed);
             if(!filesOK) { emit badRunDirectory(); return; }
+        
+            // set this here so that we know the run will start
+            // (i.e. we have passed the check for the output location, etc...)
+            ui->eventCountStop->setEnabled(false);
 
             // not all things need to be signal/slot
             dataHandle().setupOutputTrees();

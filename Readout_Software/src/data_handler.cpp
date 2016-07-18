@@ -1047,7 +1047,8 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
             trigCountStr     = datagram.mid(8,2).toHex();
             trigTimeStampStr = datagram.mid(10,2).toHex();
 
-            if(dbg() && verbose) {
+            //if(dbg() && verbose) {
+            if(true){
                 sx.str("");
                 headerStr        = datagram.mid(4,4).toHex();
                 fullEventDataStr = datagram.mid(12, datagram.size()).toHex();
