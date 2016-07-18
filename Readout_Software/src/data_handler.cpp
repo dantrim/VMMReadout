@@ -60,18 +60,6 @@ DataHandler::DataHandler(QObject *parent) :
     m_artTree(NULL)
 {
 
-    //thread
-   // testDAQSocket = new QUdpSocket();
-   // bool bind = testDAQSocket->bind(6006, QAbstractSocket::DefaultForPlatform); 
-   // if(bind) {
-   //     msg()("DAQ SOCKET SUCCESSFULLY BOUND");
-   // } else {
-   //     msg()("DAQ SOCKET NOT BOUND");
-   // }
-   // //testDAQSocket->bind(QHostAddress::LocalHost, 1235);
-   // connect(testDAQSocket, SIGNAL(readyRead()), this, SLOT(readEvent()));
-    //connect(&m_daqMonitor, SIGNAL(daqHangObserved()), this, SLOT(daqHanging()));
-
     m_daqMonitor = new DaqMonitor();
     connect(m_daqMonitor, SIGNAL(daqHangObserved()), this, SLOT(daqHanging()), Qt::QueuedConnection);
 
@@ -1186,7 +1174,7 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                        << "q_2              : " << q_2.toStdString() << "\n"
                        << "q_final          : " << q_final.toStdString() << "\n"
                        << "tac              : " << outTac_ << "\n"
-                       << "bcid             : " << outBCID_;
+                       << "bcid             : " << outBCID_ << "\n";
                     cout << sx.str() << endl;
                     //msg()(sx,"DataHandler::decodeAndWriteData");
                     //msg()(" "," ");
@@ -1263,9 +1251,9 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                     m_art.push_back(art2);
                     m_artFlag.push_back(art2_flag);
 
-                    if(m_art.size()>2 || m_artFlag.size()>2) {
-                        cout << "storing more than 2 ART data" << endl;
-                    }
+                    //if(m_art.size()>2 || m_artFlag.size()>2) {
+                    //    cout << "storing more than 2 ART data" << endl;
+                    //}
                 }
 
                 if(dbg() && test_art) {

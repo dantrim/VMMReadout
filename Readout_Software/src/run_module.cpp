@@ -453,16 +453,17 @@ void RunModule::ACQoff()
 
             //QByteArray buffer = socket().buffer("fec");
 
-            QString bin, hex;
-            QDataStream out (&buffer, QIODevice::WriteOnly);
-            hex = buffer.mid(12,4).toHex();
-            quint32 tmp32 = DataHandler::ValueToReplaceHEX32(hex, 0, false);
-            out.device()->seek(12);
-            out << tmp32;
-            out.device()->seek(6);
-            out << (quint16) 2; // change to write mode ?
-            socket().SendDatagram(buffer, ip, send_to_port, "fec",
-                                                "RunModule::ACQoff [2]");
+            // dantrim May 26 not sure why this second word is sent -- legacy from VMM1/MCgill code?
+            //QString bin, hex;
+            //QDataStream out (&buffer, QIODevice::WriteOnly);
+            //hex = buffer.mid(12,4).toHex();
+            //quint32 tmp32 = DataHandler::ValueToReplaceHEX32(hex, 0, false);
+            //out.device()->seek(12);
+            //out << tmp32;
+            //out.device()->seek(6);
+            //out << (quint16) 2; // change to write mode ?
+            //socket().SendDatagram(buffer, ip, send_to_port, "fec",
+            //                                    "RunModule::ACQoff [2]");
         }
         else {
             msg()("Timeout [1] while waiting for replies from VMM",
@@ -471,16 +472,17 @@ void RunModule::ACQoff()
             exit(1);
         }
 
-        readOK = socket().waitForReadyRead("fec");
-        if(readOK) {
-            socket().processReply("fec", ip);
-        }
-        else {
-            msg()("Timeout [2] while waiting for replies from VMM",
-                    "RunModule::ACQoff", true);
-            socket().closeAndDisconnect("fec","RunModule::ACQoff"); 
-            exit(1);
-        }
+        // not doing second loop
+        //readOK = socket().waitForReadyRead("fec");
+        //if(readOK) {
+        //    socket().processReply("fec", ip);
+        //}
+        //else {
+        //    msg()("Timeout [2] while waiting for replies from VMM",
+        //            "RunModule::ACQoff", true);
+        //    socket().closeAndDisconnect("fec","RunModule::ACQoff"); 
+        //    exit(1);
+        //}
     } // ip loop
 
     socket().closeAndDisconnect("fec", "RunModule::ACQoff");
@@ -750,7 +752,7 @@ void RunModule::setMask()
 
 }
 // ------------------------------------------------------------------------ //
-void RunModule::enableART(bool enabling)
+void RunModule::enableART(bool enabling, bool holdoff)
 {
     if(enabling)
         msg()("Enabling ART...","RunModule::enableART");
@@ -768,6 +770,9 @@ void RunModule::enableART(bool enabling)
     QString cmd, msbCounter;
     cmd = "AAAAFFFF";
     msbCounter = "0x80000000"; 
+
+    int holdoff_enable = 233;
+    if(holdoff) holdoff_enable = 232;
 
     for(const auto& ip : socket().ipList()) {
         datagram.clear();
@@ -788,7 +793,7 @@ void RunModule::enableART(bool enabling)
         ////////////////////////////
         out << (quint32) 0 //[12,15]
             << (quint32) 1 //[19,19]
-            << (quint32) 233; //[20,23]
+            << (quint32) holdoff_enable; //[20,23]
 
 
         socket().SendDatagram(datagram, ip, send_to_port, "fec",

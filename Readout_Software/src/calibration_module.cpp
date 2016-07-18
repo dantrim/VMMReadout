@@ -94,7 +94,7 @@ bool CalibModule::setChannelRange(int start, int end)
     if( (m_chan_end > 63 || m_chan_start < 0) ) {
         ok = false;
         sx << "ERROR Ending channel number is invalid.\n>>Must be between (inclusive)"
-           << "0 and 63";
+           << "1 and 64";
         msg()(sx,"CalibModule::setChannelRange"); sx.str("");
     }
     if( m_chan_end < m_chan_start ) {
@@ -119,21 +119,15 @@ bool CalibModule::loadPDOCalibrationRecipe(pdoCalibration& calib)
     }
 
     if(calib.gain_start > calib.gain_end) {
-        sx << "ERROR Invalid gain range. Starting gain (" << calib.gain_start
-           << ") is larger than ending gain (" << calib.gain_end << ").";
-        msg()(sx,"CalibModule::loadPDOCalibrationRecipe"); sx.str("");
+        msg()("ERROR Invalid gain range","CalibModule::loadPDOCalibrationRecipe");
         ok = false;
     } 
     if(calib.threshold_start > calib.threshold_end) {
-        sx << "ERROR Invalid threshold range. Starting threshold (" << calib.threshold_start
-           << ") is larger than ending threshold (" << calib.threshold_end << ").";
-        msg()(sx,"CalibModule::loadPDOCalibrationRecipe"); sx.str("");
+        msg()("ERROR Invalid threshold range","CalibModule::loadPDOCalibrationRecipe");
         ok = false;
     }
     if(calib.pulser_start > calib.pulser_end) {
-        sx << "ERROR Invalid pulser amplitude range. Starting amplitude (" << calib.pulser_start
-           << ") is larger than ending pulser amplitude (" << calib.pulser_end << ").";
-        msg()(sx,"CalibModule::loadPDOCalibrationRecipe"); sx.str("");
+        msg()("ERROR Invalid pulser amplitude range","CalibModule::loadPDOCalibrationRecipe");
         ok = false;
     }
 

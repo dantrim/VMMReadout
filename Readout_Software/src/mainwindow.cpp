@@ -705,7 +705,10 @@ void MainWindow::prepareAndSendTDAQConfig()
     daq.trigger_period  = ui->trgPeriod->text();
     daq.acq_sync        = ui->acqSync->value();
     daq.acq_window      = ui->acqWindow->value();
-    daq.run_mode        = "pulser"; // dummy here
+    if(ui->trgPulser->isChecked()) daq.run_mode = "pulser";
+    else if(ui->trgExternal->isChecked()) daq.run_mode = "external";
+    else{daq.run_mode = "pulser";}
+    //daq.run_mode        = "pulser"; // dummy here
     daq.run_count       = 20; // dummy here
     daq.ignore16        = ui->ignore16->isChecked();
     daq.output_path     = ui->runDirectoryField->text();
@@ -1947,8 +1950,9 @@ void MainWindow::setHDMIMask()
 void MainWindow::setART()
 {
     bool enabling = true;
+    bool enableHoldOff = ui->holdOffCheckBox->isChecked();
     if(!(ui->enableART->isChecked())) enabling = false;
-    runModule().enableART(enabling);
+    runModule().enableART(enabling, enableHoldOff);
     ui->s6RB->setChecked(true);
 }
 // ------------------------------------------------------------------------- //
@@ -2055,8 +2059,8 @@ void MainWindow::triggerHandler()
         delay();
 
         //shared memory
-        ui->doMonitoring->setEnabled(false);
-        dataHandle().set_monitorData(ui->doMonitoring->isChecked());
+        //ui->doMonitoring->setEnabled(false);
+        //dataHandle().set_monitorData(ui->doMonitoring->isChecked());
 
         //mapping
         if(ui->useMapping->isChecked()) {
@@ -2215,7 +2219,7 @@ void MainWindow::triggerHandler()
             ui->checkTriggers->setEnabled(false);
             ui->stopTriggerCnt->setEnabled(true);
 
-            ui->doMonitoring->setEnabled(false);
+            //ui->doMonitoring->setEnabled(false);
         } // not writing data
 
         ui->runNumber->setEnabled(false);
@@ -2248,8 +2252,8 @@ void MainWindow::triggerHandler()
             delay();
         }
         //shared
-        ui->doMonitoring->setEnabled(true);
-        dataHandle().clearSharedMemory();
+        //ui->doMonitoring->setEnabled(true);
+        //dataHandle().clearSharedMemory();
 
         ui->runStatusField->setText("Run:"+ui->runNumber->text()+" finished");
         ui->runStatusField->setStyleSheet("background-color: lightGray");
