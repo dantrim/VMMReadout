@@ -62,7 +62,13 @@ else:LIBS += -L$(ROOTSYS)/lib -lCore -lCint -lRIO -lNet \
        -lHist -lGraf -lGraf3d -lGpad -lTree \
        -lRint -lPostscript -lMatrix -lPhysics \
        -lGui -lMathCore #-lRGL -lMathCore
-LIBS +=  -L$$boostlib -lboost_thread-mt -lboost_filesystem  -lboost_system
+
+linux {
+    LIBS += -L$$boostlib -lboost_thread -lboost_filesystem -lboost_system -lrt
+
+} else {
+    LIBS +=  -L$$boostlib -lboost_thread-mt -lboost_filesystem  -lboost_system
+}
 #LIBS +=  -L/usr/local/opt/boost/lib -lboost_thread-mt -lboost_filesystem  -lboost_system
 
 LIBS += -L./objects -lMylib
