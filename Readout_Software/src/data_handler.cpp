@@ -31,7 +31,6 @@ DataHandler::DataHandler(QObject *parent) :
     m_monitoringSetup(false),
     m_calibRun(false),
     m_write(false),
-    //n_daqCnt(0),
     //daqmon
     n_daqCnt(new int()),
     m_ignore16(false),
@@ -118,15 +117,6 @@ void DataHandler::setupMonitoring()
 
         m_monitoringSetup = true;
     }
-
-    //m_sharedDataStrips.clear();
-    //m_daqConf = new DaqConfig();
-    //m_daqConf->loadXml("DAQ_config.xml");
-    //m_ce = new CreateEvents();
-    //m_ce->setDaq(m_daqConf);
-    //m_ce->createEvents();
-    //m_sh = new SharedMemoryWriter();
-    //m_sh->initializeSharedMemory();
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::connectDAQSocket()
@@ -176,9 +166,6 @@ void DataHandler::closeDAQSocket()
     if(dbg()) msg()("Closing DAQ socket", "DataHandler::closeDAQSocket");
     testDAQSocket->close();
     testDAQSocket->disconnectFromHost();
-
-    //daqmon
-    //closeDAQMonitor();
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::LoadMessageHandler(MessageHandler& m)
@@ -387,12 +374,12 @@ void DataHandler::updateCalibrationState(int gainIdx, int threshDAC, int ampDAC,
 
     if(dbg()) {
         stringstream sx;
-        sx << " ** Updating calibration state ** " << endl;
-        sx << "     gain           : " << m_gain_calib << endl;
-        sx << "     dac thresh     : " << m_dacCounts_calib << endl;
-        sx << "     pulser ampl.   : " << m_pulserCounts_calib << endl;
-        sx << "     s6 tp skew     : " << m_tpSkew_calib << endl;
-        sx << "     peak/int. time : " << m_peakTime_calib << endl;
+        sx << " *** Updating calibration state *** " << endl;
+        sx << " > gain           : " << m_gain_calib << endl;
+        sx << " > dac thresh     : " << m_dacCounts_calib << endl;
+        sx << " > pulser ampl.   : " << m_pulserCounts_calib << endl;
+        sx << " > s6 tp skew     : " << m_tpSkew_calib << endl;
+        sx << " > peak/int. time : " << m_peakTime_calib << endl;
         cout << sx.str() << endl;
     }
 }
@@ -432,8 +419,6 @@ void DataHandler::connectDAQ()
     connect(m_daqSocket, SIGNAL(dataReady()), this, SLOT(readEvent));
 }
 // ------------------------------------------------------------------------ //
-//bool DataHandler::setupOutputFiles(TriggerDAQ& daq, QString outdir_,
-//                                                               QString filename)
 bool DataHandler::setupOutputFiles(QString outdir_, QString filename)
 {
     stringstream sx;
@@ -745,7 +730,7 @@ void DataHandler::getRunProperties(const GlobalSetting& global,
 
     if(writeNtuple()) {
         m_daqRootFile->cd();
-        if(!m_runProperties) cout << "TREE NOT UP" << endl;
+        if(!m_runProperties) cout << "DataHandler::getRunProperties    runProperties tree is null!" << endl;
         m_runProperties->Fill();
         m_runProperties->Write("", TObject::kOverwrite);
         delete m_runProperties;
@@ -828,12 +813,6 @@ void DataHandler::setupOutputTrees()
 // ------------------------------------------------------------------------ //
 void DataHandler::writeAndCloseDataFile()
 {
-
-  //  // close the socket
-  //  msg()("Closing DAQ socket", "DataHandler::writeAndCloseDataFile");
-  //  testDAQSocket->close();
-  //  testDAQSocket->disconnectFromHost();
-
     if(dbg())
         msg()("Writing output files and closing...",
                 "DataHandler::writeAndCloseDataFile");
