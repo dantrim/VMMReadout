@@ -45,7 +45,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>530</y>
+       <y>520</y>
        <width>96</width>
        <height>20</height>
       </rect>
@@ -1216,7 +1216,7 @@
        <x>10</x>
        <y>280</y>
        <width>291</width>
-       <height>211</height>
+       <height>221</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -1699,6 +1699,30 @@
       </item>
      </layout>
     </widget>
+    <widget class="QCheckBox" name="doMonitoring">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>540</y>
+       <width>96</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Monitoring</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+    </widget>
     <zorder>layoutWidget</zorder>
     <zorder>layoutWidget</zorder>
     <zorder>useMapping</zorder>
@@ -1706,6 +1730,7 @@
     <zorder>writeConfigXMLFileButton</zorder>
     <zorder>loadDAQXMLFile</zorder>
     <zorder>writeDAQXMLFile</zorder>
+    <zorder>doMonitoring</zorder>
    </widget>
    <widget class="QGroupBox" name="groupBox_7">
     <property name="geometry">
@@ -2519,25 +2544,6 @@
       <bool>true</bool>
      </property>
     </widget>
-    <widget class="QCheckBox" name="doMonitoring">
-     <property name="geometry">
-      <rect>
-       <x>450</x>
-       <y>0</y>
-       <width>101</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="layoutDirection">
-      <enum>Qt::RightToLeft</enum>
-     </property>
-     <property name="text">
-      <string>Monitoring</string>
-     </property>
-     <property name="checked">
-      <bool>false</bool>
-     </property>
-    </widget>
     <zorder>label_7</zorder>
     <zorder>frame_4</zorder>
     <zorder>frame_2</zorder>
@@ -2557,7 +2563,6 @@
     <zorder>checkTriggers</zorder>
     <zorder>readTrigger</zorder>
     <zorder>writeData</zorder>
-    <zorder>doMonitoring</zorder>
    </widget>
    <widget class="QGroupBox" name="groupBox">
     <property name="geometry">
@@ -4508,7 +4513,7 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>552</width>
+         <width>553</width>
          <height>619</height>
         </rect>
        </property>
