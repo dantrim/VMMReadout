@@ -52,7 +52,7 @@
      </property>
      <property name="font">
       <font>
-       <pointsize>12</pointsize>
+       <pointsize>8</pointsize>
       </font>
      </property>
      <property name="text">
@@ -67,8 +67,8 @@
       <rect>
        <x>120</x>
        <y>530</y>
-       <width>96</width>
-       <height>32</height>
+       <width>81</width>
+       <height>21</height>
       </rect>
      </property>
      <property name="font">
@@ -85,8 +85,8 @@
       <rect>
        <x>210</x>
        <y>530</y>
-       <width>97</width>
-       <height>32</height>
+       <width>81</width>
+       <height>21</height>
       </rect>
      </property>
      <property name="font">
@@ -101,15 +101,15 @@
     <widget class="QPushButton" name="loadDAQXMLFile">
      <property name="geometry">
       <rect>
-       <x>90</x>
+       <x>110</x>
        <y>500</y>
-       <width>105</width>
-       <height>32</height>
+       <width>91</width>
+       <height>21</height>
       </rect>
      </property>
      <property name="font">
       <font>
-       <pointsize>9</pointsize>
+       <pointsize>8</pointsize>
       </font>
      </property>
      <property name="text">
@@ -119,15 +119,15 @@
     <widget class="QPushButton" name="writeDAQXMLFile">
      <property name="geometry">
       <rect>
-       <x>193</x>
+       <x>210</x>
        <y>500</y>
-       <width>111</width>
-       <height>32</height>
+       <width>91</width>
+       <height>21</height>
       </rect>
      </property>
      <property name="font">
       <font>
-       <pointsize>9</pointsize>
+       <pointsize>8</pointsize>
       </font>
      </property>
      <property name="text">
@@ -139,7 +139,7 @@
       <rect>
        <x>10</x>
        <y>33</y>
-       <width>291</width>
+       <width>301</width>
        <height>241</height>
       </rect>
      </property>
@@ -1215,8 +1215,8 @@
       <rect>
        <x>10</x>
        <y>280</y>
-       <width>291</width>
-       <height>221</height>
+       <width>301</width>
+       <height>211</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -1713,7 +1713,7 @@
      </property>
      <property name="font">
       <font>
-       <pointsize>12</pointsize>
+       <pointsize>8</pointsize>
       </font>
      </property>
      <property name="text">
@@ -1754,8 +1754,8 @@
       <rect>
        <x>2</x>
        <y>39</y>
-       <width>68</width>
-       <height>23</height>
+       <width>51</width>
+       <height>21</height>
       </rect>
      </property>
      <property name="font">
@@ -1813,7 +1813,7 @@
       <rect>
        <x>5</x>
        <y>22</y>
-       <width>22</width>
+       <width>41</width>
        <height>16</height>
       </rect>
      </property>
@@ -1830,7 +1830,7 @@
     <widget class="QComboBox" name="tpWidth">
      <property name="geometry">
       <rect>
-       <x>74</x>
+       <x>60</x>
        <y>39</y>
        <width>68</width>
        <height>23</height>
@@ -1889,9 +1889,9 @@
     <widget class="QLabel" name="tpWidthLabel">
      <property name="geometry">
       <rect>
-       <x>77</x>
+       <x>60</x>
        <y>22</y>
-       <width>23</width>
+       <width>41</width>
        <height>16</height>
       </rect>
      </property>
@@ -1908,9 +1908,9 @@
     <widget class="QLabel" name="tpPolarityLabel">
      <property name="geometry">
       <rect>
-       <x>149</x>
+       <x>130</x>
        <y>22</y>
-       <width>30</width>
+       <width>51</width>
        <height>16</height>
       </rect>
      </property>
@@ -1927,7 +1927,7 @@
     <widget class="QComboBox" name="tpPolarity">
      <property name="geometry">
       <rect>
-       <x>146</x>
+       <x>130</x>
        <y>39</y>
        <width>67</width>
        <height>23</height>
@@ -1956,10 +1956,10 @@
     <widget class="QPushButton" name="setTp_s6">
      <property name="geometry">
       <rect>
-       <x>210</x>
-       <y>37</y>
+       <x>200</x>
+       <y>39</y>
        <width>51</width>
-       <height>31</height>
+       <height>21</height>
       </rect>
      </property>
      <property name="font">
@@ -1996,9 +1996,9 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>67</x>
+       <x>79</x>
        <y>84</y>
-       <width>163</width>
+       <width>151</width>
        <height>21</height>
       </rect>
      </property>
@@ -2017,7 +2017,7 @@
       <rect>
        <x>11</x>
        <y>27</y>
-       <width>55</width>
+       <width>81</width>
        <height>16</height>
       </rect>
      </property>
@@ -2035,7 +2035,7 @@
       <rect>
        <x>11</x>
        <y>86</y>
-       <width>48</width>
+       <width>61</width>
        <height>16</height>
       </rect>
      </property>
@@ -2051,7 +2051,7 @@
     <widget class="QSpinBox" name="runNumber">
      <property name="geometry">
       <rect>
-       <x>74</x>
+       <x>85</x>
        <y>23</y>
        <width>62</width>
        <height>25</height>
@@ -2078,7 +2078,7 @@
       <rect>
        <x>11</x>
        <y>57</y>
-       <width>40</width>
+       <width>61</width>
        <height>16</height>
       </rect>
      </property>
@@ -2111,23 +2111,6 @@
      </property>
      <property name="alignment">
       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="selectDir">
-     <property name="geometry">
-      <rect>
-       <x>175</x>
-       <y>51</y>
-       <width>62</width>
-       <height>32</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-     <property name="icon">
-      <iconset resource="../images/icons.qrc">
-       <normaloff>:/images/directory.png</normaloff>:/images/directory.png</iconset>
      </property>
     </widget>
     <widget class="QLabel" name="label_7">
@@ -2182,7 +2165,7 @@
       <rect>
        <x>146</x>
        <y>27</y>
-       <width>31</width>
+       <width>41</width>
        <height>16</height>
       </rect>
      </property>
@@ -2198,10 +2181,10 @@
     <widget class="QPushButton" name="stopTriggerCnt">
      <property name="geometry">
       <rect>
-       <x>334</x>
-       <y>58</y>
-       <width>91</width>
-       <height>31</height>
+       <x>344</x>
+       <y>62</y>
+       <width>81</width>
+       <height>21</height>
       </rect>
      </property>
      <property name="font">
@@ -2236,10 +2219,10 @@
     <widget class="QPushButton" name="checkTriggers">
      <property name="geometry">
       <rect>
-       <x>240</x>
-       <y>58</y>
-       <width>91</width>
-       <height>31</height>
+       <x>250</x>
+       <y>62</y>
+       <width>81</width>
+       <height>21</height>
       </rect>
      </property>
      <property name="font">
@@ -2292,8 +2275,8 @@
      <widget class="QLabel" name="eventCountStopLabel">
       <property name="geometry">
        <rect>
-        <x>7</x>
-        <y>22</y>
+        <x>0</x>
+        <y>20</y>
         <width>51</width>
         <height>16</height>
        </rect>
@@ -2301,11 +2284,11 @@
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>9</pointsize>
+        <pointsize>8</pointsize>
        </font>
       </property>
       <property name="text">
-       <string>Event Stop</string>
+       <string>EventStop</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_9">
@@ -2448,6 +2431,29 @@
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
+     <widget class="QPushButton" name="selectDir">
+      <property name="geometry">
+       <rect>
+        <x>178</x>
+        <y>35</y>
+        <width>51</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset resource="../images/icons.qrc">
+        <normaloff>:/images/directory.png</normaloff>:/images/directory.png</iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>18</width>
+        <height>20</height>
+       </size>
+      </property>
+     </widget>
     </widget>
     <widget class="QFrame" name="frame_4">
      <property name="geometry">
@@ -2469,7 +2475,7 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>68</width>
+        <width>111</width>
         <height>18</height>
        </rect>
       </property>
@@ -2488,7 +2494,7 @@
        <rect>
         <x>0</x>
         <y>20</y>
-        <width>82</width>
+        <width>121</width>
         <height>18</height>
        </rect>
       </property>
@@ -2506,9 +2512,9 @@
     <widget class="QCheckBox" name="readTrigger">
      <property name="geometry">
       <rect>
-       <x>350</x>
+       <x>335</x>
        <y>80</y>
-       <width>71</width>
+       <width>91</width>
        <height>18</height>
       </rect>
      </property>
@@ -2525,9 +2531,9 @@
     <widget class="QCheckBox" name="writeData">
      <property name="geometry">
       <rect>
-       <x>350</x>
+       <x>335</x>
        <y>94</y>
-       <width>71</width>
+       <width>91</width>
        <height>18</height>
       </rect>
      </property>
@@ -2555,7 +2561,6 @@
     <zorder>runNumber</zorder>
     <zorder>label_6</zorder>
     <zorder>runDirectoryField</zorder>
-    <zorder>selectDir</zorder>
     <zorder>angle</zorder>
     <zorder>label_8</zorder>
     <zorder>stopTriggerCnt</zorder>
@@ -2569,7 +2574,7 @@
      <rect>
       <x>10</x>
       <y>0</y>
-      <width>261</width>
+      <width>271</width>
       <height>381</height>
      </rect>
     </property>
@@ -2585,16 +2590,16 @@
     <widget class="QPushButton" name="openConnection">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>45</y>
-       <width>111</width>
-       <height>31</height>
+       <x>4</x>
+       <y>50</y>
+       <width>121</width>
+       <height>21</height>
       </rect>
      </property>
      <property name="font">
       <font>
        <family>Arial</family>
-       <pointsize>9</pointsize>
+       <pointsize>8</pointsize>
       </font>
      </property>
      <property name="text">
@@ -2643,7 +2648,7 @@
        <rect>
         <x>10</x>
         <y>60</y>
-        <width>111</width>
+        <width>122</width>
         <height>22</height>
        </rect>
       </property>
@@ -2687,8 +2692,8 @@
        <rect>
         <x>10</x>
         <y>20</y>
-        <width>111</width>
-        <height>53</height>
+        <width>112</width>
+        <height>62</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_2" rowminimumheight="0,0">
@@ -2761,72 +2766,76 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QComboBox" name="setVMMs">
       <property name="geometry">
        <rect>
-        <x>11</x>
-        <y>78</y>
-        <width>131</width>
-        <height>31</height>
+        <x>5</x>
+        <y>80</y>
+        <width>41</width>
+        <height>24</height>
        </rect>
       </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_25">
-       <item>
-        <widget class="QComboBox" name="setVMMs">
-         <property name="font">
-          <font>
-           <family>Arial</family>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="minimumContentsLength">
-          <number>1</number>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="SendConfiguration">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="font">
-          <font>
-           <family>Arial</family>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Send</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="cmdlabel">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="font">
-          <font>
-           <family>Arial</family>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>count</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="minimumContentsLength">
+       <number>1</number>
+      </property>
      </widget>
-     <zorder>setVMMs</zorder>
-     <zorder>SendConfiguration</zorder>
-     <zorder>cmdlabel</zorder>
+     <widget class="QPushButton" name="SendConfiguration">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>50</x>
+        <y>80</y>
+        <width>41</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Send</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="cmdlabel">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>100</x>
+        <y>84</y>
+        <width>31</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>count</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <zorder>layoutWidget</zorder>
      <zorder>horizontalLayoutWidget_2</zorder>
      <zorder>horizontalLayoutWidget</zorder>
     </widget>
@@ -2966,7 +2975,7 @@
      <property name="font">
       <font>
        <family>Arial</family>
-       <pointsize>9</pointsize>
+       <pointsize>7</pointsize>
       </font>
      </property>
      <property name="title">
@@ -2975,9 +2984,9 @@
      <widget class="QLabel" name="label_14">
       <property name="geometry">
        <rect>
-        <x>80</x>
+        <x>75</x>
         <y>54</y>
-        <width>46</width>
+        <width>51</width>
         <height>16</height>
        </rect>
       </property>
@@ -2993,9 +3002,9 @@
      <widget class="QLabel" name="label_15">
       <property name="geometry">
        <rect>
-        <x>10</x>
+        <x>0</x>
         <y>90</y>
-        <width>41</width>
+        <width>71</width>
         <height>16</height>
        </rect>
       </property>
@@ -3015,8 +3024,8 @@
       <property name="geometry">
        <rect>
         <x>5</x>
-        <y>15</y>
-        <width>40</width>
+        <y>18</y>
+        <width>51</width>
         <height>16</height>
        </rect>
       </property>
@@ -3033,8 +3042,8 @@
       <property name="geometry">
        <rect>
         <x>74</x>
-        <y>15</y>
-        <width>52</width>
+        <y>18</y>
+        <width>61</width>
         <height>16</height>
        </rect>
       </property>
@@ -3053,9 +3062,9 @@
      <widget class="QLabel" name="label_18">
       <property name="geometry">
        <rect>
-        <x>10</x>
+        <x>0</x>
         <y>54</y>
-        <width>32</width>
+        <width>61</width>
         <height>16</height>
        </rect>
       </property>
@@ -3071,267 +3080,289 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QSpinBox" name="pulserDelay">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>33</y>
+        <width>61</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="minimum">
+       <number>1</number>
+      </property>
+      <property name="maximum">
+       <number>50000</number>
+      </property>
+      <property name="singleStep">
+       <number>1</number>
+      </property>
+      <property name="value">
+       <number>81</number>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="bcid_reset">
+      <property name="geometry">
+       <rect>
+        <x>70</x>
+        <y>33</y>
+        <width>61</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="minimum">
+       <number>0</number>
+      </property>
+      <property name="maximum">
+       <number>65535</number>
+      </property>
+      <property name="singleStep">
+       <number>1</number>
+      </property>
+      <property name="value">
+       <number>0</number>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="trgPeriod">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>68</y>
+        <width>51</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>61A80</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="acqSync">
+      <property name="geometry">
+       <rect>
+        <x>70</x>
+        <y>68</y>
+        <width>51</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="minimum">
+       <number>1</number>
+      </property>
+      <property name="maximum">
+       <number>50000</number>
+      </property>
+      <property name="singleStep">
+       <number>1</number>
+      </property>
+      <property name="value">
+       <number>100</number>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="acqWindow">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>104</y>
+        <width>62</width>
+        <height>19</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="minimum">
+       <number>1</number>
+      </property>
+      <property name="maximum">
+       <number>50000</number>
+      </property>
+      <property name="singleStep">
+       <number>1</number>
+      </property>
+      <property name="value">
+       <number>4096</number>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="holdOffCheckBox">
+      <property name="geometry">
+       <rect>
+        <x>70</x>
+        <y>90</y>
+        <width>71</width>
+        <height>19</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>8</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Hold Off</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="trgExternal">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>150</y>
+        <width>61</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="focusPolicy">
+       <enum>Qt::NoFocus</enum>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="text">
+       <string>External</string>
+      </property>
+      <property name="autoDefault">
+       <bool>false</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="trgPulser">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>130</y>
+        <width>61</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="focusPolicy">
+       <enum>Qt::NoFocus</enum>
+      </property>
+      <property name="text">
+       <string>Pulser</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="onACQ">
       <property name="geometry">
        <rect>
         <x>70</x>
         <y>130</y>
         <width>61</width>
-        <height>51</height>
-       </rect>
-      </property>
-      <layout class="QGridLayout" name="gridLayout_12">
-       <item row="0" column="0">
-        <widget class="QPushButton" name="setTrgAcqConst">
-         <property name="font">
-          <font>
-           <pointsize>14</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Set</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QPushButton" name="onACQ">
-         <property name="font">
-          <font>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="focusPolicy">
-          <enum>Qt::NoFocus</enum>
-         </property>
-         <property name="text">
-          <string>ACQ On</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QPushButton" name="offACQ">
-         <property name="font">
-          <font>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="focusPolicy">
-          <enum>Qt::NoFocus</enum>
-         </property>
-         <property name="text">
-          <string>ACQ Off</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>140</y>
-        <width>51</width>
-        <height>41</height>
-       </rect>
-      </property>
-      <layout class="QGridLayout" name="gridLayout_13">
-       <item row="0" column="0">
-        <widget class="QPushButton" name="trgPulser">
-         <property name="font">
-          <font>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="focusPolicy">
-          <enum>Qt::NoFocus</enum>
-         </property>
-         <property name="text">
-          <string>Pulser</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QPushButton" name="trgExternal">
-         <property name="font">
-          <font>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="focusPolicy">
-          <enum>Qt::NoFocus</enum>
-         </property>
-         <property name="autoFillBackground">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>External</string>
-         </property>
-         <property name="autoDefault">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>70</y>
-        <width>131</width>
         <height>21</height>
        </rect>
       </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_18">
-       <item>
-        <widget class="QLineEdit" name="trgPeriod">
-         <property name="font">
-          <font>
-           <family>Arial</family>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>61A80</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QSpinBox" name="acqSync">
-         <property name="font">
-          <font>
-           <family>Arial</family>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="minimum">
-          <number>1</number>
-         </property>
-         <property name="maximum">
-          <number>50000</number>
-         </property>
-         <property name="singleStep">
-          <number>1</number>
-         </property>
-         <property name="value">
-          <number>100</number>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <property name="font">
+       <font>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="focusPolicy">
+       <enum>Qt::NoFocus</enum>
+      </property>
+      <property name="text">
+       <string>ACQ On</string>
+      </property>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QPushButton" name="offACQ">
       <property name="geometry">
        <rect>
-        <x>10</x>
-        <y>30</y>
-        <width>131</width>
-        <height>31</height>
+        <x>70</x>
+        <y>150</y>
+        <width>61</width>
+        <height>21</height>
        </rect>
       </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_21">
-       <item>
-        <widget class="QSpinBox" name="pulserDelay">
-         <property name="font">
-          <font>
-           <family>Arial</family>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="minimum">
-          <number>1</number>
-         </property>
-         <property name="maximum">
-          <number>50000</number>
-         </property>
-         <property name="singleStep">
-          <number>1</number>
-         </property>
-         <property name="value">
-          <number>81</number>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QSpinBox" name="bcid_reset">
-         <property name="font">
-          <font>
-           <family>Arial</family>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="minimum">
-          <number>0</number>
-         </property>
-         <property name="maximum">
-          <number>65535</number>
-         </property>
-         <property name="singleStep">
-          <number>1</number>
-         </property>
-         <property name="value">
-          <number>0</number>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <property name="font">
+       <font>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="focusPolicy">
+       <enum>Qt::NoFocus</enum>
+      </property>
+      <property name="text">
+       <string>ACQ Off</string>
+      </property>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QPushButton" name="setTrgAcqConst">
       <property name="geometry">
        <rect>
-        <x>10</x>
-        <y>100</y>
-        <width>126</width>
-        <height>31</height>
+        <x>70</x>
+        <y>110</y>
+        <width>61</width>
+        <height>21</height>
        </rect>
       </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_24">
-       <item>
-        <widget class="QSpinBox" name="acqWindow">
-         <property name="font">
-          <font>
-           <family>Arial</family>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="minimum">
-          <number>1</number>
-         </property>
-         <property name="maximum">
-          <number>50000</number>
-         </property>
-         <property name="singleStep">
-          <number>1</number>
-         </property>
-         <property name="value">
-          <number>4096</number>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="holdOffCheckBox">
-         <property name="font">
-          <font>
-           <pointsize>8</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Hold Off</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <property name="font">
+       <font>
+        <pointsize>14</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Set</string>
+      </property>
      </widget>
+     <zorder>pulserDelay</zorder>
+     <zorder>bcid_reset</zorder>
+     <zorder>trgPeriod</zorder>
+     <zorder>acqSync</zorder>
+     <zorder>acqWindow</zorder>
+     <zorder>holdOffCheckBox</zorder>
+     <zorder>trgExternal</zorder>
+     <zorder>onACQ</zorder>
+     <zorder>offACQ</zorder>
+     <zorder>label_14</zorder>
+     <zorder>label_15</zorder>
+     <zorder>label_5</zorder>
+     <zorder>label_35</zorder>
+     <zorder>label_18</zorder>
+     <zorder>trgPulser</zorder>
+     <zorder>setTrgAcqConst</zorder>
     </widget>
     <widget class="QGroupBox" name="groupBox_3">
      <property name="geometry">
       <rect>
-       <x>160</x>
+       <x>150</x>
        <y>70</y>
-       <width>101</width>
+       <width>111</width>
        <height>271</height>
       </rect>
      </property>
@@ -3369,7 +3400,7 @@
        <rect>
         <x>0</x>
         <y>30</y>
-        <width>101</width>
+        <width>111</width>
         <height>21</height>
        </rect>
       </property>
@@ -3447,7 +3478,7 @@
        <rect>
         <x>0</x>
         <y>51</y>
-        <width>101</width>
+        <width>111</width>
         <height>131</height>
        </rect>
       </property>
@@ -3879,180 +3910,204 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QPushButton" name="enableART">
       <property name="geometry">
        <rect>
-        <x>10</x>
-        <y>190</y>
-        <width>81</width>
-        <height>71</height>
+        <x>11</x>
+        <y>208</y>
+        <width>91</width>
+        <height>21</height>
        </rect>
       </property>
-      <layout class="QGridLayout" name="gridLayout_4">
-       <item row="0" column="0">
-        <widget class="QPushButton" name="setMask">
-         <property name="font">
-          <font>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Set Mask</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QPushButton" name="enableART">
-         <property name="font">
-          <font>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Enable ART</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QPushButton" name="linkPB">
-         <property name="font">
-          <font>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Link Status</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QPushButton" name="resetLinks">
-         <property name="font">
-          <font>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Reset Links</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <property name="font">
+       <font>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Enable ART</string>
+      </property>
      </widget>
+     <widget class="QPushButton" name="linkPB">
+      <property name="geometry">
+       <rect>
+        <x>11</x>
+        <y>229</y>
+        <width>91</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Link Status</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="setMask">
+      <property name="geometry">
+       <rect>
+        <x>11</x>
+        <y>186</y>
+        <width>91</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Set Mask</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="resetLinks">
+      <property name="geometry">
+       <rect>
+        <x>11</x>
+        <y>250</y>
+        <width>91</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Reset Links</string>
+      </property>
+     </widget>
+     <zorder>enableART</zorder>
+     <zorder>linkPB</zorder>
+     <zorder>setMask</zorder>
+     <zorder>resetLinks</zorder>
      <zorder>layoutWidget</zorder>
      <zorder>layoutWidget</zorder>
      <zorder>label_17</zorder>
-     <zorder>setMask</zorder>
-     <zorder>linkPB</zorder>
-     <zorder>resetLinks</zorder>
-     <zorder>enableART</zorder>
     </widget>
-    <widget class="QWidget" name="">
+    <widget class="QComboBox" name="evbld_mode">
      <property name="geometry">
       <rect>
-       <x>10</x>
+       <x>6</x>
        <y>350</y>
-       <width>251</width>
-       <height>31</height>
+       <width>58</width>
+       <height>24</height>
       </rect>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_26">
-      <item>
-       <widget class="QComboBox" name="evbld_mode">
-        <property name="font">
-         <font>
-          <family>Arial</family>
-          <pointsize>9</pointsize>
-         </font>
-        </property>
-        <property name="currentIndex">
-         <number>0</number>
-        </property>
-        <item>
-         <property name="text">
-          <string>Frame Cnt</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Global Frame Cnt</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Timestamp + Frame Cnt</string>
-         </property>
-        </item>
-       </widget>
-      </item>
-      <item>
-       <widget class="QComboBox" name="evbld_infodata">
-        <property name="font">
-         <font>
-          <family>Arial</family>
-          <pointsize>9</pointsize>
-         </font>
-        </property>
-        <property name="currentIndex">
-         <number>5</number>
-        </property>
-        <item>
-         <property name="text">
-          <string>HINFO+Datalength</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Trigger Cnt+Datalength</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Trigger Cnt</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Trigger Timestamp+Datalength</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Trigger Timestamp</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Trigger Cnt+Trigger Timestamp</string>
-         </property>
-        </item>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="timeStampResCheckBox">
-        <property name="font">
-         <font>
-          <pointsize>9</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>High Res.</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="setEvbld">
-        <property name="font">
-         <font>
-          <pointsize>9</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>Set</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <item>
+      <property name="text">
+       <string>Frame Cnt</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Global Frame Cnt</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Timestamp + Frame Cnt</string>
+      </property>
+     </item>
+    </widget>
+    <widget class="QComboBox" name="evbld_infodata">
+     <property name="geometry">
+      <rect>
+       <x>65</x>
+       <y>350</y>
+       <width>58</width>
+       <height>24</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="currentIndex">
+      <number>5</number>
+     </property>
+     <item>
+      <property name="text">
+       <string>HINFO+Datalength</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Trigger Cnt+Datalength</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Trigger Cnt</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Trigger Timestamp+Datalength</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Trigger Timestamp</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Trigger Cnt+Trigger Timestamp</string>
+      </property>
+     </item>
+    </widget>
+    <widget class="QCheckBox" name="timeStampResCheckBox">
+     <property name="geometry">
+      <rect>
+       <x>125</x>
+       <y>355</y>
+       <width>71</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>High Res.</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="setEvbld">
+     <property name="geometry">
+      <rect>
+       <x>200</x>
+       <y>350</y>
+       <width>57</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Set</string>
+     </property>
     </widget>
    </widget>
    <widget class="QGroupBox" name="groupBox_8">
@@ -4119,7 +4174,7 @@
      <property name="font">
       <font>
        <family>Arial</family>
-       <pointsize>9</pointsize>
+       <pointsize>8</pointsize>
       </font>
      </property>
      <property name="text">
@@ -4138,7 +4193,7 @@
      <property name="font">
       <font>
        <family>Arial</family>
-       <pointsize>9</pointsize>
+       <pointsize>8</pointsize>
       </font>
      </property>
      <property name="text">
@@ -4209,14 +4264,14 @@
       <rect>
        <x>140</x>
        <y>17</y>
-       <width>51</width>
+       <width>71</width>
        <height>18</height>
       </rect>
      </property>
      <property name="font">
       <font>
        <family>Arial</family>
-       <pointsize>9</pointsize>
+       <pointsize>8</pointsize>
       </font>
      </property>
      <property name="text">
@@ -4228,7 +4283,7 @@
       <rect>
        <x>140</x>
        <y>30</y>
-       <width>71</width>
+       <width>51</width>
        <height>21</height>
       </rect>
      </property>
@@ -4273,7 +4328,7 @@
      </property>
      <property name="font">
       <font>
-       <pointsize>9</pointsize>
+       <pointsize>8</pointsize>
       </font>
      </property>
      <property name="text">
@@ -4283,7 +4338,7 @@
     <widget class="QSpinBox" name="s6_tkPulses">
      <property name="geometry">
       <rect>
-       <x>110</x>
+       <x>125</x>
        <y>65</y>
        <width>41</width>
        <height>20</height>
@@ -4311,10 +4366,10 @@
     <widget class="QPushButton" name="setck_s6_resets">
      <property name="geometry">
       <rect>
-       <x>212</x>
-       <y>62</y>
-       <width>51</width>
-       <height>31</height>
+       <x>220</x>
+       <y>65</y>
+       <width>41</width>
+       <height>21</height>
       </rect>
      </property>
      <property name="font">
@@ -4329,9 +4384,9 @@
     <widget class="QCheckBox" name="s6_autoReset">
      <property name="geometry">
       <rect>
-       <x>6</x>
+       <x>0</x>
        <y>51</y>
-       <width>101</width>
+       <width>111</width>
        <height>20</height>
       </rect>
      </property>
@@ -4350,9 +4405,9 @@
     <widget class="QCheckBox" name="s6_FECReset">
      <property name="geometry">
       <rect>
-       <x>6</x>
+       <x>0</x>
        <y>69</y>
-       <width>111</width>
+       <width>141</width>
        <height>20</height>
       </rect>
      </property>
@@ -4362,13 +4417,13 @@
       </font>
      </property>
      <property name="text">
-      <string>FEC Periodic Reset</string>
+      <string>FEC Period. Reset</string>
      </property>
     </widget>
     <widget class="QSpinBox" name="fecPeriodReset">
      <property name="geometry">
       <rect>
-       <x>160</x>
+       <x>167</x>
        <y>65</y>
        <width>51</width>
        <height>21</height>
@@ -4404,20 +4459,20 @@
      </property>
      <property name="font">
       <font>
-       <pointsize>9</pointsize>
+       <pointsize>8</pointsize>
       </font>
      </property>
      <property name="text">
-      <string>Period</string>
+      <string>  Period</string>
      </property>
     </widget>
     <widget class="QPushButton" name="setck_s6">
      <property name="geometry">
       <rect>
-       <x>212</x>
+       <x>220</x>
        <y>30</y>
-       <width>51</width>
-       <height>31</height>
+       <width>41</width>
+       <height>21</height>
       </rect>
      </property>
      <property name="font">
@@ -4448,7 +4503,7 @@
      <enum>QTabWidget::North</enum>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <property name="iconSize">
      <size>
@@ -6122,7 +6177,7 @@
        <rect>
         <x>90</x>
         <y>10</y>
-        <width>201</width>
+        <width>235</width>
         <height>21</height>
        </rect>
       </property>
@@ -6282,7 +6337,7 @@
       <x>10</x>
       <y>380</y>
       <width>261</width>
-      <height>51</height>
+      <height>41</height>
      </rect>
     </property>
     <property name="title">
@@ -6294,10 +6349,10 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>174</x>
-       <y>18</y>
-       <width>92</width>
-       <height>32</height>
+       <x>170</x>
+       <y>20</y>
+       <width>81</width>
+       <height>21</height>
       </rect>
      </property>
      <property name="font">
@@ -6317,9 +6372,9 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>18</y>
-       <width>94</width>
-       <height>32</height>
+       <y>20</y>
+       <width>81</width>
+       <height>21</height>
       </rect>
      </property>
      <property name="font">
@@ -6338,10 +6393,10 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>85</x>
-       <y>18</y>
-       <width>99</width>
-       <height>32</height>
+       <x>90</x>
+       <y>20</y>
+       <width>81</width>
+       <height>21</height>
       </rect>
      </property>
      <property name="font">
