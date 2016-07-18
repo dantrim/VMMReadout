@@ -1,8 +1,9 @@
-#-------------------------------------------------
 #
-# Project created by QtCreator 2012-06-18T11:31:24
+# project file for vmmdcs
 #
-#-------------------------------------------------
+# daniel.joseph.antrim@cern.ch
+# July 2016
+#
 
 #####################################################
 # directory and machine specific items here
