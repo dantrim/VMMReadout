@@ -69,7 +69,6 @@ linux {
 } else {
     LIBS +=  -L$$boostlib -lboost_thread-mt -lboost_filesystem  -lboost_system
 }
-#LIBS +=  -L/usr/local/opt/boost/lib -lboost_thread-mt -lboost_filesystem  -lboost_system
 
 LIBS += -L./objects -lMylib
 
@@ -92,9 +91,6 @@ linux {
     QMAKE_CXXFLAGS += -std=c++11
     QMAKE_LFLAGS   += -stdlib=libc++
 }
-#QMAKE_CXXFLAGS += -stdlib=libc++
-#QMAKE_CXXFLAGS += -std=c++11
-#QMAKE_LFLAGS   += -stdlib=libc++
 
 SOURCES += $$sourcepath/main.cpp\
            $$sourcepath/mainwindow.cpp\
