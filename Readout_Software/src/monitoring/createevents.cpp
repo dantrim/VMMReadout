@@ -28,6 +28,19 @@ void CreateEvents::setDaq(DaqConfig* daq)
     n_eventCounter = -1;
 }
 
+// dantrim Jul20
+//void CreateEvents::buildMapsMMFE8()
+//{
+//    /*
+//        [IP][chip name][chip channel] -> Event object
+//    */
+//    int n_chambers = getDetector().getChamberArraySize();
+//    // loop over all chambers in our detector setup
+//    for(int ichamber = 0; ichamber < n_chambers; ichamber++) {
+//        string chamber_name = getDetecotr().m_chamberArray[ichamber]->getName();
+//    } // ichamber
+//}
+
 // dantrim May 20 2016
 // essentially a re-write of the 'createEvents' method but targetting VMM2-MINI2
 // for which we have different mapping formats (currently)
