@@ -223,8 +223,10 @@ void Configuration::SendConfig()
             //channel SPI
             for(int i = 63;  i >= 0; i--) {
                 // only send 24bits per channel with current MMFE8 configuration FW
-                QString first8bits = channelRegisters[63-i].mid(8,8);
-                QString second16bits = channelRegisters[63-i].mid(16,16);
+                QString first8bits = channelRegisters[i].mid(8,8);
+                QString second16bits = channelRegisters[i].mid(16,16);
+                //QString first8bits = channelRegisters[63-i].mid(8,8);
+                //QString second16bits = channelRegisters[63-i].mid(16,16);
 
                 out << (quint16)reverseString(second16bits).toUInt(&ok,2);
                 out << (quint8)reverseString(first8bits).toUInt(&ok,2);
@@ -482,10 +484,10 @@ void Configuration::fillGlobalRegisters(std::vector<QString>& global)
     //channel to monitor
     //[23,28]
     #warning reversing channel_mon manually
-    tmp = QString("%1").arg(64-config().globalSettings().channel_monitor,
-                                                    6,2,QChar('0'));
-    //tmp = QString("%1").arg(config().globalSettings().channel_monitor,
+    //tmp = QString("%1").arg(64-config().globalSettings().channel_monitor,
     //                                                6,2,QChar('0'));
+    tmp = QString("%1").arg(config().globalSettings().channel_monitor,
+                                                    6,2,QChar('0'));
     spi2.replace(sequence,tmp.size(),tmp);
     sequence += tmp.size();
 
