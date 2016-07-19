@@ -46,10 +46,19 @@ const QStringList ConfigHandler::all_ADC6bits
 ConfigHandler::ConfigHandler(QObject *parent) :
     QObject(parent),
     m_dbg(false),
+    m_mmfe8(false),
     m_msg(0)
 {
     m_channelmap.clear();
     m_channels.clear();
+}
+//// ------------------------------------------------------------------------ //
+void ConfigHandler::setMMFE8(bool set_for_mmfe8)
+{
+    m_mmfe8 = set_for_mmfe8;
+    if(dbg() && m_mmfe8) {
+        msg()("Configuration set to MMFE8","ConfigHandler::setMMFE8");
+    }
 }
 //// ------------------------------------------------------------------------ //
 void ConfigHandler::LoadMessageHandler(MessageHandler& m)
