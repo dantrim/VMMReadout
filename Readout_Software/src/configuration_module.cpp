@@ -167,6 +167,7 @@ void Configuration::SendConfig()
         out.device()->seek(0); //rewind
     
         if(mmfe8()) {
+            //hardcode this based on code from Panos -- note that VMM ID and cmd are swapped
             QString h1 = "ffbb";
             QString h2 = "aadd";
             QString h3 = "bb00";
@@ -221,6 +222,7 @@ void Configuration::SendConfig()
             // and reverse each of the words
             //channel SPI
             for(int i = 63;  i >= 0; i--) {
+                // only send 24bits per channel with current MMFE8 configuration FW
                 QString first8bits = channelRegisters[63-i].mid(8,8);
                 QString second16bits = channelRegisters[63-i].mid(16,16);
 
@@ -479,8 +481,11 @@ void Configuration::fillGlobalRegisters(std::vector<QString>& global)
 
     //channel to monitor
     //[23,28]
-    tmp = QString("%1").arg(config().globalSettings().channel_monitor,
+    #warning reversing channel_mon manually
+    tmp = QString("%1").arg(64-config().globalSettings().channel_monitor,
                                                     6,2,QChar('0'));
+    //tmp = QString("%1").arg(config().globalSettings().channel_monitor,
+    //                                                6,2,QChar('0'));
     spi2.replace(sequence,tmp.size(),tmp);
     sequence += tmp.size();
 

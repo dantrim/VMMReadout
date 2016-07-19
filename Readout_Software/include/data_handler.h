@@ -105,6 +105,7 @@ class DataHandler : public QObject
         /////////////////////////////////////////
         VMMSocket& daqSocket() { return *m_daqSocket; }
         void decodeAndWriteData(const QByteArray& datagram, QHostAddress& ip);
+        void decodeAndWriteData_mmfe8(const QByteArray& datagram, QHostAddress& ip);
         void resetDAQCount() { (*n_daqCnt) = 0; }
         int getDAQCount() { return (*n_daqCnt); } 
         void updateDAQCount() { (*n_daqCnt)++; }
