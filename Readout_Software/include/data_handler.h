@@ -6,6 +6,7 @@
 #include <QObject>
 #include <QFile>
 #include <QMap>
+#include <QHostAddress>
 class QByteArray;
 class QBitArray;
 class QUdpSocket;
@@ -103,7 +104,7 @@ class DataHandler : public QObject
         // data handling
         /////////////////////////////////////////
         VMMSocket& daqSocket() { return *m_daqSocket; }
-        void decodeAndWriteData(const QByteArray& datagram);
+        void decodeAndWriteData(const QByteArray& datagram, QHostAddress& ip);
         void resetDAQCount() { (*n_daqCnt) = 0; }
         int getDAQCount() { return (*n_daqCnt); } 
         void updateDAQCount() { (*n_daqCnt)++; }
@@ -178,6 +179,7 @@ class DataHandler : public QObject
 
         int m_eventNumberFAFA;
         int m_daqCnt;
+        std::vector<int> m_fromIp;
         std::vector<int> m_triggerTimeStamp;
         std::vector<int> m_triggerCounter;
         std::vector<int> m_chipId;
@@ -216,6 +218,7 @@ class DataHandler : public QObject
         TBranch *br_eventNumberFAFA;
         TBranch *br_triggerTimeStamp;
         TBranch *br_triggerCounter;
+        TBranch *br_fromIp;
         TBranch *br_chipId;
         TBranch *br_evSize;
         TBranch *br_tdo;

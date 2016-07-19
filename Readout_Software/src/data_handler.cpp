@@ -75,7 +75,7 @@ void DataHandler::setDebug(bool doit)
 void DataHandler::setMMFE8(bool set_for_mmfe8)
 {
     m_mmfe8 = set_for_mmfe8;
-    if(dbg()) {
+    if(dbg() && m_mmfe8) {
         msg()("DAQ set to MMFE8","DataHandler::setMMFE8");
     }
 }
@@ -774,6 +774,8 @@ void DataHandler::setupOutputTrees()
                                 "std::vector<int>", &m_triggerTimeStamp);
     br_triggerCounter       = m_vmm2->Branch("triggerCounter",
                                 "std::vector<int>", &m_triggerCounter);
+    br_fromIp               = m_vmm2->Branch("fromIp",
+                                "std::vector<int>", &m_fromIp);
     br_chipId               = m_vmm2->Branch("chip",
                                 "std::vector<int>", &m_chipId);
     br_evSize               = m_vmm2->Branch("eventSize",
@@ -889,6 +891,7 @@ void DataHandler::clearData()
     m_eventNumberFAFA = 0;
     m_triggerTimeStamp.clear();
     m_triggerCounter.clear();
+    m_fromIp.clear();
     m_chipId.clear();
     m_eventSize.clear();
     m_tdo.clear();
@@ -989,7 +992,7 @@ void DataHandler::readEvent()
         // here is where we write the ntuple
         //if(writeNtuple())
         // still decode even if not writing out
-            decodeAndWriteData(datagram);
+            decodeAndWriteData(datagram, vmmip);
 
     } // while loop
 
@@ -1011,7 +1014,8 @@ void DataHandler::readEvent()
     return;
 }
 // ------------------------------------------------------------------------ //
-void DataHandler::decodeAndWriteData(const QByteArray& datagram)
+void DataHandler::decodeAndWriteData(const QByteArray& datagram,
+                                            QHostAddress& fromIp)
 {
     bool ok;
     stringstream sx;
@@ -1019,6 +1023,9 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
     bool verbose = false;
 
     QString frameCounterStr = datagram.mid(0,4).toHex(); //Frame Counter
+
+    QString fromIpStr = fromIp.toString();
+    quint32 fromIpNo  = fromIp.toIPv4Address();
 
     ///////////////////////////////////////////////////
     //event data incoming from chip (MINI2 decoding)
@@ -1044,6 +1051,7 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
                 fullEventDataStr = datagram.mid(12, datagram.size()).toHex();
                 sx << "*****************************************************\n"
                    << " Data from chip # : " << chipNumberStr.toInt(&ok,16) << "\n" //toStdString() << "\n"
+                   << "  > IP            : " << fromIpStr.toStdString() << "\n"
                    << "  > Header        : " << headerStr.toStdString() << "\n"
                    << "  > Data          : " << fullEventDataStr.toStdString() << "\n"
                    << "*****************************************************"; 
@@ -1190,6 +1198,7 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
             if(writeNtuple()) {
                 m_triggerTimeStamp.push_back(trigTimeStampStr.toInt(&ok,16));
                 m_triggerCounter.push_back(trigCountStr.toInt(&ok,16));
+                m_fromIp.push_back(fromIpNo);
                 m_chipId.push_back(chipNumberStr.toInt(&ok,16));
                 m_eventSize.push_back(datagram.size()-12);
 
@@ -1283,6 +1292,7 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
             sx.str("");
             sx << "*****************************************************\n"
                << " Data from chip # : " << chipNumberStr.toInt(&ok,16) << "\n"
+               << "  > IP            : " << fromIpStr.toStdString() << "\n"
                << "  > Data          : " << fullEventDataStr.toStdString() << "\n"
                <<  "*****************************************************";
             cout << sx.str() << endl;
@@ -1380,6 +1390,7 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
         if(writeNtuple()) {
             m_triggerTimeStamp.push_back(trigTimeStampStr.toInt(&ok,16));
             m_triggerCounter.push_back(trigCountStr.toInt(&ok,16));
+            m_fromIp.push_back(fromIpNo);
             m_chipId.push_back(chipNumberStr.toInt(&ok,16));
             m_eventSize.push_back(datagram.size()-12);
 
