@@ -1020,10 +1020,11 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
 
     QString frameCounterStr = datagram.mid(0,4).toHex(); //Frame Counter
 
-    ///////////////////////////////////////
-    //event data incoming from chip
-    ///////////////////////////////////////
-    if(frameCounterStr != "fafafafa") {
+    ///////////////////////////////////////////////////
+    //event data incoming from chip (MINI2 decoding)
+    ///////////////////////////////////////////////////
+    //addmmfe8
+    if((frameCounterStr != "fafafafa") && !mmfe8()) {
         QString headerID = datagram.mid(4,3).toHex();
 
         ///////////////////////////////////////////////
@@ -1265,7 +1266,137 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram)
         ///////////////////////////////////////////////
         // readout the ART data [end]
         ///////////////////////////////////////////////
-    } // != fafafafa
+    } // != fafafafa and MINI2
+    //addmmfe8
+    ///////////////////////////////////////////////////
+    //event data incoming from chip (MMFE8 decoding)
+    ///////////////////////////////////////////////////
+    else if((frameCounterStr != "fafafafa") && mmfe8()) {
+        QString fullEventDataStr, headerStr, chipNumberStr, trigCountStr, trigTimeStampStr;
+
+        fullEventDataStr    = datagram.toHex();
+        chipNumberStr       = datagram.mid(7,1).toHex();
+        trigCountStr        = datagram.mid(0,4).toHex();
+        trigTimeStampStr    = datagram.mid(6,3).toHex();
+
+        if(dbg() && verbose) {
+            sx.str("");
+            sx << "*****************************************************\n"
+               << " Data from chip # : " << chipNumberStr.toInt(&ok,16) << "\n"
+               << "  > Data          : " << fullEventDataStr.toStdString() << "\n"
+               <<  "*****************************************************";
+            cout << sx.str() << endl;
+        } // dbg
+
+        if(datagram.size()==12 && dbg()) {
+            sx.str("");
+            sx << "Empty event from chip #: " << chipNumberStr.toInt(&ok,16);
+            cout << sx.str() << endl; sx.str("");
+        } // empty event
+
+        // data containers for this chip
+        _pdo.clear();
+        _tdo.clear();
+        _bcid.clear();
+        _gray.clear();
+        _channelNo.clear();
+        _flag.clear();
+        _thresh.clear();
+        _neighbor.clear();
+
+        // ------------------ begin loop over channels -------------------- //
+        for(int i = 8; i < datagram.size(); ) {
+            // first 32 bits
+            quint32 first32 = datagram.mid(i,4).toHex().toUInt(&ok,16);
+            // second 32 bits
+            quint32 second32 = datagram.mid(i+4,4).toHex().toUInt(&ok,16);
+
+            // --- flag --- //
+            uint flag = (second32 & 0x1);
+            _flag.push_back(flag);
+
+            // --- threshold --- //
+            uint threshold = (second32 & 0x2)>>1;
+            _thresh.push_back(threshold);
+
+            // --- channel number --- //
+            uint channel_no = (second32 & 0xfc)>>2;
+            if(calibRun()) {
+                if(m_channel_for_calib < 0) {
+                    sx.str("");
+                    sx << "Channel for caligration has not been set!\n"
+                       << "Make sure that it is set correctly in "
+                       << "DataHandler::setCalibrationChannel";
+                    msg()(sx,"DataHandler::decodeAndWriteData"); sx.str("");
+                    _neighbor.push_back(0);
+                }
+                else {
+                    _neighbor.push_back(!(m_channel_for_calib == static_cast<int>(channel_no)));
+                }
+            } // calibRun
+
+            uint unmapped_channel = channel_no;
+            if(useChannelMap()) {
+                int chan_test = channelToStrip(chipNumberStr.toInt(&ok,16),
+                                                channel_no);
+                if(chan_test>0) channel_no = chan_test;
+                else {
+                    msg()("Not using channel map");
+                }
+            } // use channel map
+            _channelNo.push_back(channel_no);
+
+            // --- pdo/charge --- //
+            uint charge = (first32 & 0x3ff);
+            _pdo.push_back(charge);
+
+            // --- tac/tdo --- //
+            uint tac = (first32 & 0x3fc00000)>>22;
+            _tdo.push_back(tac);
+
+            // --- bcid --- //
+            uint bcid = (first32 & 0x3ffc00)>>10;
+            _bcid.push_back(bcid);
+
+            // -- gray --- //
+            uint gray = DataHandler::grayToBinary(bcid);
+            _gray.push_back(gray);
+
+            if(dbg() && verbose) {
+                sx.str("");
+                sx  << "channel             : " << channel_no       << "\n"
+                    << "unmapped channel    : " << unmapped_channel << "\n"
+                    << "flag                : " << flag             << "\n"
+                    << "threshold           : " << threshold        << "\n"
+                    << "charge              : " << charge           << "\n"
+                    << "tac                 : " << tac              << "\n"
+                    << "bcid                : " << bcid             << "\n";
+                cout << sx.str() << endl;
+            } // verbose
+
+            i = i + 8;
+        } // i
+
+        if(writeNtuple()) {
+            m_triggerTimeStamp.push_back(trigTimeStampStr.toInt(&ok,16));
+            m_triggerCounter.push_back(trigCountStr.toInt(&ok,16));
+            m_chipId.push_back(chipNumberStr.toInt(&ok,16));
+            m_eventSize.push_back(datagram.size()-12);
+
+            m_tdo.push_back(_tdo);
+            m_pdo.push_back(_pdo);
+            m_flag.push_back(_flag);
+            m_threshold.push_back(_thresh);
+            m_bcid.push_back(_bcid);
+            m_channelId.push_back(_channelNo);
+            m_grayDecoded.push_back(_gray);
+
+            if(calibRun())
+                m_neighbor_calib.push_back(_neighbor);
+            
+        } // writeNtuple
+
+    } // != fafafafa and MMFE8
 
     ///////////////////////////////////////
     // reading out chip complete
