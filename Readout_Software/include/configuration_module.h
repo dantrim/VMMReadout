@@ -37,6 +37,8 @@ class Configuration : public QObject
         Configuration& LoadConfig(ConfigHandler& config);
         Configuration& LoadSocket(SocketHandler& socket);
 
+        quint32 reverse32(QString binary_in);
+        QString reverseString(QString string);
         void SendConfig();
         void fillGlobalRegisters(std::vector<QString>& globalRegisters);
         void fillChannelRegisters(std::vector<QString>& channelRegisters);

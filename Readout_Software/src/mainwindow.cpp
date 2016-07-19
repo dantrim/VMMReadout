@@ -450,14 +450,23 @@ void MainWindow::updateLogScreen()
 // ------------------------------------------------------------------------- //
 void MainWindow::updateFSM()
 {
-    if(m_commOK && !m_febSetOK && !m_configOK && !m_tdaqOK && !m_runModeOK && m_acqMode=="") {
-        ui->mini2CheckBox->setEnabled(true);
-        ui->mmfe8CheckBox->setEnabled(true);
-        ui->cmdlabel->setText("No FEB\nSet");
-        msg()("Waiting to set FEB configuration type");
-    }
     //addmmfe8
-    else if(m_commOK && m_febSetOK && !m_configOK && !m_tdaqOK && !m_runModeOK && m_acqMode=="") { 
+    if(m_febSetOK && !m_commOK && !m_configOK && !m_tdaqOK && !m_runModeOK && m_acqMode==""){
+        ui->openConnection->setEnabled(true);
+        msg()("Waiting for open communication with FEC...");
+    }
+    else if(m_febSetOK && m_commOK && !m_configOK && !m_tdaqOK && !m_runModeOK && m_acqMode==""){
+    //    ui->cmdLabel->setText("No\nConfig");
+        
+
+    //if(m_commOK && !m_febSetOK && !m_configOK && !m_tdaqOK && !m_runModeOK && m_acqMode=="") {
+    //    ui->mini2CheckBox->setEnabled(true);
+    //    ui->mmfe8CheckBox->setEnabled(true);
+    //    ui->cmdlabel->setText("No FEB\nSet");
+    //    msg()("Waiting to set FEB configuration type");
+    //}
+    ////addmmfe8
+    //else if(m_commOK && m_febSetOK && !m_configOK && !m_tdaqOK && !m_runModeOK && m_acqMode=="") { 
         ui->SendConfiguration->setEnabled(true);
         ui->cmdlabel->setText("No\nConfig");
 
@@ -580,6 +589,13 @@ void MainWindow::setFEB()
     else if(QObject::sender() == ui->mmfe8CheckBox) {
         msg()("Setting up to configure and readout MMFE8");
         propagateFEBSettings(true);
+
+        //change the IP default
+        msg()("Setting IP to 192.168.0.2","MainWindow::setFEB");
+        ui->ip1->setText("192");
+        ui->ip2->setText("168");
+        ui->ip3->setText("0");
+        ui->ip4->setText("2");
     }
     m_febSetOK = true;
     emit checkFSM(); 
@@ -867,11 +883,14 @@ void MainWindow::setNumberOfFecs(int)
 // ------------------------------------------------------------------------- //
 void MainWindow::SetInitialState()
 {
-    msg()("Waiting for open communication with FEC...");
 
+     msg()("Waiting to set FEB configuration type");
     //addmmfe8
-    ui->mini2CheckBox->setEnabled(false);
-    ui->mmfe8CheckBox->setEnabled(false);
+    ui->mini2CheckBox->setEnabled(true);
+    ui->mmfe8CheckBox->setEnabled(true);
+
+    //wait for mmfe8 config before connection since MMFE8 doen't need a ping
+    ui->openConnection->setEnabled(false);
 
     // write and SPI configuration
     ui->spiRB->setChecked(true);
@@ -2271,6 +2290,7 @@ void MainWindow::triggerHandler()
     } // clearTriggerCnt
 
     if(QObject::sender() == ui->stopTriggerCnt) {
+        if(!m_daqInProgress) return;
         ui->clearTriggerCnt->setEnabled(true);
         sx << " -------------------------------- \n";
         sx << " *** Ending DAQ run " << ui->runNumber->value() << " ***\n";
@@ -2289,6 +2309,10 @@ void MainWindow::triggerHandler()
             emit stopCalibrationLoop();
             delay();
         }
+        delay();
+        delay();
+        delay();
+        delay();
         //shared
         //ui->doMonitoring->setEnabled(true);
         //dataHandle().clearSharedMemory();

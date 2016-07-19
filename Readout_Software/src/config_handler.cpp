@@ -814,23 +814,44 @@ void ConfigHandler::setHDMIChannelMap()
         exit(1);
     }
     bool ok;
-    QString chMapString = "000000000000000000000000"; //24bit (16 vmm + 8 art)
-    for(int i = 0; i < (int)m_channelmap.size(); ++i) {
-        QString first, second, art;
-        first  = m_channelmap[i].first ? "1" : "0";
-        second = m_channelmap[i].second ? "1" : "0";
-        art    = m_channelmap[i].art ? "1" : "0";
-        if(m_channelmap[i].on) {
-            chMapString.replace(23-2*i, 1, first);
-            chMapString.replace(22-2*i, 1, second);
-            chMapString.replace(7-i, 1, art);
+    ///////////////////////////////////////////////////////////////////
+    // build the channel (VMMID) map
+    ///////////////////////////////////////////////////////////////////
+    QString chMapString = "";
+    //addmmfe8
+    if(!mmfe8()) {
+        chMapString = "000000000000000000000000"; //24bit (16 vmm + 8 art)
+        for(int i = 0; i < (int)m_channelmap.size(); ++i) {
+            QString first, second, art;
+            first  = m_channelmap[i].first ? "1" : "0";
+            second = m_channelmap[i].second ? "1" : "0";
+            art    = m_channelmap[i].art ? "1" : "0";
+            if(m_channelmap[i].on) {
+                chMapString.replace(23-2*i, 1, first);
+                chMapString.replace(22-2*i, 1, second);
+                chMapString.replace(7-i, 1, art);
 
-//            chMapString.replace(15-2*i, 1, first);
-//            chMapString.replace(14-2*i, 1, second);
-        }
-    } // i
-    m_channelMap =    (quint16)chMapString.toInt(&ok,2);
-    m_channelMapART = (quint32)chMapString.toInt(&ok,2); 
+//                chMapString.replace(15-2*i, 1, first);
+//                chMapString.replace(14-2*i, 1, second);
+            }
+        } // i
+        m_channelMap =    (quint16)chMapString.toInt(&ok,2);
+        m_channelMapART = (quint32)chMapString.toInt(&ok,2); 
+    } // mini2
+    ///////////////////////////////////////////////////////////////////
+    // build the channel (VMMID) map
+    ///////////////////////////////////////////////////////////////////
+    else if(mmfe8()) {
+        chMapString = "";
+        for(int i = 0; i < (int)m_channelmap.size(); ++i) {
+            if(m_channelmap[i].on) {
+                chMapString.append(QString::number(i+1));
+                break;
+            }
+        } // i
+        m_channelMap    = (quint16)chMapString.toInt(&ok,10);
+        m_channelMapART = (quint32)0;
+    }
 }
 //// ------------------------------------------------------------------------ //
 std::vector<Channel> ConfigHandler::LoadVMMChannelConfig(const boost::property_tree::ptree& pt)

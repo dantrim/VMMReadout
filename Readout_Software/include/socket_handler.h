@@ -33,7 +33,7 @@ class SocketHandler : public QObject
 
         //addmmfe8
         void setMMFE8(bool set_to_run_mmfe8);
-        bool mmfe8();
+        bool mmfe8() { return m_mmfe8; }
 
         void LoadMessageHandler(MessageHandler& msg);
         MessageHandler& msg() { return *m_msg; }

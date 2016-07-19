@@ -1,6 +1,7 @@
 
 // vmm
 #include "configuration_module.h"
+#include "data_handler.h" // for reverse32
 
 // std/stl
 #include <iostream>
@@ -10,6 +11,7 @@ using namespace std;
 #include <QString>
 #include <QDataStream>
 #include <QByteArray>
+#include <QBitArray>
 
 // boost
 #include <boost/format.hpp>
@@ -72,16 +74,44 @@ Configuration& Configuration::LoadSocket(SocketHandler& socket)
     return *this;
 }
 // ------------------------------------------------------------------------ //
+quint32 Configuration::reverse32(QString input_bin)
+{
+    bool ok;
+    QBitArray received(32,false);
+    for(int i = 0; i < input_bin.size(); i++) {
+        QString bit = input_bin.at(i);
+        received.setBit(32-input_bin.size()+i, bit.toUInt(&ok,10));
+    } // i
+
+    QBitArray reversed(32,false);
+    for(int j = 0; j < 32; j++) {
+        reversed.setBit(31-j, received[j]);
+    } // j
+
+    QByteArray reversed_byte = DataHandler::bitsToBytes(reversed);
+    return reversed_byte.toHex().toUInt(&ok,16);
+}
+// ------------------------------------------------------------------------ //
+QString Configuration::reverseString(QString string)
+{
+    QString tmp = string;
+    QByteArray ba = tmp.toLocal8Bit();
+    char *d = ba.data();
+    std::reverse(d,d+tmp.length());
+    tmp = QString(d);
+    return tmp;
+}
+// ------------------------------------------------------------------------ //
 void Configuration::SendConfig()
 {
     stringstream sx;
-
-    // NEED TO ADD SOCKET STATE CHECK
 
     bool ok;
 
     // configuration of the VMMs
     int send_to_port = config().commSettings().vmmasic_port;
+    //addmmfe8
+    if(mmfe8()) send_to_port = 6008;
 
     ///////////////////////////////////////////////////
     // build the configuration word(s) to be sent
@@ -116,6 +146,8 @@ void Configuration::SendConfig()
     QString cmd, msbCounter;
     cmd = "AAAAFFFF";
     msbCounter = "0x80000000"; 
+
+    //addmmfe8
     unsigned int firstChRegSPI = 0;
     unsigned int lastChRegSPI  = 63;
     unsigned int firstGlobalRegSPI  = 64;
@@ -134,27 +166,82 @@ void Configuration::SendConfig()
         QDataStream out (&datagram, QIODevice::WriteOnly);
         out.device()->seek(0); //rewind
     
-        out << (quint32)(socket().commandCounter() + msbCounter.toUInt(&ok,16)) //[0,3]
-            << (quint32)config().getHDMIChannelMap() //[4,7]
-            << (quint32)cmd.toUInt(&ok,16) //[8,11]
-            << (quint32) 0; //[12,15]
+        if(mmfe8()) {
+            QString h1 = "ffbb";
+            QString h2 = "aadd";
+            QString h3 = "bb00";
+            out << (quint16)h1.toUInt(&ok,16)
+                << (quint16)h2.toUInt(&ok,16)
+                << (quint16)config().getHDMIChannelMap()
+                << (quint16)h3.toUInt(&ok,16);
 
-        //channel SPI
-        for(unsigned int i = firstChRegSPI; i <= lastChRegSPI; ++i) {
-            out << (quint32)(i)
-                << (quint32)channelRegisters[i].toUInt(&ok,2);
-        } // i
-        //[12,523]
+//1684                 QString header1 = "ffbb";
+//1685                 QString header2 = "aadd";
+//1686                 //QString header3 = "0008";
+//1687                 QString header4 = "bb00";
+//1688                 out << (quint16)  (  header1   ).toUInt(&ok,16);
+//1689                 out << (quint16)  (  header2   ).toUInt(&ok,16);
+//1690                 //out << (quint16)  (  header3   ).toUInt(&ok,16);
+//1691                 out << (quint16)  ( channelMap );
+//1692                 out << (quint16)  (  header4   ).toUInt(&ok,16);
+            
+        }
+        else {
+            out << (quint32)(socket().commandCounter() + msbCounter.toUInt(&ok,16)) //[0,3]
+                << (quint32)config().getHDMIChannelMap() //[4,7]
+                << (quint32)cmd.toUInt(&ok,16) //[8,11]
+                << (quint32) 0; //[12,15]
+        }
 
-        // global SPI
-        for(unsigned int i = firstGlobalRegSPI; i <= lastGlobalRegSPI; ++i) {
-            out << (quint32)(i)
-                << (quint32)globalRegisters[i-firstGlobalRegSPI].toUInt(&ok,2);
-        } // i
-        //[524,547]
+        ///////////////////////////////////////////////////////////
+        // configuration send to MINI2
+        ///////////////////////////////////////////////////////////
+        if(!mmfe8()) {
+            //channel SPI
+            for(unsigned int i = firstChRegSPI; i <= lastChRegSPI; ++i) {
+                out << (quint32)(i)
+                    << (quint32)channelRegisters[i].toUInt(&ok,2);
+            } // i
+            //[12,523]
 
-        out << (quint32)128 //[548,551]
-            << (quint32) 1; //[552,555]
+            // global SPI
+            for(unsigned int i = firstGlobalRegSPI; i <= lastGlobalRegSPI; ++i) {
+                out << (quint32)(i)
+                    << (quint32)globalRegisters[i-firstGlobalRegSPI].toUInt(&ok,2);
+            } // i
+            //[524,547]
+            out << (quint32)128 //[548,551]
+                << (quint32) 1; //[552,555]
+        } // not mmfe8
+        ///////////////////////////////////////////////////////////
+        // configuration send to MMFE8
+        ///////////////////////////////////////////////////////////
+        else if (mmfe8()) {
+            // for MMFE8 send first channel 63 and end at 0
+            // and reverse each of the words
+            //channel SPI
+            for(int i = 63;  i >= 0; i--) {
+                QString first8bits = channelRegisters[63-i].mid(8,8);
+                QString second16bits = channelRegisters[63-i].mid(16,16);
+
+                out << (quint16)reverseString(second16bits).toUInt(&ok,2);
+                out << (quint8)reverseString(first8bits).toUInt(&ok,2);
+
+                //qDebug() << "normal     : " << channelRegisters.at(i);//.toUInt(&ok,2);
+                //qDebug() << "reversed   : " << Configuration::reverse32(channelRegisters.at(i));
+                //out << (quint32)Configuration::reverse32(channelRegisters.at(i));
+                //out << (quint32)DataHandler::reverse32(channelRegisters.at(i));
+            } // i
+
+            // simply reverse each of the global SPI words
+            // global SPI
+            for(unsigned int i = 0; i < 3; i++) {
+                //out << (quint32)DataHandler::reverse32(globalRegisters[i]);
+                qDebug() << "global[" << i << "] : " << globalRegisters.at(i);
+                qDebug() << "global[" << i << "] reversed : " << Configuration::reverse32(globalRegisters.at(i));
+                out << (quint32)Configuration::reverse32(globalRegisters.at(i));
+            } // i
+        } // if mmfe8
 
         bool readOK = true;
         //debug
@@ -163,9 +250,9 @@ void Configuration::SendConfig()
             sx << "Send config to port: " << send_to_port;
             msg()(sx);sx.str("");
         }
+        qDebug() << "CONFIGURATION DATAGRAM: " << datagram.toHex() << "  size: " << datagram.size();
         socket().SendDatagram(datagram, ip, send_to_port, "fec",
                                         "Configuration::SendConfig"); 
-        //sleep(2);
         readOK = socket().waitForReadyRead("fec");
         if(readOK) {
             if(dbg()) msg()("Processing replies...", "Configuration::SendConfig");

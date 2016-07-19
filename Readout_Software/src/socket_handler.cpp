@@ -78,36 +78,42 @@ SocketHandler& SocketHandler::loadIPList(const QString& ipstring)
 // ---------------------------------------------------------------------- //
 bool SocketHandler::ping()
 {
-    if(m_dbg) {
-        msg()("Pinging IP address...","SocketHandler::ping");
-    }
-    if(m_iplist.size()==0) {
-        stringstream sx;
-        sx << "ERROR There are no IP addresses loaded. Please use method 'loadIPList'";
-        msg()(sx,"SocketHandler::ping");
-        m_pinged = false;
-    }
-    for(const auto& ip : m_iplist) {
-        #ifdef __linux__
-        int status_code = QProcess::execute("ping", QStringList()<<"-c1"<<ip);
-        #elif __APPLE__
-        int status_code = QProcess::execute("ping", QStringList()<<"-t1"<<ip);
-        #endif
+    //addmmfe8
+    if(!mmfe8()) {
+        if(m_dbg) {
+            msg()("Pinging IP address...","SocketHandler::ping");
+        }
+        if(m_iplist.size()==0) {
+            stringstream sx;
+            sx << "ERROR There are no IP addresses loaded. Please use method 'loadIPList'";
+            msg()(sx,"SocketHandler::ping");
+            m_pinged = false;
+        }
+        for(const auto& ip : m_iplist) {
+            #ifdef __linux__
+            int status_code = QProcess::execute("ping", QStringList()<<"-c1"<<ip);
+            #elif __APPLE__
+            int status_code = QProcess::execute("ping", QStringList()<<"-t1"<<ip);
+            #endif
 
-        //////////////////////////////////
-        if(!dryrun()) {
-            if(status_code == 0)
-                m_pinged = true;
+            //////////////////////////////////
+            if(!dryrun()) {
+                if(status_code == 0)
+                    m_pinged = true;
+                else {
+                    m_pinged = false;
+                    msg()("ERROR Unable to successfully ping the IP: " + ip.toStdString(),
+                            "SocketHandler::ping");
+                } 
+            }
             else {
-                m_pinged = false;
-                msg()("ERROR Unable to successfully ping the IP: " + ip.toStdString(),
-                        "SocketHandler::ping");
-            } 
+                m_pinged = true;
+            }
+            //////////////////////////////////
         }
-        else {
-            m_pinged = true;
-        }
-        //////////////////////////////////
+    } else {
+        //mmfe8 does not receive ping
+        m_pinged = true;
     }
     return m_pinged;
 }

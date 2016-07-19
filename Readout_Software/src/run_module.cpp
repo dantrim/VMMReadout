@@ -459,7 +459,8 @@ void RunModule::ACQoff()
         if(readOK) {
             if(dbg()) msg()("Processing replies...","RunModule::ACQoff");
             QByteArray buffer;
-            buffer = socket().fecSocket().processReply(ip, 0, socket().commandCounter()); //.processReply("fec", ip);
+            //buffer = socket().fecSocket().processReply(ip, 0, socket().commandCounter()); //.processReply("fec", ip);
+            socket().processReply("fec", ip);
 
             //QByteArray buffer = socket().buffer("fec");
 

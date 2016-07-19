@@ -134,6 +134,8 @@ void DataHandler::connectDAQSocket()
     stringstream sx;
 
     int daqport = 6006;
+    //addmmfe8
+    if(mmfe8()) daqport = 6008;
 
     if(!m_DAQSocket) {
         msg()("Initializing DAQ socket...","DataHandler::connectDAQSocket");
@@ -926,6 +928,7 @@ void DataHandler::EndRun()
 // ------------------------------------------------------------------------ //
 void DataHandler::readEvent()
 {
+    //std::cout << "DataHandler::readEvent" << std::endl;
     stringstream sx;
 
     bool ok_to_read = true;
@@ -967,11 +970,13 @@ void DataHandler::readEvent()
     if(monitoring())
         m_sharedDataStrips.clear();
     while(m_DAQSocket->hasPendingDatagrams()) {
+        //std::cout << "DataHanlder::         has pending datagrams " << std::endl;
         //shared
 
         //shared
         datagram.resize(m_DAQSocket->pendingDatagramSize());
         m_DAQSocket->readDatagram(datagram.data(), datagram.size(), &vmmip);
+        //qDebug() << "  > " << datagram.toHex();
 
 
         //qDebug() << datagram.toHex();
@@ -1020,9 +1025,15 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram,
     bool ok;
     stringstream sx;
 
+    //qDebug() << "in decode: " << datagram.toHex();
+
     bool verbose = false;
 
     QString frameCounterStr = datagram.mid(0,4).toHex(); //Frame Counter
+    QString trailer = "fafafafa";
+    //addmmfe8
+    if(mmfe8())
+        trailer = "ffffffff";
 
     QString fromIpStr = fromIp.toString();
     quint32 fromIpNo  = fromIp.toIPv4Address();
@@ -1031,7 +1042,8 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram,
     //event data incoming from chip (MINI2 decoding)
     ///////////////////////////////////////////////////
     //addmmfe8
-    if((frameCounterStr != "fafafafa") && !mmfe8()) {
+    if((frameCounterStr != trailer) && !mmfe8()) {
+    //if((frameCounterStr != "fafafafa") && !mmfe8()) {
         QString headerID = datagram.mid(4,3).toHex();
 
         ///////////////////////////////////////////////
@@ -1280,7 +1292,7 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram,
     ///////////////////////////////////////////////////
     //event data incoming from chip (MMFE8 decoding)
     ///////////////////////////////////////////////////
-    else if((frameCounterStr != "fafafafa") && mmfe8()) {
+    else if((frameCounterStr != trailer) && mmfe8()) {
         QString fullEventDataStr, headerStr, chipNumberStr, trigCountStr, trigTimeStampStr;
 
         fullEventDataStr    = datagram.toHex();
@@ -1316,74 +1328,76 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram,
 
         // ------------------ begin loop over channels -------------------- //
         for(int i = 8; i < datagram.size(); ) {
-            // first 32 bits
-            quint32 first32 = datagram.mid(i,4).toHex().toUInt(&ok,16);
-            // second 32 bits
-            quint32 second32 = datagram.mid(i+4,4).toHex().toUInt(&ok,16);
+            if(datagram.mid(i,4).toHex()!=trailer) {
+                // first 32 bits
+                quint32 first32 = datagram.mid(i,4).toHex().toUInt(&ok,16);
+                // second 32 bits
+                quint32 second32 = datagram.mid(i+4,4).toHex().toUInt(&ok,16);
 
-            // --- flag --- //
-            uint flag = (second32 & 0x1);
-            _flag.push_back(flag);
+                // --- flag --- //
+                uint flag = (second32 & 0x1);
+                _flag.push_back(flag);
 
-            // --- threshold --- //
-            uint threshold = (second32 & 0x2)>>1;
-            _thresh.push_back(threshold);
+                // --- threshold --- //
+                uint threshold = (second32 & 0x2)>>1;
+                _thresh.push_back(threshold);
 
-            // --- channel number --- //
-            uint channel_no = (second32 & 0xfc)>>2;
-            if(calibRun()) {
-                if(m_channel_for_calib < 0) {
+                // --- channel number --- //
+                uint channel_no = (second32 & 0xfc)>>2;
+                if(calibRun()) {
+                    if(m_channel_for_calib < 0) {
+                        sx.str("");
+                        sx << "Channel for caligration has not been set!\n"
+                           << "Make sure that it is set correctly in "
+                           << "DataHandler::setCalibrationChannel";
+                        msg()(sx,"DataHandler::decodeAndWriteData"); sx.str("");
+                        _neighbor.push_back(0);
+                    }
+                    else {
+                        _neighbor.push_back(!(m_channel_for_calib == static_cast<int>(channel_no)));
+                    }
+                } // calibRun
+
+                uint unmapped_channel = channel_no;
+                if(useChannelMap()) {
+                    int chan_test = channelToStrip(chipNumberStr.toInt(&ok,16),
+                                                    channel_no);
+                    if(chan_test>0) channel_no = chan_test;
+                    else {
+                        msg()("Not using channel map");
+                    }
+                } // use channel map
+                _channelNo.push_back(channel_no);
+
+                // --- pdo/charge --- //
+                uint charge = (first32 & 0x3ff);
+                _pdo.push_back(charge);
+
+                // --- tac/tdo --- //
+                uint tac = (first32 & 0x3fc00000)>>22;
+                _tdo.push_back(tac);
+
+                // --- bcid --- //
+                uint bcid = (first32 & 0x3ffc00)>>10;
+                _bcid.push_back(bcid);
+
+                // -- gray --- //
+                uint gray = DataHandler::grayToBinary(bcid);
+                _gray.push_back(gray);
+
+                //if(dbg() && verbose) {
+                if(true){
                     sx.str("");
-                    sx << "Channel for caligration has not been set!\n"
-                       << "Make sure that it is set correctly in "
-                       << "DataHandler::setCalibrationChannel";
-                    msg()(sx,"DataHandler::decodeAndWriteData"); sx.str("");
-                    _neighbor.push_back(0);
-                }
-                else {
-                    _neighbor.push_back(!(m_channel_for_calib == static_cast<int>(channel_no)));
-                }
-            } // calibRun
-
-            uint unmapped_channel = channel_no;
-            if(useChannelMap()) {
-                int chan_test = channelToStrip(chipNumberStr.toInt(&ok,16),
-                                                channel_no);
-                if(chan_test>0) channel_no = chan_test;
-                else {
-                    msg()("Not using channel map");
-                }
-            } // use channel map
-            _channelNo.push_back(channel_no);
-
-            // --- pdo/charge --- //
-            uint charge = (first32 & 0x3ff);
-            _pdo.push_back(charge);
-
-            // --- tac/tdo --- //
-            uint tac = (first32 & 0x3fc00000)>>22;
-            _tdo.push_back(tac);
-
-            // --- bcid --- //
-            uint bcid = (first32 & 0x3ffc00)>>10;
-            _bcid.push_back(bcid);
-
-            // -- gray --- //
-            uint gray = DataHandler::grayToBinary(bcid);
-            _gray.push_back(gray);
-
-            if(dbg() && verbose) {
-                sx.str("");
-                sx  << "channel             : " << channel_no       << "\n"
-                    << "unmapped channel    : " << unmapped_channel << "\n"
-                    << "flag                : " << flag             << "\n"
-                    << "threshold           : " << threshold        << "\n"
-                    << "charge              : " << charge           << "\n"
-                    << "tac                 : " << tac              << "\n"
-                    << "bcid                : " << bcid             << "\n";
-                cout << sx.str() << endl;
-            } // verbose
-
+                    sx  << "channel             : " << channel_no       << "\n"
+                        << "unmapped channel    : " << unmapped_channel << "\n"
+                        << "flag                : " << flag             << "\n"
+                        << "threshold           : " << threshold        << "\n"
+                        << "charge              : " << charge           << "\n"
+                        << "tac                 : " << tac              << "\n"
+                        << "bcid                : " << bcid             << "\n";
+                    cout << sx.str() << endl;
+                } // verbose
+            }
             i = i + 8;
         } // i
 
@@ -1408,11 +1422,15 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram,
         } // writeNtuple
 
     } // != fafafafa and MMFE8
+    frameCounterStr=trailer;
 
     ///////////////////////////////////////
     // reading out chip complete
     ///////////////////////////////////////
-    else if(frameCounterStr == "fafafafa") {
+    #warning HARDCODING MMFE8 BEHAVIOR
+    //addmmfe8
+    if(frameCounterStr == trailer) {
+    //else if(frameCounterStr == trailer) {
 
         if((int)getDAQCount()%100==0) {
             emit checkDAQCount(false);
