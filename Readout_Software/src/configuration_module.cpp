@@ -483,9 +483,6 @@ void Configuration::fillGlobalRegisters(std::vector<QString>& global)
 
     //channel to monitor
     //[23,28]
-    #warning reversing channel_mon manually
-    //tmp = QString("%1").arg(64-config().globalSettings().channel_monitor,
-    //                                                6,2,QChar('0'));
     tmp = QString("%1").arg(config().globalSettings().channel_monitor,
                                                     6,2,QChar('0'));
     spi2.replace(sequence,tmp.size(),tmp);
