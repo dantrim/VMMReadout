@@ -589,6 +589,7 @@ void MainWindow::propagateFEBSettings(bool doMMFE8)
 {
     msg()("Propagating FEB settings...");
     vmmConfigModule->setMMFE8(doMMFE8);
+    vmmConfigHandler->setMMFE8(doMMFE8);
     vmmRunModule->setMMFE8(doMMFE8);
     vmmDataHandler->setMMFE8(doMMFE8);
 }

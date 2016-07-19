@@ -35,7 +35,7 @@ RunModule::RunModule(QObject *parent) :
 void RunModule::setMMFE8(bool set_for_mmfe8)
 {
     m_mmfe8 = set_for_mmfe8;
-    if(dbg()) {
+    if(dbg() && m_mmfe8) {
         msg()("DAQ configuration set to MMFE8","RunModule::setMMFE8");
     }
 }
