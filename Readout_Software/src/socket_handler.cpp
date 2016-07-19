@@ -19,6 +19,8 @@ using namespace std;
 SocketHandler::SocketHandler(QObject* parent) :
     QObject(parent),
     m_dbg(false),
+    //addmmfe8
+    m_mmfe8(false),
     m_msg(0),
     m_pinged(false),
     m_dryrun(false),
@@ -29,6 +31,20 @@ SocketHandler::SocketHandler(QObject* parent) :
     m_vmmappSocket(0),
     m_vmmappSetup(false)
 {
+}
+// ---------------------------------------------------------------------- //
+//addmmfe8
+void SocketHandler::setMMFE8(bool set_for_mmfe8)
+{
+    m_mmfe8 = set_for_mmfe8;
+    if(dbg() && m_mmfe8) {
+        msg()("Socket handling set to MMFE8","SocketHandler::setMMFE8");
+    }
+
+    if(m_mmfe8) {
+        msg()("Set to MMFE8. Will skip reply processing.","SocketHandler::setMMFE8");
+        m_skipProcessing = true;
+    }
 }
 // ---------------------------------------------------------------------- //
 void SocketHandler::LoadMessageHandler(MessageHandler& m)
@@ -236,7 +252,7 @@ QByteArray SocketHandler::processReply(std::string name, const QString& ip_to_ch
     quint32 count = commandCounter();
 
     if(dryrun() || m_skipProcessing) {
-        msg()("NOT PROCESSING REPLIES!", "SocketHandler::processReply");
+        cout << "SocketHandler::processReply    Not processing reply from FE" << endl;
         return outbuffer;
     }
 

@@ -592,6 +592,7 @@ void MainWindow::propagateFEBSettings(bool doMMFE8)
     vmmConfigHandler->setMMFE8(doMMFE8);
     vmmRunModule->setMMFE8(doMMFE8);
     vmmDataHandler->setMMFE8(doMMFE8);
+    vmmSocketHandler->setMMFE8(doMMFE8);
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::prepareAndSendBoardConfig()
