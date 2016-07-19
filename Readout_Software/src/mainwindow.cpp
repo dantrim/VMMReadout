@@ -596,6 +596,41 @@ void MainWindow::setFEB()
         ui->ip2->setText("168");
         ui->ip3->setText("0");
         ui->ip4->setText("2");
+
+        //for now fix the vmm id
+        ui->hdmi1->setChecked(false);
+        ui->hdmi1_1->setChecked(false);
+        ui->hdmi1_2->setChecked(false);
+        ui->hdmi2->setChecked(false);
+        ui->hdmi2_1->setChecked(false);
+        ui->hdmi2_2->setChecked(false);
+        ui->hdmi3->setChecked(false);
+        ui->hdmi3_1->setChecked(false);
+        ui->hdmi3_2->setChecked(false);
+        ui->hdmi4->setChecked(false);
+        ui->hdmi4_1->setChecked(false);
+        ui->hdmi4_2->setChecked(false);
+        ui->hdmi5->setChecked(true);
+        ui->hdmi5_1->setChecked(true);
+        ui->hdmi5_2->setChecked(false);
+        ui->hdmi6->setChecked(false);
+        ui->hdmi6_1->setChecked(false);
+        ui->hdmi6_2->setChecked(false);
+        ui->hdmi7->setChecked(false);
+        ui->hdmi7_1->setChecked(false);
+        ui->hdmi7_2->setChecked(false);
+        ui->hdmi8->setChecked(false);
+        ui->hdmi8_1->setChecked(false);
+        ui->hdmi8_2->setChecked(false);
+
+        ui->hdmi1_art->setChecked(false);
+        ui->hdmi2_art->setChecked(false);
+        ui->hdmi3_art->setChecked(false);
+        ui->hdmi4_art->setChecked(false);
+        ui->hdmi5_art->setChecked(false);
+        ui->hdmi6_art->setChecked(false);
+        ui->hdmi7_art->setChecked(false);
+        ui->hdmi8_art->setChecked(false);
     }
     m_febSetOK = true;
     emit checkFSM(); 
