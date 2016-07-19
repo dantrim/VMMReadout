@@ -49,6 +49,11 @@ class DataHandler : public QObject
 
         void setDebug(bool dbg);
         bool dbg() { return m_dbg; }
+
+        //addmmfe8
+        void setMMFE8(bool set_to_run_mmfe8);
+        bool mmfe8() { return m_mmfe8; }
+
         bool monitoring() { return m_doMonitoring; }
         void setupMonitoring();
         void LoadMessageHandler(MessageHandler& msg);
@@ -111,6 +116,8 @@ class DataHandler : public QObject
 
     private :
         bool m_dbg;
+        //addmmfe8
+        bool m_mmfe8;
         bool m_doMonitoring;
         bool m_monitoringSetup;
         bool m_calibRun;

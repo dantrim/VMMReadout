@@ -20,6 +20,10 @@ class RunModule : public QObject
         RunModule& setDebug(bool dbg) { m_dbg = dbg; return *this; }
         bool dbg() { return m_dbg; }
 
+        //addmmfe8
+        void setMMFE8(bool set_to_run_mmfe8);
+        bool mmfe8() { return m_mmfe8; }
+
         void LoadMessageHandler(MessageHandler& msg);
         MessageHandler& msg() { return *m_msg; }
 
@@ -76,6 +80,8 @@ class RunModule : public QObject
 
     private :
         bool m_dbg;
+        //addmmfe8
+        bool m_mmfe8;
         MessageHandler *m_msg;
         bool m_externalTrigger;
         long int m_pulseCount; 

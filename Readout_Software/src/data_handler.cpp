@@ -27,6 +27,8 @@ using namespace std;
 DataHandler::DataHandler(QObject *parent) :
     QObject(parent),
     m_dbg(false),
+    //addmmfe8
+    m_mmfe8(false),
     m_doMonitoring(false),
     m_monitoringSetup(false),
     m_calibRun(false),
@@ -68,6 +70,14 @@ void DataHandler::setDebug(bool doit)
 {
     m_dbg = doit;
     m_daqMonitor->setDebug(doit);
+}
+// ------------------------------------------------------------------------ //
+void DataHandler::setMMFE8(bool set_for_mmfe8)
+{
+    m_mmfe8 = set_for_mmfe8;
+    if(dbg()) {
+        msg()("DAQ set to MMFE8","DataHandler::setMMFE8");
+    }
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::testSharedMem()

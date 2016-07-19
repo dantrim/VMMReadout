@@ -20,6 +20,8 @@ using namespace std;
 RunModule::RunModule(QObject *parent) :
     QObject(parent),
     m_dbg(true),
+    //addmmfe8
+    m_mmfe8(false),
     m_msg(0),
     m_externalTrigger(false),
     m_pulseCount(0),
@@ -28,6 +30,14 @@ RunModule::RunModule(QObject *parent) :
     m_socketHandler(0),
     m_configHandler(0)
 {
+}
+// ------------------------------------------------------------------------ //
+void RunModule::setMMFE8(bool set_for_mmfe8)
+{
+    m_mmfe8 = set_for_mmfe8;
+    if(dbg()) {
+        msg()("DAQ configuration set to MMFE8","RunModule::setMMFE8");
+    }
 }
 // ------------------------------------------------------------------------ //
 void RunModule::LoadMessageHandler(MessageHandler& m)

@@ -22,10 +22,21 @@ using namespace std;
 Configuration::Configuration(QObject *parent) :
     QObject(parent),
     m_dbg(false),
+    //addmmfe8
+    m_mmfe8(false),
     m_socketHandler(0),
     m_configHandler(0),
     m_msg(0)
 {
+}
+// ------------------------------------------------------------------------ //
+//addmmfe8
+void Configuration::setMMFE8(bool set_for_mmfe8)
+{
+    m_mmfe8 = set_for_mmfe8;
+    if(dbg()) {
+        msg()("Configuration set to MMFE8","Configuration::setMMFE8");
+    }
 }
 // ------------------------------------------------------------------------ //
 void Configuration::LoadMessageHandler(MessageHandler& m)
