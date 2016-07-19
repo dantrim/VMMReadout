@@ -170,7 +170,10 @@ class MainWindow : public QMainWindow
         QThread *daqThread;
 
 
+        // "FSM" stuff
         bool m_commOK;
+        //addmmfe8
+        bool m_febSetOK;
         bool m_configOK;
         bool m_tdaqOK;
         bool m_runModeOK;
@@ -279,6 +282,11 @@ class MainWindow : public QMainWindow
 
         // connect to IP
         void Connect();
+
+        //addmmfe8
+        // set FEB
+        void setFEB();
+        void propagateFEBSettings(bool);
 
         // calibration-related
         void calibrationLoopState(bool);

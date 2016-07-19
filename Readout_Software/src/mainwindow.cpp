@@ -34,6 +34,7 @@ MainWindow::MainWindow(QWidget *parent) :
     vmmDataHandler(0),
     vmmCalibModule(0),
     m_commOK(false),
+    m_febSetOK(false),
     m_configOK(false),
     m_tdaqOK(false),
     m_runModeOK(false),
@@ -194,6 +195,13 @@ MainWindow::MainWindow(QWidget *parent) :
     // ping the boards and connect sockets
     connect(ui->openConnection, SIGNAL(pressed()),
                                             this, SLOT(Connect()));
+
+    //addmmfe8
+    // set whether running a mmfe8 configuration or mini2
+    connect(ui->mini2CheckBox, SIGNAL(pressed()),
+                                            this, SLOT(setFEB()));
+    connect(ui->mmfe8CheckBox, SIGNAL(pressed()),
+                                            this, SLOT(setFEB()));
 
     // prepare the board configuration and send
     connect(ui->SendConfiguration, SIGNAL(pressed()),
@@ -442,9 +450,16 @@ void MainWindow::updateLogScreen()
 // ------------------------------------------------------------------------- //
 void MainWindow::updateFSM()
 {
-    if(m_commOK && !m_configOK && !m_tdaqOK && !m_runModeOK && m_acqMode=="") {
+    if(m_commOK && !m_febSetOK && !m_configOK && !m_tdaqOK && !m_runModeOK && m_acqMode=="") {
+        ui->mini2CheckBox->setEnabled(true);
+        ui->mmfe8CheckBox->setEnabled(true);
+        ui->cmdlabel->setText("No FEB\nSet");
+        msg()("Waiting to set FEB configuration type");
+    }
+    //addmmfe8
+    else if(m_commOK && m_febSetOK && !m_configOK && !m_tdaqOK && !m_runModeOK && m_acqMode=="") { 
         ui->SendConfiguration->setEnabled(true);
-        ui->cmdlabel->setText("No\nConfig.");
+        ui->cmdlabel->setText("No\nConfig");
 
         ui->fec_WarmInit->setEnabled(true);
         ui->fec_reset->setEnabled(true);
@@ -553,6 +568,29 @@ void MainWindow::Connect()
 
     emit checkFSM();
 
+}
+// ------------------------------------------------------------------------- //
+//addmmfe8
+void MainWindow::setFEB()
+{
+    if(QObject::sender() == ui->mini2CheckBox) {
+        msg()("Setting up to configure and readout MINI2");
+        propagateFEBSettings(false);
+    }
+    else if(QObject::sender() == ui->mmfe8CheckBox) {
+        msg()("Setting up to configure and readout MMFE8");
+        propagateFEBSettings(true);
+    }
+    m_febSetOK = true;
+    emit checkFSM(); 
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::propagateFEBSettings(bool doMMFE8)
+{
+    msg()("Propagating FEB settings...");
+    vmmConfigModule->setMMFE8(doMMFE8);
+    vmmRunModule->setMMFE8(doMMFE8);
+    vmmDataHandler->setMMFE8(doMMFE8);
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::prepareAndSendBoardConfig()
@@ -829,6 +867,9 @@ void MainWindow::SetInitialState()
 {
     msg()("Waiting for open communication with FEC...");
 
+    //addmmfe8
+    ui->mini2CheckBox->setEnabled(false);
+    ui->mmfe8CheckBox->setEnabled(false);
 
     // write and SPI configuration
     ui->spiRB->setChecked(true);

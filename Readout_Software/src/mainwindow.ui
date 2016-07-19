@@ -2590,9 +2590,9 @@
     <widget class="QPushButton" name="openConnection">
      <property name="geometry">
       <rect>
-       <x>4</x>
-       <y>50</y>
-       <width>121</width>
+       <x>14</x>
+       <y>55</y>
+       <width>111</width>
        <height>21</height>
       </rect>
      </property>
@@ -2610,7 +2610,7 @@
      <property name="geometry">
       <rect>
        <x>130</x>
-       <y>50</y>
+       <y>54</y>
        <width>131</width>
        <height>16</height>
       </rect>
@@ -2629,9 +2629,9 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>70</y>
-       <width>141</width>
-       <height>111</height>
+       <y>80</y>
+       <width>131</width>
+       <height>101</height>
       </rect>
      </property>
      <property name="font">
@@ -2641,136 +2641,13 @@
       </font>
      </property>
      <property name="title">
-      <string>Command</string>
+      <string>Configuration</string>
      </property>
-     <widget class="QWidget" name="horizontalLayoutWidget_2">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>60</y>
-        <width>122</width>
-        <height>22</height>
-       </rect>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_23">
-       <item>
-        <widget class="QRadioButton" name="readRB">
-         <property name="font">
-          <font>
-           <family>Arial</family>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Read</string>
-         </property>
-         <property name="autoExclusive">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QRadioButton" name="writeRB">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="font">
-          <font>
-           <family>Arial</family>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Write</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="horizontalLayoutWidget">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>20</y>
-        <width>112</width>
-        <height>62</height>
-       </rect>
-      </property>
-      <layout class="QGridLayout" name="gridLayout_2" rowminimumheight="0,0">
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
-        <number>17</number>
-       </property>
-       <item row="0" column="3">
-        <widget class="QRadioButton" name="fecRB">
-         <property name="font">
-          <font>
-           <family>Arial</family>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>FEC</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QRadioButton" name="s6RB">
-         <property name="font">
-          <font>
-           <family>Arial</family>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>S6</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="3">
-        <widget class="QRadioButton" name="spiRB">
-         <property name="font">
-          <font>
-           <family>Arial</family>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>SPI</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QRadioButton" name="appRB">
-         <property name="font">
-          <font>
-           <family>Arial</family>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="layoutDirection">
-          <enum>Qt::LeftToRight</enum>
-         </property>
-         <property name="text">
-          <string>APP</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
      <widget class="QComboBox" name="setVMMs">
       <property name="geometry">
        <rect>
-        <x>5</x>
-        <y>80</y>
+        <x>3</x>
+        <y>68</y>
         <width>41</width>
         <height>24</height>
        </rect>
@@ -2792,7 +2669,7 @@
       <property name="geometry">
        <rect>
         <x>50</x>
-        <y>80</y>
+        <y>70</y>
         <width>41</width>
         <height>21</height>
        </rect>
@@ -2813,8 +2690,8 @@
       </property>
       <property name="geometry">
        <rect>
-        <x>100</x>
-        <y>84</y>
+        <x>95</x>
+        <y>72</y>
         <width>31</width>
         <height>16</height>
        </rect>
@@ -2835,11 +2712,42 @@
        <bool>true</bool>
       </property>
      </widget>
-     <zorder>setVMMs</zorder>
-     <zorder>SendConfiguration</zorder>
-     <zorder>cmdlabel</zorder>
-     <zorder>horizontalLayoutWidget_2</zorder>
-     <zorder>horizontalLayoutWidget</zorder>
+     <widget class="QWidget" name="">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>20</y>
+        <width>115</width>
+        <height>39</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QRadioButton" name="mini2CheckBox">
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>MINI2 config</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="mmfe8CheckBox">
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>MMFE8 config</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
     <widget class="QWidget" name="layoutWidget_6">
      <property name="geometry">
@@ -3358,6 +3266,7 @@
      <zorder>label_18</zorder>
      <zorder>trgPulser</zorder>
      <zorder>setTrgAcqConst</zorder>
+     <zorder>layoutWidget</zorder>
     </widget>
     <widget class="QGroupBox" name="groupBox_3">
      <property name="geometry">
@@ -3995,9 +3904,9 @@
     <widget class="QComboBox" name="evbld_mode">
      <property name="geometry">
       <rect>
-       <x>6</x>
+       <x>16</x>
        <y>352</y>
-       <width>61</width>
+       <width>51</width>
        <height>21</height>
       </rect>
      </property>
@@ -4029,9 +3938,9 @@
     <widget class="QComboBox" name="evbld_infodata">
      <property name="geometry">
       <rect>
-       <x>65</x>
+       <x>75</x>
        <y>352</y>
-       <width>61</width>
+       <width>51</width>
        <height>21</height>
       </rect>
      </property>
@@ -4490,7 +4399,7 @@
    <widget class="QTabWidget" name="tabWidget">
     <property name="geometry">
      <rect>
-      <x>600</x>
+      <x>590</x>
       <y>10</y>
       <width>691</width>
       <height>671</height>
@@ -6411,6 +6320,129 @@
       <string>WarmInit FEC</string>
      </property>
     </widget>
+   </widget>
+   <widget class="QWidget" name="horizontalLayoutWidget_2">
+    <property name="geometry">
+     <rect>
+      <x>610</x>
+      <y>690</y>
+      <width>16</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_23">
+     <item>
+      <widget class="QRadioButton" name="readRB">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+         <pointsize>9</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Read</string>
+       </property>
+       <property name="autoExclusive">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="writeRB">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="font">
+        <font>
+         <family>Arial</family>
+         <pointsize>9</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Write</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="horizontalLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>630</x>
+      <y>690</y>
+      <width>16</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <layout class="QGridLayout" name="gridLayout_2" rowminimumheight="0,0">
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>17</number>
+     </property>
+     <item row="0" column="3">
+      <widget class="QRadioButton" name="fecRB">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+         <pointsize>9</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>FEC</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QRadioButton" name="s6RB">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+         <pointsize>9</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>S6</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3">
+      <widget class="QRadioButton" name="spiRB">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+         <pointsize>9</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>SPI</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QRadioButton" name="appRB">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+         <pointsize>9</pointsize>
+        </font>
+       </property>
+       <property name="layoutDirection">
+        <enum>Qt::LeftToRight</enum>
+       </property>
+       <property name="text">
+        <string>APP</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
