@@ -30,6 +30,7 @@ class Connector {
 
         #warning the data here is different for VMM than with APV
         std::tuple<int, int, int> getChannel(int chamberStrip, int chip_number);
+        std::tuple<int, int, int> getChannelMMFE8(int chamberStrip);
         std::tuple<int, int, int> getPin(int pin); // pinstr, chipstr, chanstr
         std::vector<std::tuple<int,int,int>> data; // pin, chip, chan
 

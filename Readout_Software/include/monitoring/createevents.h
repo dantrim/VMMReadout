@@ -18,8 +18,9 @@ class Event;
 typedef vector<Event*> ChamberReadout;
 typedef vector<ChamberReadout> Chambers;
 
-typedef map<int, Event*> map_channel;
-typedef map<std::string, map_channel> map_chip;
+typedef map<int, Event*> map_channel;  // [VMMCHANNEL] = EVENT
+typedef map<std::string, map_channel> map_chip; // [VMMID][VMMCHANNEL]
+typedef map<std::string, map_chip> ip_map; // [IP][VMMID][VMMCHANNEL]
 
 class CreateEvents {
 
@@ -27,6 +28,7 @@ class CreateEvents {
         CreateEvents();
         void setDaq(DaqConfig* daq);
         void buildMaps();
+        void buildMapsMMFE8();
         void createEvents();
 
         void setDebug(bool doit = true) { m_dbg = doit; }
@@ -37,6 +39,7 @@ class CreateEvents {
         DetectorConfig& getDetector() { return *m_detector; }
 
         map_chip m_chips_map;
+        ip_map m_ip_map;
 
         std::string getEvent(int chip, int channel, int event, int charge, int time, int charge2, int time2);
 

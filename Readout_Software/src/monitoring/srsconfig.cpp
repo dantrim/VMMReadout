@@ -4,6 +4,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/foreach.hpp>
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 
@@ -106,6 +107,25 @@ string SRSConfig::getFecContainsChipName(string chipname)
         } // j
     } // i
     return out;
+}
+string SRSConfig::getChipNameFromIp(int vmm_id, string ip)
+{
+    // provide a vmmid (expecting [1...8]) and the IP from the UDP packet
+    // and get the full chip name, e.g. VMM.1.2, given the input of 
+    // 2 and 198.162.0.2
+
+    string out_name = "";
+    for(int i = 0; i < m_fecArraySize; i++) {
+        if(!(ip==m_fecArray[i]->getIp())) continue;
+        for(int j = 0; j < m_fecArray[i]->m_chipArraySize; j++) {
+            string chipname = m_fecArray[i]->m_chipArray[j]->getName();
+            vector<string> chip_name_split;
+            boost::split(chip_name_split, chipname, boost::is_any_of("."));
+            int chip_number_j = stoi(chip_name_split.back());
+            if(chip_number_j == vmm_id) out_name = chipname;
+        } // j
+    }//i
+    return out_name;
 }
 
 

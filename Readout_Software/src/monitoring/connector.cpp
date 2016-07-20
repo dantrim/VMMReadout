@@ -231,6 +231,14 @@ tuple<int, int, int> Connector::getChannel(int chamberStrip, int chip_number)
     return make_tuple(-1,-1,-1);
 
 }
+tuple<int, int, int> Connector::getChannelMMFE8(int chamberstrip)
+{
+    for(tuple<int, int, int> t : data) {
+        if(get<2>(t) == chamberstrip)
+            return t;
+    }
+    return make_tuple(-1,-1,-1);
+}
 tuple<int, int, int> Connector::getPin(int pin)
 {
     #warning SUBTRACTING 2 FROM CHAMBER MAP PIN --  CHECK THAT THIS IS CORRECT FOR MINI2

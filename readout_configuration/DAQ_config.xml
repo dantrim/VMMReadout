@@ -3,9 +3,9 @@
 
 <daq_config>
     <!-- SRS electroncis file -->
-    <srs_file>srs.xml</srs_file>
+    <srs_file>srs_mmfe8.xml</srs_file>
 
     <!-- detector configuration -->
-    <detector_file>setup.xml</detector_file>
+    <detector_file>setup_mmfe8.xml</detector_file>
 
 </daq_config>

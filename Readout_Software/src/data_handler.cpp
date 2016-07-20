@@ -120,10 +120,11 @@ void DataHandler::setupMonitoring()
         m_daqConf->loadXml("DAQ_config.xml");
         m_ce = new CreateEvents();
         m_ce->setDaq(m_daqConf);
-        m_ce->buildMaps();
+        m_ce->buildMapsMMFE8();
         //m_ce->createEvents();
-        m_sh = new SharedMemoryWriter();
-        m_sh->initializeSharedMemory();
+        msg()("Not initializing shared memory","DataHandler::setupMonitoring");
+        //m_sh = new SharedMemoryWriter();
+        //m_sh->initializeSharedMemory();
 
         m_monitoringSetup = true;
     }

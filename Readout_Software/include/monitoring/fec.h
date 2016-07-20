@@ -14,6 +14,7 @@ class Fec {
         Fec();
         bool loadFec(const boost::property_tree::ptree::value_type pt);
 
+        std::string name() { return m_name; }
         std::string getId() { return m_id; }
         std::string getIp() { return m_ip; }
 
