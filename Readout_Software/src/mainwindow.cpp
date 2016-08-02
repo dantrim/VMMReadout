@@ -353,8 +353,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // for now disable the ability to set the online monitoring ON
     // will wait until this is robus
-    msg()(" *** Disabling online monitoring *** ");
-    ui->doMonitoring->setEnabled(false);
+    //msg()(" *** Disabling online monitoring *** ");
+    //ui->doMonitoring->setEnabled(false);
 }
 
 // ------------------------------------------------------------------------- //
