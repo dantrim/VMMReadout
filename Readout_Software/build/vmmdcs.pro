@@ -75,8 +75,8 @@ LIBS += -L./objects -lMylib
 
 INCLUDEPATH += $$includepath
 DEPENDPATH  += $$includepath
-INCLUDEPATH += $$includepath/monitoring
-DEPENDPATH  += $$includepath/monitoring
+INCLUDEPATH += $$includepath/mapping/
+DEPENDPATH  += $$includepath/mapping/
 INCLUDEPATH += $$boostinclude
 DEPENDPATH  += $$boostinclude
 
@@ -104,24 +104,39 @@ SOURCES += $$sourcepath/main.cpp\
            $$sourcepath/calibration_module.cpp\
            $$sourcepath/message_handler.cpp\
            $$sourcepath/daq_monitor.cpp\
-           ## monitoring related below
-           $$sourcepath/monitoring/daqconfig.cpp\
-           $$sourcepath/monitoring/srsconfig.cpp\
-           $$sourcepath/monitoring/detectorconfig.cpp\
-           $$sourcepath/monitoring/fec.cpp\
-           $$sourcepath/monitoring/chip.cpp\
-           $$sourcepath/monitoring/multilayer.cpp\
-           $$sourcepath/monitoring/readout.cpp\
-           $$sourcepath/monitoring/layer.cpp\
-           $$sourcepath/monitoring/chamberspecs.cpp\
-           $$sourcepath/monitoring/chamber.cpp\
-           $$sourcepath/monitoring/connectorspecs.cpp\
-           $$sourcepath/monitoring/connector.cpp\
-           $$sourcepath/monitoring/AsioService.cpp\
-           $$sourcepath/monitoring/sharedmemorywriter.cpp\
-           $$sourcepath/monitoring/createevents.cpp\
-           $$sourcepath/monitoring/event.cpp\
-           $$sourcepath/monitoring/coordinates.cpp
+           ## mapping related below
+            $$sourcepath/mapping/readout.cpp\
+            $$sourcepath/mapping/multilayer.cpp\
+            $$sourcepath/mapping/layer.cpp\
+            $$sourcepath/mapping/febconfig.cpp\
+            $$sourcepath/mapping/feb.cpp\
+            $$sourcepath/mapping/element.cpp\
+            $$sourcepath/mapping/detectorconfig.cpp\
+            $$sourcepath/mapping/daqconfig.cpp\
+            $$sourcepath/mapping/coordinates.cpp\
+            $$sourcepath/mapping/connectorinfo.cpp\
+            $$sourcepath/mapping/connector.cpp\
+            $$sourcepath/mapping/chip.cpp\
+            $$sourcepath/mapping/chamber.cpp\
+            $$sourcepath/mapping/map_handler.cpp
+           
+          ## $$sourcepath/monitoring/daqconfig.cpp\
+          ## $$sourcepath/monitoring/srsconfig.cpp\
+          ## $$sourcepath/monitoring/detectorconfig.cpp\
+          ## $$sourcepath/monitoring/fec.cpp\
+          ## $$sourcepath/monitoring/chip.cpp\
+          ## $$sourcepath/monitoring/multilayer.cpp\
+          ## $$sourcepath/monitoring/readout.cpp\
+          ## $$sourcepath/monitoring/layer.cpp\
+          ## $$sourcepath/monitoring/chamberspecs.cpp\
+          ## $$sourcepath/monitoring/chamber.cpp\
+          ## $$sourcepath/monitoring/connectorspecs.cpp\
+          ## $$sourcepath/monitoring/connector.cpp\
+          ## $$sourcepath/monitoring/AsioService.cpp\
+          ## $$sourcepath/monitoring/sharedmemorywriter.cpp\
+          ## $$sourcepath/monitoring/createevents.cpp\
+          ## $$sourcepath/monitoring/event.cpp\
+          ## $$sourcepath/monitoring/coordinates.cpp
 
 HEADERS  += $$includepath/mainwindow.h\
             $$includepath/run_module.h\
@@ -133,24 +148,38 @@ HEADERS  += $$includepath/mainwindow.h\
             $$includepath/calibration_module.h\
             $$includepath/message_handler.h\
             $$includepath/daq_monitor.h\
-            ## monitoring related below
-            $$includepath/monitoring/daqconfig.h\
-            $$includepath/monitoring/srsconfig.h\
-            $$includepath/monitoring/detectorconfig.h\
-            $$includepath/monitoring/fec.h\
-            $$includepath/monitoring/chip.h\
-            $$includepath/monitoring/multilayer.h\
-            $$includepath/monitoring/readout.h\
-            $$includepath/monitoring/layer.h\
-            $$includepath/monitoring/chamberspecs.h\
-            $$includepath/monitoring/chamber.h\
-            $$includepath/monitoring/connectorspecs.h\
-            $$includepath/monitoring/connector.h\
-            $$includepath/monitoring/AsioService.h\
-            $$includepath/monitoring/sharedmemorywriter.h\
-            $$includepath/monitoring/createevents.h\
-            $$includepath/monitoring/event.h\
-            $$includepath/monitoring/coordinates.h 
+            ## mapping related below
+            $$includepath/mapping/readout.h\
+            $$includepath/mapping/multilayer.h\
+            $$includepath/mapping/layer.h\
+            $$includepath/mapping/febconfig.h\
+            $$includepath/mapping/feb.h\
+            $$includepath/mapping/element.h\
+            $$includepath/mapping/detectorconfig.h\
+            $$includepath/mapping/daqconfig.h\
+            $$includepath/mapping/coordinates.h\
+            $$includepath/mapping/connectorinfo.h\
+            $$includepath/mapping/connector.h\
+            $$includepath/mapping/chip.h\
+            $$includepath/mapping/chamber.h\
+            $$includepath/mapping/map_handler.h
+           # $$includepath/monitoring/daqconfig.h\
+           # $$includepath/monitoring/srsconfig.h\
+           # $$includepath/monitoring/detectorconfig.h\
+           # $$includepath/monitoring/fec.h\
+           # $$includepath/monitoring/chip.h\
+           # $$includepath/monitoring/multilayer.h\
+           # $$includepath/monitoring/readout.h\
+           # $$includepath/monitoring/layer.h\
+           # $$includepath/monitoring/chamberspecs.h\
+           # $$includepath/monitoring/chamber.h\
+           # $$includepath/monitoring/connectorspecs.h\
+           # $$includepath/monitoring/connector.h\
+           # $$includepath/monitoring/AsioService.h\
+           # $$includepath/monitoring/sharedmemorywriter.h\
+           # $$includepath/monitoring/createevents.h\
+           # $$includepath/monitoring/event.h\
+           # $$includepath/monitoring/coordinates.h 
 
 FORMS    += $$sourcepath/mainwindow.ui
 

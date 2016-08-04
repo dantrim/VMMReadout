@@ -18,6 +18,7 @@ class QUdpSocket;
 #include "config_handler.h"
 #include "message_handler.h"
 #include "daq_monitor.h"
+#include "map_handler.h"
 class VMMSocket;
 
 // ROOT
@@ -27,12 +28,12 @@ class VMMSocket;
 #include "TBranch.h"
 
 //mmdaq
-#include "daqconfig.h"
-#include "sharedmemorywriter.h"
-#include "createevents.h"
+//#include "daqconfig.h"
+//#include "sharedmemorywriter.h"
+//#include "createevents.h"
 
 //boost
-#include <boost/shared_ptr.hpp>
+//#include <boost/shared_ptr.hpp>
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -128,10 +129,12 @@ class DataHandler : public QObject
         bool m_use_channelmap;
 
         //test shared
-        DaqConfig* m_daqConf;
-        CreateEvents* m_ce;
-        SharedMemoryWriter* m_sh;
-        std::vector<std::string> m_sharedDataStrips;
+        //DaqConfig* m_daqConf;
+        //CreateEvents* m_ce;
+        //SharedMemoryWriter* m_sh;
+        //std::vector<std::string> m_sharedDataStrips;
+        //mapping
+        MapHandler* m_mapHandler;
 
         //thread
         QUdpSocket *m_DAQSocket;

@@ -38,9 +38,11 @@ DataHandler::DataHandler(QObject *parent) :
     m_ignore16(false),
     m_use_channelmap(false),
     //test shared
-    m_daqConf(0),
-    m_ce(0),
-    m_sh(0),
+    //m_daqConf(0),
+    //m_ce(0),
+    //m_sh(0),
+    //mapping
+    m_mapHandler(0),
     //thread
     m_DAQSocket(0), 
     m_mapping_file(""),
@@ -83,51 +85,53 @@ void DataHandler::setMMFE8(bool set_for_mmfe8)
 void DataHandler::testSharedMem()
 {
 
-    if(!m_monitoringSetup)
-        setupMonitoring();
+    //if(!m_monitoringSetup)
+    //    setupMonitoring();
 
-    int n = 1000;
-    for (int i = 0; i < n; i++){
-        //if(n>10) break;
-        int chip_number = 1;
-        int channel = 30;
-        int event = 12;
-        int charge = 720;
-        int time = 70;
-        string x = "10 T6 0 0 X 45 1 20 60 40 40 40 40";
-        for(int i = 0; i < 10; i++) {
-            m_sharedDataStrips.push_back(x);
-            //outvector.push_back(m_ce->getEvent(chip_number, channel, event, charge, time, charge, time));
-        }
-    m_sh->publishEvent(m_sharedDataStrips);
-    m_sharedDataStrips.clear();
-    }
+    //int n = 1000;
+    //for (int i = 0; i < n; i++){
+    //    //if(n>10) break;
+    //    int chip_number = 1;
+    //    int channel = 30;
+    //    int event = 12;
+    //    int charge = 720;
+    //    int time = 70;
+    //    string x = "10 T6 0 0 X 45 1 20 60 40 40 40 40";
+    //    for(int i = 0; i < 10; i++) {
+    //        //m_sharedDataStrips.push_back(x);
+    //        //outvector.push_back(m_ce->getEvent(chip_number, channel, event, charge, time, charge, time));
+    //    }
+    //m_sh->publishEvent(m_sharedDataStrips);
+    //m_sharedDataStrips.clear();
+    //}
+    return;
 
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::setupMonitoring()
 {
-    stringstream sx;
-    if(!m_monitoringSetup) {
-        //if(dbg()) {
-        if(true){
-            sx.str("");
-            sx << "Initializing SharedMemory and Monitoring tools...";
-            msg()(sx, "DataHandler::setupMonitoring");sx.str("");
-        }
-        m_sharedDataStrips.clear();
-        m_daqConf = new DaqConfig();
-        m_daqConf->loadXml("DAQ_config.xml");
-        m_ce = new CreateEvents();
-        m_ce->setDaq(m_daqConf);
-        m_ce->buildMapsMMFE8();
-        //m_ce->createEvents();
-        msg()("Not initializing shared memory","DataHandler::setupMonitoring");
-        //m_sh = new SharedMemoryWriter();
-        //m_sh->initializeSharedMemory();
+    //stringstream sx;
+    //if(!m_monitoringSetup) {
+    //    //if(dbg()) {
+    //    if(true){
+    //        sx.str("");
+    //        sx << "Initializing SharedMemory and Monitoring tools...";
+    //        msg()(sx, "DataHandler::setupMonitoring");sx.str("");
+    //    }
+    //    m_sharedDataStrips.clear();
+    //    m_daqConf = new DaqConfig();
+    //    m_daqConf->loadXml("DAQ_config.xml");
+    //    m_ce = new CreateEvents();
+    //    m_ce->setDaq(m_daqConf);
+    //    m_ce->buildMapsMMFE8();
+    //    //m_ce->createEvents();
+    //    msg()("Not initializing shared memory","DataHandler::setupMonitoring");
+    //    //m_sh = new SharedMemoryWriter();
+    //    //m_sh->initializeSharedMemory();
 
-        m_monitoringSetup = true;
-    }
+    //    m_monitoringSetup = true;
+    //}
+    return;
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::connectDAQSocket()
@@ -208,7 +212,7 @@ void DataHandler::daqHanging()
 
     closeDAQSocket();
     // wait a second
-    boost::this_thread::sleep(boost::posix_time::seconds(1));
+    //boost::this_thread::sleep(boost::posix_time::seconds(1));
     connectDAQSocket();
 }
 // ------------------------------------------------------------------------ //
@@ -228,14 +232,15 @@ void DataHandler::set_monitorData(bool doit)
 // ------------------------------------------------------------------------ //
 void DataHandler::clearSharedMemory(/*int*/ /*dummy*/)
 {
-    if(m_monitoringSetup) {
-        if(dbg()) {
-            stringstream sx;
-            sx << "Clearing shared memory...";
-            msg()(sx, "DataHandler::clearSharedMemory");
-        }
-        m_sh->clearSharedMemory();
-    }
+   // if(m_monitoringSetup) {
+   //     if(dbg()) {
+   //         stringstream sx;
+   //         sx << "Clearing shared memory...";
+   //         msg()(sx, "DataHandler::clearSharedMemory");
+   //     }
+   //     m_sh->clearSharedMemory();
+   // }
+    return;
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::setUseChannelMap(bool useMap)
@@ -968,8 +973,8 @@ void DataHandler::readEvent()
   //      datagram.resize(daqSocket().socket().pendingDatagramSize());
   //      daqSocket().socket().readDatagram(datagram.data(), datagram.size(), &vmmip);
 
-    if(monitoring())
-        m_sharedDataStrips.clear();
+    //if(monitoring())
+    //    m_sharedDataStrips.clear();
     while(m_DAQSocket->hasPendingDatagrams()) {
         //std::cout << "DataHanlder::         has pending datagrams " << std::endl;
         //shared
@@ -1196,16 +1201,16 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram,
                 } // dbg
 
                 //shared
-                if(monitoring()) {
-                //if(true){
-                    //string x = "10 TL2 0 0 X 45 1 20 60 40 40 40 40";
-                    string x = "";
-                    x = m_ce->getEvent(chipNumberStr.toInt(&ok,16), unmapped_channel, outBCID_, outCharge_, outTac_, outCharge_, outTac_); 
-                    //cout << "-------------------------------" << endl;
-                    //cout << "DataHandler::decodeAndWriteData RETURN FROM GET EVENT: " << x << endl; 
-                    //cout << "-------------------------------" << endl;
-                    m_sharedDataStrips.push_back(x);
-                }
+              //  if(monitoring()) {
+              //  //if(true){
+              //      //string x = "10 TL2 0 0 X 45 1 20 60 40 40 40 40";
+              //      string x = "";
+              //      x = m_ce->getEvent(chipNumberStr.toInt(&ok,16), unmapped_channel, outBCID_, outCharge_, outTac_, outCharge_, outTac_); 
+              //      //cout << "-------------------------------" << endl;
+              //      //cout << "DataHandler::decodeAndWriteData RETURN FROM GET EVENT: " << x << endl; 
+              //      //cout << "-------------------------------" << endl;
+              //      m_sharedDataStrips.push_back(x);
+              //  }
 
                 // move to next channel (8 bytes forward)
                 i += 8;
@@ -1472,11 +1477,11 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram,
         // clear the data containers for this chip before the next one
         // is read int
 
-        if(monitoring()) {
-        //if(true) {
-            m_sh->publishEvent(m_sharedDataStrips);
-            m_sharedDataStrips.clear();
-        }
+       // if(monitoring()) {
+       // //if(true) {
+       //     m_sh->publishEvent(m_sharedDataStrips);
+       //     m_sharedDataStrips.clear();
+       // }
 
         clearData();
 
@@ -1650,7 +1655,7 @@ void DataHandler::decodeAndWriteData_mmfe8(const QByteArray& datagram,
         if(writeNtuple())
             fillEventData();
 
-        #warning MONITORING NOT SET FOR MMFE8 READOUT
+        //#warning MONITORING NOT SET FOR MMFE8 READOUT
         //if(monitoring()) {
         //    m_sh->publishEvent(m_sharedDataStrips);
         //    m_sharedDataStrips.clear();
