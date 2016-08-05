@@ -60,3 +60,4 @@ objects/
 *.stash*
 moc_*
 
+*testMon2/*
