@@ -60,4 +60,4 @@ objects/
 *.stash*
 moc_*
 
-*/testMon2/*
+*.DS_Store
