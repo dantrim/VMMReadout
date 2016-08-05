@@ -13,6 +13,8 @@ class DetectorConfig {
     public :
         DetectorConfig();
 
+        void setMapDir(std::string mapdir) { m_map_dir = mapdir; }
+
         // load the detector configuration based on the input
         // xml file
         bool loadDetectorSetup(std::string filename);
@@ -26,6 +28,7 @@ class DetectorConfig {
         Coordinates rotation() { return m_rotation; }
 
     private :
+        std::string m_map_dir;
         std::string m_name;
 
         int n_chambers;

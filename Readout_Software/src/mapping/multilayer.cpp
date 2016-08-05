@@ -11,6 +11,7 @@
 
 
 MultiLayer::MultiLayer() :
+    m_map_dir(""),
     m_name(""),
     m_id(""),
     n_layer(0)
@@ -74,6 +75,7 @@ bool MultiLayer::loadMultiLayer(const boost::property_tree::ptree::value_type pt
                 //////////////////////////////////
                 else if(v.first == "layer") {
                     Layer tmpLayer;
+                    tmpLayer.setMapDir(m_map_dir);
                     if(!tmpLayer.loadLayer(v)) ok = false;
                     if(ok) m_layerArray.push_back(tmpLayer);
                 }

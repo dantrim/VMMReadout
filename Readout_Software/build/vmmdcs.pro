@@ -77,6 +77,8 @@ INCLUDEPATH += $$includepath
 DEPENDPATH  += $$includepath
 INCLUDEPATH += $$includepath/mapping/
 DEPENDPATH  += $$includepath/mapping/
+INCLUDEPATH += $$includepath/monitoring/
+DEPENDPATH  += $$includepath/monitoring/
 INCLUDEPATH += $$boostinclude
 DEPENDPATH  += $$boostinclude
 
@@ -118,7 +120,9 @@ SOURCES += $$sourcepath/main.cpp\
             $$sourcepath/mapping/connector.cpp\
             $$sourcepath/mapping/chip.cpp\
             $$sourcepath/mapping/chamber.cpp\
-            $$sourcepath/mapping/map_handler.cpp
+            $$sourcepath/mapping/map_handler.cpp\
+           ## monitoring related below
+            $$sourcepath/monitoring/OnlineMonTool.cpp
            
           ## $$sourcepath/monitoring/daqconfig.cpp\
           ## $$sourcepath/monitoring/srsconfig.cpp\
@@ -162,7 +166,9 @@ HEADERS  += $$includepath/mainwindow.h\
             $$includepath/mapping/connector.h\
             $$includepath/mapping/chip.h\
             $$includepath/mapping/chamber.h\
-            $$includepath/mapping/map_handler.h
+            $$includepath/mapping/map_handler.h\
+            ## monitoring related below
+            $$includepath/monitoring/OnlineMonTool.h
            # $$includepath/monitoring/daqconfig.h\
            # $$includepath/monitoring/srsconfig.h\
            # $$includepath/monitoring/detectorconfig.h\

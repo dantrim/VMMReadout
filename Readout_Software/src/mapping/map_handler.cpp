@@ -38,13 +38,22 @@ bool MapHandler::loadDaqConfiguration(std::string filename)
     if(ok) {
         cout << "MapHandler::loadDaqConfiguration    DAQ xml loaded: " << filename << endl;
     }
+    else {
+        cout << "MapHandler::loadDaqConfiguration    Unable to load DAQ xml: " << filename << endl;
+    }
     ok = m_daqConfig->loadFEB();
     if(ok) {
         cout << "MapHandler::loadDaqConfiguration    FEB loaded" << endl;
     }
+    else {
+        cout << "MapHandler::loadDaqConfiguration    Unable to load FEB configuration" << endl;
+    }
     ok = m_daqConfig->loadDetectorSetup();
     if(ok) {
         cout << "MapHandler::loadDaqConfiguration     Detector setup loaded" << endl;
+    }
+    else {
+        cout << "MapHandler::loadDaqConfiguration    Unable to laod detector setup" << endl;
     }
     m_initialized = ok;
 
@@ -165,6 +174,8 @@ void MapHandler::buildMapping()
     } // ifeb, loop over FEB
 
     #warning ADD SANITY CHECK ON MAP
+
+cout << " [1][222] = " << m_daq_map["1"]["222"].stripNumber() << std::endl;
 
     m_map_loaded = true;
 }

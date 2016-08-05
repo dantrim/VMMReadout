@@ -10,6 +10,7 @@
 #include <boost/algorithm/string.hpp>
 
 DetectorConfig::DetectorConfig() :
+    m_map_dir(""),
     m_name(""),
     n_chambers(0)
 {
@@ -53,6 +54,7 @@ bool DetectorConfig::loadDetectorSetup(std::string filename)
                 ////////////////////////////////
                 if(v.first == "chamber") {
                     Chamber tmpChamber;
+                    tmpChamber.setMapDir(m_map_dir); 
                     if(!tmpChamber.loadChamber(v)) ok = false;
                     if(ok) m_chamberArray.push_back(tmpChamber);
                 }

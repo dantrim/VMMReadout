@@ -14,6 +14,8 @@ class FEBConfig {
         bool loadFEBXml(std::string filename);
         int nFeb() { return n_feb; }
 
+        void setMapDir(std::string mapdir) { m_map_dir = mapdir; }
+
         //useful methods
 
         // get the name of the FEB that has IP 'ip'
@@ -32,6 +34,7 @@ class FEBConfig {
 
     private :
         int n_feb;
+        std::string m_map_dir;
 
         std::vector<FEB> m_febArray;
         

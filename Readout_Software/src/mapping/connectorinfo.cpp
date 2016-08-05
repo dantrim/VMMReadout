@@ -10,6 +10,7 @@
 #include <boost/algorithm/string.hpp>
 
 ConnectorInfo::ConnectorInfo() :
+    m_map_dir(""),
     m_name(""),
     m_map_filename("")
 {
@@ -36,7 +37,11 @@ bool ConnectorInfo::loadConnectorInfo(const boost::property_tree::ptree::value_t
             if(v.first == "map_file") {
                 m_map_filename = v.second.data();
                 trim(m_map_filename);
-                if(!loadMapFile(m_map_filename)) ok = false;
+                std::string mapfile = m_map_dir + "/" + m_map_filename;
+                if(!loadMapFile(mapfile)) { 
+                    ok = false;
+                    std::cout << "ConnectorInfo::loadConnectorInfo    Unable to load map: " << mapfile << std::endl;
+                }
             }
             ////////////////////////////////
             // name

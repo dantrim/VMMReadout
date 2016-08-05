@@ -127,9 +127,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(this, SIGNAL(monitorDataSignal(bool)), vmmDataHandler, SLOT(set_monitorData(bool)), Qt::DirectConnection);
     connect(this, SIGNAL(clearSharedMemory(int)), vmmDataHandler, SLOT(clearSharedMemory(int)), Qt::DirectConnection);
-    connect(ui->doMonitoring, SIGNAL(stateChanged(int)), this, SLOT(setupMonitoring(int)));
-    connect(this, SIGNAL(setUseChannelMap(bool)), vmmDataHandler, SLOT(setUseChannelMap(bool)));
-    connect(this, SIGNAL(loadELxChannelMapping(QString)), vmmDataHandler, SLOT(loadELxChannelMapping(QString)));
     connect(this, SIGNAL(setWriteNtuple(bool)), vmmDataHandler, SLOT(setWriteNtuple(bool)));
     connect(this, SIGNAL(setIgnore16(bool)), vmmDataHandler, SLOT(setIgnore16(bool)));
     connect(this, SIGNAL(setCalibrationRun(bool)), vmmDataHandler, SLOT(setCalibrationRun(bool)));
@@ -170,10 +167,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //enable art
     ui->enableART->setCheckable(true);
-
-    // DAQ XML
-    ui->loadDAQXMLFile->setEnabled(false);
-    ui->writeDAQXMLFile->setEnabled(false);
 
     /////////////////////////////////////////////////////////////////////
     //-----------------------------------------------------------------//
@@ -242,9 +235,34 @@ MainWindow::MainWindow(QWidget *parent) :
     // ------------- remaining buttons/widgets -------------- //
     // ------------------------------------------------------ //
 
+    connect(ui->doMonitoring, SIGNAL(clicked()),
+                                    this, SLOT(updateMonitoringState()));
+
+    connect(ui->testMonButton, SIGNAL(clicked()),
+                                    this, SLOT(testMon()));
+
+
     // select the output directory for files
-    connect(ui->selectDir, SIGNAL(clicked()),
+    connect(ui->selectDir_output, SIGNAL(clicked()),
                                     this, SLOT(selectOutputDirectory()));
+
+    // select the DAQ configuration file (needed for mapping, etc...)
+    connect(ui->selectDir_daqSetup, SIGNAL(clicked()),
+                                    this, SLOT(selectDAQSetupFile()));
+
+    connect(ui->daqSetupFilenameField, SIGNAL(returnPressed()),
+                                    this, SLOT(checkRequestedFile()));
+
+    connect(ui->load_daqSetup, SIGNAL(clicked()),
+                                    this, SLOT(loadDAQSetup()));
+
+    // select the configuration xml file (if you want to load a pre-existing
+    // configuration)
+    connect(ui->selectDir_config, SIGNAL(clicked()),
+                                    this, SLOT(selectConfigXmlFile()));
+
+    connect(ui->configXmlFilenameField, SIGNAL(returnPressed()),
+                                    this, SLOT(checkRequestedFile()));
 
     // load the board/global configuration from the XML
     connect(ui->loadConfigXMLFileButton, SIGNAL(clicked()),
@@ -377,6 +395,23 @@ MainWindow::~MainWindow()
     delete ui;
 }
 // ------------------------------------------------------------------------- //
+void MainWindow::updateMonitoringState()
+{
+    if(ui->doMonitoring->isChecked()) {
+        ui->doMonitoring->setStyleSheet("QPushButton {background-color: rgb(15, 147, 255);}");
+        dataHandle().setupMonitoring(true);
+    }
+    else {
+        ui->doMonitoring->setStyleSheet("QPushButton {background-color: white;}");
+        dataHandle().setupMonitoring(false);
+    }
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::testMon()
+{
+    dataHandle().testMonitoring();
+}
+// ------------------------------------------------------------------------- //
 void MainWindow::selectOutputDirectory()
 {
     stringstream sx;
@@ -399,6 +434,131 @@ void MainWindow::selectOutputDirectory()
         msg()(sx); sx.str("");
     }
     ui->runNumber->setValue(run_number);
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::checkRequestedFile()
+{
+    stringstream sx;
+    if(QObject::sender() == ui->daqSetupFilenameField) {
+        ui->daqSetupFilenameField->setStyleSheet("QLineEdit { background: white; }");
+        QString current_text = ui->daqSetupFilenameField->text();
+        if(current_text=="") ui->load_daqSetup->setEnabled(false);
+        else {
+            QFile ftest(current_text);
+            if(!ftest.exists()) {
+                sx << "DAQ setup file (" << current_text.toStdString() << ") bad";
+                msg()(sx); sx.str("");
+                ui->load_daqSetup->setEnabled(false);
+
+                ui->daqSetupFilenameField->setStyleSheet("QLineEdit { background: rgb(220, 0, 0); }"); 
+                delay();
+                delay();
+                ui->daqSetupFilenameField->setStyleSheet("QLineEdit { background: white; }");
+                delay();
+            }
+            else { ui->load_daqSetup->setEnabled(true); }
+        }
+    }
+    else if(QObject::sender() == ui->configXmlFilenameField) {
+        ui->configXmlFilenameField->setStyleSheet("QLineEdit { background: white; }");
+        QString current_text = ui->configXmlFilenameField->text();
+        if(current_text=="") ui->load_config->setEnabled(false);
+        else {
+            QFile ftest(current_text);
+            if(!ftest.exists()) {
+                sx << "Configuration file (" << current_text.toStdString() << ") bad";
+                msg()(sx); sx.str("");
+                ui->load_config->setEnabled(false);
+
+                ui->configXmlFilenameField->setStyleSheet("QLineEdit { background: rgb(220, 0, 0); }"); 
+                delay();
+                delay();
+                ui->configXmlFilenameField->setStyleSheet("QLineEdit { background: white; }");
+                delay();
+            }
+            else { ui->load_config->setEnabled(true); }
+        }
+    }
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::selectDAQSetupFile()
+{
+    ui->daqSetupFilenameField->setStyleSheet("QLineEdit { background: white;}");
+    stringstream sx;
+    // get the file from the user
+    QString filename = QFileDialog::getOpenFileName(this,
+        tr("Load DAQ configuration XML"), "../../readout_configuration/",
+        tr("XML Files (*.xml)"));
+    if(filename.isNull()) return;
+
+    QFile ftest(filename);
+    //ftest.setFileName(filename);
+    if(!ftest.exists()) {
+    //if(!ftest.open(QIODevice::ReadWrite)) {
+        sx << "DAQ setup file (" << filename.toStdString() << ") unable to be opened";
+        msg()(sx); sx.str("");
+        ui->daqSetupFilenameField->setText("");
+
+        ui->daqSetupFilenameField->setStyleSheet("QLineEdit { background: rgb(220, 0, 0);}"); 
+        delay();
+        delay();
+        ui->daqSetupFilenameField->setStyleSheet("QLineEdit { background: white;}");
+        delay();
+    }
+    else {
+        ui->daqSetupFilenameField->setText(filename);
+        sx << "Setting DAQ setup file to: " << filename.toStdString();
+        msg()(sx); sx.str("");
+        ui->load_daqSetup->setEnabled(true);
+    }
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::loadDAQSetup()
+{
+    bool ok = dataHandle().loadMapping(ui->daqSetupFilenameField->text().toStdString());
+
+    if(ok) {
+        msg()("DAQ setup loaded successfully");
+        ui->daqSetupFilenameField->setStyleSheet("background-color: green");
+    }
+    else {
+        msg()("DAQ setup unable to be loaded");
+        ui->daqSetupFilenameField->setStyleSheet("QLineEdit { background: rgb(220, 0, 0);}"); 
+        delay();
+        delay();
+        ui->daqSetupFilenameField->setStyleSheet("QLineEdit { background: white;}");
+        delay();
+    }
+
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::selectConfigXmlFile()
+{
+    stringstream sx;
+    QString filename = QFileDialog::getOpenFileName(this,
+        tr("Load board configuration XML"), "../../readout_configuration/",
+        tr("XML Files (*.xml)"));
+    if(filename.isNull()) return;
+
+    QFile ftest(filename);
+    //ftest.setFileName(filename);
+    if(!ftest.exists()) {
+    //if(!ftest.open(QIODevice::ReadWrite)) {
+        sx << "Configuration file (" << filename.toStdString() << ") unable to be opened";
+        msg()(sx); sx.str("");
+        ui->configXmlFilenameField->setText("");
+
+        ui->configXmlFilenameField->setStyleSheet("QLineEdit { background: rgb(220, 0, 0); selection-background-color: rgb(233, 99, 0); }"); 
+        delay();
+        delay();
+        ui->configXmlFilenameField->setStyleSheet("QLineEdit { background: white; selection-background-color: rgb(233, 99, 0); }");
+    }
+    else {
+        ui->configXmlFilenameField->setText(filename);
+        sx << "Setting configuration file to: " << filename.toStdString();
+        msg()(sx); sx.str("");
+        ui->load_config->setEnabled(true);
+    }
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::toggleDebug()
@@ -918,6 +1078,9 @@ void MainWindow::setNumberOfFecs(int)
 // ------------------------------------------------------------------------- //
 void MainWindow::SetInitialState()
 {
+    // can't load anything unless the files have been set
+    ui->load_daqSetup->setEnabled(false);
+    ui->load_config->setEnabled(false);
 
      msg()("Waiting to set FEB configuration type");
     //addmmfe8
@@ -926,10 +1089,6 @@ void MainWindow::SetInitialState()
 
     //wait for mmfe8 config before connection since MMFE8 doen't need a ping
     ui->openConnection->setEnabled(false);
-
-    // write and SPI configuration
-    ui->spiRB->setChecked(true);
-    ui->writeRB->setChecked(true);
 
     // don't yet prepare the config
     //ui->prepareConfigButton->setEnabled(false);
@@ -1993,7 +2152,6 @@ void MainWindow::setAndSendEventHeaders()
     runModule().setEventHeaders(ui->evbld_infodata->currentIndex(),
                                 ui->evbld_mode->currentIndex(),
                                 ui->timeStampResCheckBox->isChecked());
-    ui->appRB->setChecked(1);
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::resetASICs()
@@ -2005,7 +2163,6 @@ void MainWindow::resetFEC()
 {
     bool do_reset = (ui->fec_reset == QObject::sender() ? true : false);
     runModule().resetFEC(do_reset);
-    ui->fecRB->setChecked(1);
 
     ui->trgExternal->setChecked(false);
     ui->trgPulser->setChecked(false);
@@ -2026,7 +2183,6 @@ void MainWindow::resetFEC()
 void MainWindow::setHDMIMask()
 {
     runModule().setMask();
-    ui->appRB->setChecked(true);
 
     if(m_hdmiMaskON) {
         ui->setMask->setDown(true);
@@ -2042,12 +2198,10 @@ void MainWindow::setART()
     bool enableHoldOff = ui->holdOffCheckBox->isChecked();
     if(!(ui->enableART->isChecked())) enabling = false;
     runModule().enableART(enabling, enableHoldOff);
-    ui->s6RB->setChecked(true);
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::checkLinkStatus()
 {
-    ui->appRB->setChecked(true);
     runModule().checkLinkStatus();
 }
 // ------------------------------------------------------------------------- //
@@ -2089,13 +2243,11 @@ void MainWindow::writeFECStatus()
 // ------------------------------------------------------------------------- //
 void MainWindow::resetLinks()
 {
-    ui->appRB->setChecked(true);
     runModule().resetLinks();
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::setS6Resets()
 {
-    ui->s6RB->setChecked(true);
     runModule().setS6Resets(ui->s6_tkPulses->value(),
                             ui->s6_autoReset->isChecked(),
                             ui->s6_FECReset->isChecked(),
@@ -2112,12 +2264,6 @@ void MainWindow::set_s6resetStatus(bool ok)
     }
 }
 // ------------------------------------------------------------------------- //
-void MainWindow::setupMonitoring(int /*doit*/)
-{
-    if(ui->doMonitoring->isChecked())
-        dataHandle().setupMonitoring();
-}
-// ------------------------------------------------------------------------- //
 void MainWindow::eventCountReached()
 {
     ui->stopTriggerCnt->click();
@@ -2127,15 +2273,6 @@ void MainWindow::triggerHandler()
 
 {
     stringstream sx;
-
-  //  if(ui->useMapping->isChecked()) {
-  //      emit setUseChannelMap(true);
-  //      QString mapFileName = configHandle().daqSettings().mapping_file;
-  //      emit loadELxChannelMapping(mapFileName);
-  //  }
-  //  else {
-  //      emit setUseChannelMap(false);
-  //  }
 
     if(QObject::sender() == ui->checkTriggers) {
         ui->clearTriggerCnt->setEnabled(false);
@@ -2147,19 +2284,8 @@ void MainWindow::triggerHandler()
         delay();
 
         //shared memory
-        //ui->doMonitoring->setEnabled(false);
+        ui->doMonitoring->setEnabled(false);
         //dataHandle().set_monitorData(ui->doMonitoring->isChecked());
-
-        //mapping
-        if(ui->useMapping->isChecked()) {
-            emit setUseChannelMap(true);
-            QString mapFileName = configHandle().daqSettings().mapping_file; // default to mini2 map
-            emit loadELxChannelMapping(mapFileName);
-        } else {
-            emit setUseChannelMap(false);
-        }
-
-        ui->useMapping->setEnabled(false);
 
         emit setWriteNtuple(ui->writeData->isChecked());
         emit setIgnore16(ui->ignore16->isChecked());
@@ -2311,7 +2437,7 @@ void MainWindow::triggerHandler()
             ui->checkTriggers->setEnabled(false);
             ui->stopTriggerCnt->setEnabled(true);
 
-            //ui->doMonitoring->setEnabled(false);
+            ui->doMonitoring->setEnabled(false);
         } // not writing data
 
         ui->runNumber->setEnabled(false);
@@ -2331,7 +2457,6 @@ void MainWindow::triggerHandler()
         sx << " *** Ending DAQ run " << ui->runNumber->value() << " ***\n";
         sx << " -------------------------------- ";
         msg()(sx); sx.str("");
-        ui->useMapping->setEnabled(true);
         ui->eventCountStop->setEnabled(true);
 
         // daq socket exists in another thread so must call it with signal
@@ -2349,7 +2474,7 @@ void MainWindow::triggerHandler()
         delay();
         delay();
         //shared
-        //ui->doMonitoring->setEnabled(true);
+        ui->doMonitoring->setEnabled(true);
         //dataHandle().clearSharedMemory();
 
         ui->runStatusField->setText("Run:"+ui->runNumber->text()+" finished");
@@ -2686,7 +2811,6 @@ void MainWindow::badRunDirectory()
 // ------------------------------------------------------------------------- //
 void MainWindow::setS6clocks()
 {
-    ui->s6RB->setChecked(1);
     runModule().s6clocks(ui->cktk_s6->currentIndex(),
                          ui->ckbc_s6->currentIndex(),
                          ui->ckbc_skew_s6->currentIndex());
@@ -2695,7 +2819,6 @@ void MainWindow::setS6clocks()
 // ------------------------------------------------------------------------- //
 void MainWindow::configureTP()
 {
-    ui->s6RB->setChecked(1);
     runModule().configTP(ui->tpSkew->currentIndex(),
                          ui->tpWidth->currentIndex(),
                          ui->tpPolarity->currentIndex());

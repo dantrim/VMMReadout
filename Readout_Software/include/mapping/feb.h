@@ -14,6 +14,7 @@
 class FEB {
     public :
         FEB();
+        void setMapDir(std::string mapdir) { m_map_dir = mapdir; }
         bool loadFEB(const boost::property_tree::ptree::value_type pt);
 
         bool loadMapFile(std::string filename);
@@ -32,6 +33,7 @@ class FEB {
         std::vector<std::tuple<int, int, int> > vmm_map; // (vmm id, vmm channel, FEB channel)
     private :
         int n_chip; 
+        std::string m_map_dir;
         std::string m_vmm_map_filename;
         std::string m_name;
         std::string m_id;

@@ -11,7 +11,8 @@
 
 
 FEBConfig::FEBConfig() :
-    n_feb(0)
+    n_feb(0),
+    m_map_dir("")
 {
 }
 
@@ -49,6 +50,7 @@ bool FEBConfig::loadFEBXml(std::string filename)
                 try
                 {
                     FEB tmpFeb;
+                    tmpFeb.setMapDir(m_map_dir);
                     if(!tmpFeb.loadFEB(v)) ok = false;
                     if(ok) m_febArray.push_back(tmpFeb);
                 } // try

@@ -12,6 +12,7 @@
 class MultiLayer {
     public :
         MultiLayer();
+        void setMapDir(std::string mapdir) { m_map_dir = mapdir; }
         bool loadMultiLayer(const boost::property_tree::ptree::value_type pt);
 
         std::string name() { return m_name; }
@@ -21,6 +22,7 @@ class MultiLayer {
         Layer getLayer(int i) { return m_layerArray.at(i); }
 
     private :
+        std::string m_map_dir;
         std::string m_name;
         std::string m_id;
 

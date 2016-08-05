@@ -10,6 +10,7 @@
 
 FEB::FEB() :
     n_chip(0),
+    m_map_dir(""),
     m_vmm_map_filename(""),
     m_name(""),
     m_id(""),
@@ -93,7 +94,11 @@ bool FEB::loadFEB(const boost::property_tree::ptree::value_type pt)
                 else if(v.first == "map_file") {
                     m_vmm_map_filename = v.second.data(); 
                     boost::trim(m_vmm_map_filename);
-                    if(!loadMapFile(m_vmm_map_filename)) ok = false;
+                    std::string vmm_map_file = m_map_dir + "/" + m_vmm_map_filename;
+                    if(!loadMapFile(vmm_map_file)) ok = false;
+                    if(ok) {
+                        m_vmm_map_filename = vmm_map_file;
+                    }
                 }
                 else {
                     std::cout << "FEB::loadFEB    ERROR Unknown key: " << v.first << std::endl;

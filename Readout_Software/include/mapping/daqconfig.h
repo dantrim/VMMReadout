@@ -25,6 +25,7 @@ class DaqConfiguration {
         bool loadDetectorSetup();
 
     private :
+        std::string m_map_dir;
         std::string m_febConfigFile;
         std::string m_detectorConfigFile;
 

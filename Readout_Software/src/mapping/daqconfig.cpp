@@ -8,9 +8,11 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/filesystem.hpp>
 
 
 DaqConfiguration::DaqConfiguration() :
+    m_map_dir(""),
     m_febConfigFile(""),
     m_detectorConfigFile(""),
     m_febConfig(nullptr)
@@ -22,12 +24,13 @@ bool DaqConfiguration::loadDaqXml(std::string filename)
 {
     std::cout << "DaqConfiguration::loadDaqXml   " << filename  << std::endl;
 
-    std::string path = "./";
-    std::string full_filename = path + filename;
+    //std::string path = "./";
+    //std::string full_filename = path + filename;
+    std::string full_filename = filename;
     bool exists = std::ifstream(full_filename).good();
 
     if(!exists) {
-        std::cout << "DaqConfiguration::loadDaqXml   File not found" << std::endl;
+        std::cout << "DaqConfiguration::loadDaqXml   File (" << full_filename << ") not found" << std::endl;
         return false;
     }
 
@@ -38,23 +41,50 @@ bool DaqConfiguration::loadDaqXml(std::string filename)
         return false;
     }
 
-    std::string full_feb_name = "./" + febConfigFile();
-    std::string full_det_name = "./" + detectorConfigFile();
+// size_t found;
+//  cout << "Splitting: " << str << endl;
+//  found=str.find_last_of("/\\");
+//  cout << " folder: " << str.substr(0,found) << endl;
+//  cout << " file: " << str.substr(found+1) << endl;
+    //size_t dir_found;
+    //dir_found = full_filename.find_last_of("/\\");
+    //std::string full_feb_name = full_filename.substr(dir_found+1) + febConfigFile();
+    //std::cout << "DaqConfiguration::loadDaqXml    FEB file: " << full_feb_name << std::endl;
+//boost::filesystem::path p("C:\\folder\\foo.txt");
+//boost::filesystem::path dir = p.parent_path();
+    boost::filesystem::path p_config(full_filename);
+    boost::filesystem::path dir = p_config.parent_path();
+    std::string full_feb_name = dir.string() + "/" + febConfigFile();
+    std::cout << "full_feb_name: " << full_feb_name << std::endl;
+    std::string full_det_name = dir.string() + "/" + detectorConfigFile();
+    std::cout << "full_det_name: " << full_det_name << std::endl;
+
+    // set the map dir (this is propagated down)
+    m_map_dir = dir.string();
+
+
+    //std::string full_feb_name = "./" + febConfigFile();
+    //std::string full_det_name = "./" + detectorConfigFile();
     if(febConfigFile()!="")
         exists = std::ifstream(full_feb_name).good();
     if(!exists) {
-        std::cout << "DaqConfiguration::loadDaqXml    Unable to load FEB config file" << std::endl;
+        std::cout << "DaqConfiguration::loadDaqXml    Unable to load FEB config file: " << full_feb_name << std::endl;
         return false;
     }
     if(detectorConfigFile()!="")
         exists = std::ifstream(full_det_name).good();
     if(!exists) {
-        std::cout << "DaqConfiguration::loadDaqXml    Unable to load detector config file" << std::endl;
+        std::cout << "DaqConfiguration::loadDaqXml    Unable to load detector config file: " << full_det_name << std::endl;
         return false;
     }
     std::cout << "Successfully found DAQ files" << std::endl;
-    std::cout << "   > feb config       : " << febConfigFile() << std::endl;
-    std::cout << "   > det config       : " << detectorConfigFile() << std::endl;
+    std::cout << "   > map directory    : " << m_map_dir << std::endl;
+    std::cout << "   > feb config       : " << full_feb_name << std::endl;
+    std::cout << "   > det config       : " << full_det_name << std::endl;
+
+    // update the filenames to have full path
+    m_febConfigFile = full_feb_name;
+    m_detectorConfigFile = full_det_name;
 
     return true;
 }
@@ -98,6 +128,7 @@ bool DaqConfiguration::loadFEB()
     bool ok = true;
     std::cout << "DaqConfiguration::loadFEB" << std::endl;
     m_febConfig = new FEBConfig();
+    m_febConfig->setMapDir(m_map_dir);
     ok = m_febConfig->loadFEBXml(febConfigFile());
 
     return ok;
@@ -108,6 +139,7 @@ bool DaqConfiguration::loadDetectorSetup()
     bool ok = true;
     std::cout << "DaqConfiguration::loadDetectorSetup" << std::endl;
     m_detConfig = new DetectorConfig();
+    m_detConfig->setMapDir(m_map_dir);
     ok = m_detConfig->loadDetectorSetup(detectorConfigFile());
     return ok;
 }

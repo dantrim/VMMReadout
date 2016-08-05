@@ -15,6 +15,7 @@
 class Chamber {
     public :
         Chamber();
+        void setMapDir(std::string mapdir) { m_map_dir = mapdir; }
         bool loadChamber(const boost::property_tree::ptree::value_type pt);
 
         bool loadChamberSpecs(std::string filename);
@@ -39,6 +40,7 @@ class Chamber {
         Coordinates rotation() { return m_rotation; }
 
     private :
+        std::string m_map_dir;
         int n_multilayer;
         int n_connector;
         std::string m_name;

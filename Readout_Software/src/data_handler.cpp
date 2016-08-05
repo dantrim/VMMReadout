@@ -26,11 +26,13 @@ using namespace std;
 //////////////////////////////////////////////////////////////////////////////
 DataHandler::DataHandler(QObject *parent) :
     QObject(parent),
+    n_test(0),
     m_dbg(false),
     //addmmfe8
     m_mmfe8(false),
     m_doMonitoring(false),
     m_monitoringSetup(false),
+    m_mappingSetup(false),
     m_calibRun(false),
     m_write(false),
     //daqmon
@@ -43,6 +45,8 @@ DataHandler::DataHandler(QObject *parent) :
     //m_sh(0),
     //mapping
     m_mapHandler(0),
+    //monitor
+    m_monTool(0),
     //thread
     m_DAQSocket(0), 
     m_mapping_file(""),
@@ -68,6 +72,29 @@ DataHandler::DataHandler(QObject *parent) :
 
 }
 // ------------------------------------------------------------------------ //
+void DataHandler::testMonitoring()
+{
+  //  if(!m_monitoringSetup) setupMonitoring(true);
+  //  std::vector<std::string> test;
+  //  std::string a = "A";
+  //  std::string b = "B";
+  //  std::string c = "C";
+  //  test.push_back(a);
+  //  test.push_back(b);
+  //  test.push_back(c);
+  //  for(int i =0; i < (int)test.size(); i++) {
+        stringstream blah;
+        blah << n_test;
+        string dummy = "1 TZ2 0 0 X 43 1 20 60 150 100 100 120";
+        dummy = dummy + "   " + blah.str();
+        n_test++;
+        m_monTool->writeToBuffer(dummy);
+        //m_monTool->sendToMonitoring(dummy);
+  //  } 
+    ///m_monTool->sendToMonitoring(dummy);
+    //m_monTool->writeToBuffer(dummy);
+}
+// ------------------------------------------------------------------------ //
 void DataHandler::setDebug(bool doit)
 {
     m_dbg = doit;
@@ -82,56 +109,65 @@ void DataHandler::setMMFE8(bool set_for_mmfe8)
     }
 }
 // ------------------------------------------------------------------------ //
-void DataHandler::testSharedMem()
+void DataHandler::setupMonitoring(bool do_monitoring)
 {
+    stringstream sx;
+    if(do_monitoring) {
+        if(!m_monitoringSetup) {
+            if(dbg()) {
+                sx << "Initializing QLocalSocket and monitoring tools...";
+                msg()(sx, "DataHandler::setupMonitoring"); sx.str("");
+            }
 
-    //if(!m_monitoringSetup)
-    //    setupMonitoring();
+            if(m_monTool) delete m_monTool; 
 
-    //int n = 1000;
-    //for (int i = 0; i < n; i++){
-    //    //if(n>10) break;
-    //    int chip_number = 1;
-    //    int channel = 30;
-    //    int event = 12;
-    //    int charge = 720;
-    //    int time = 70;
-    //    string x = "10 T6 0 0 X 45 1 20 60 40 40 40 40";
-    //    for(int i = 0; i < 10; i++) {
-    //        //m_sharedDataStrips.push_back(x);
-    //        //outvector.push_back(m_ce->getEvent(chip_number, channel, event, charge, time, charge, time));
-    //    }
-    //m_sh->publishEvent(m_sharedDataStrips);
-    //m_sharedDataStrips.clear();
-    //}
+            m_monTool = new OnlineMonTool();
+            bool ok = m_monTool->initializeServer();
+
+            if(ok) {
+                sx << "Online monitoring server initialized";
+                msg()(sx, "DataHandler::setupMonitoring"); sx.str("");
+                m_monitoringSetup = true;
+            }
+            else {
+                m_monitoringSetup = false;
+                delete m_monTool;
+            }
+        } // monitoring not yet setup
+
+        if(dbg()) {
+            sx << "Monitoring already setup";
+            msg()(sx,"DataHandler::setupMonitoring"); sx.str("");
+        }
+    } // do it
+    else {
+        if(m_monitoringSetup) {
+            // here close down the monitoring tools
+            sx << "NEED TO IMPLEMENT CLOSING DOWN OF MONITORING TOOLS";
+            msg()(sx, "DataHandler::setupMonitoring"); sx.str("");
+
+            m_monTool->closeMonitoringServer();
+            m_monitoringSetup = false;
+        }
+    } 
     return;
-
 }
 // ------------------------------------------------------------------------ //
-void DataHandler::setupMonitoring()
+bool DataHandler::loadMapping(string daq_xml_file)
 {
-    //stringstream sx;
-    //if(!m_monitoringSetup) {
-    //    //if(dbg()) {
-    //    if(true){
-    //        sx.str("");
-    //        sx << "Initializing SharedMemory and Monitoring tools...";
-    //        msg()(sx, "DataHandler::setupMonitoring");sx.str("");
-    //    }
-    //    m_sharedDataStrips.clear();
-    //    m_daqConf = new DaqConfig();
-    //    m_daqConf->loadXml("DAQ_config.xml");
-    //    m_ce = new CreateEvents();
-    //    m_ce->setDaq(m_daqConf);
-    //    m_ce->buildMapsMMFE8();
-    //    //m_ce->createEvents();
-    //    msg()("Not initializing shared memory","DataHandler::setupMonitoring");
-    //    //m_sh = new SharedMemoryWriter();
-    //    //m_sh->initializeSharedMemory();
+    if(m_mapHandler) {
+        delete m_mapHandler;
+    }
+    m_mapHandler = new MapHandler();
+    
+    bool ok = m_mapHandler->loadDaqConfiguration(daq_xml_file);
+    if(ok) {
+        m_mapHandler->buildMapping();
+    }
 
-    //    m_monitoringSetup = true;
-    //}
-    return;
+    m_mappingSetup = ok;
+
+    return ok;
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::connectDAQSocket()
@@ -230,29 +266,6 @@ void DataHandler::set_monitorData(bool doit)
     m_doMonitoring = doit;
 }
 // ------------------------------------------------------------------------ //
-void DataHandler::clearSharedMemory(/*int*/ /*dummy*/)
-{
-   // if(m_monitoringSetup) {
-   //     if(dbg()) {
-   //         stringstream sx;
-   //         sx << "Clearing shared memory...";
-   //         msg()(sx, "DataHandler::clearSharedMemory");
-   //     }
-   //     m_sh->clearSharedMemory();
-   // }
-    return;
-}
-// ------------------------------------------------------------------------ //
-void DataHandler::setUseChannelMap(bool useMap)
-{
-    m_use_channelmap = useMap;
-    if(dbg()) {
-        stringstream sx;
-        sx << "Using channel map: " << (useMap ? "YES" : "NO");
-        msg()(sx,"DataHandler::setUseChannelMap");
-    }
-}
-// ------------------------------------------------------------------------ //
 void DataHandler::LoadDAQSocket(VMMSocket& vmmsocket)
 {
 
@@ -276,82 +289,6 @@ void DataHandler::LoadDAQSocket(VMMSocket& vmmsocket)
         exit(1);
     }
     return;
-}
-// ------------------------------------------------------------------------ //
-void DataHandler::loadELxChannelMapping(QString mapname)
-{
-    stringstream sx;
-
-    bool mapOK = true;
-
-    if(mapname=="") {
-        msg()("ERROR ELx channel map filename provided is empty",
-                            "DataHandler::LoadELxChannelMap");
-        mapOK = false;
-    }
-
-    // assume for now that use provides only the name, expecting
-    // to be stored in /configs/
-    #warning make env variable for VMMDIR
-    string fullname = "../configs/" + mapname.toStdString();
-    if(!checkQFileFound(fullname)) {
-        sx << "ERROR Map file (" << fullname << ") not found";
-        msg()(sx,"DataHandler::LoadELxChannelMap"); sx.str(""); 
-        mapOK = false;
-    }
-
-    if(!checkQFileOK(fullname)) {
-        sx << "ERROR Map file (" << fullname << ") unable to be opened";
-        msg()(sx,"DataHandler::LoadELxChannelMap"); sx.str("");
-        mapOK = false;
-    }
-
-    if(mapOK && dbg()) {
-        sx << "VMM channel map file opened: " << fullname;
-        msg()(sx,"DataHandler::LoadELxChannelMap"); sx.str("");
-    }
-
-    //cases
-    if(mapname=="mini2_map.txt") { m_mapping = "mini2"; m_map_mini2.clear(); }
-    else {
-        sx << "ERROR Unhandled ELx map loaded: " << fullname;
-        msg()(sx,"DataHandler::LoadELxChannelMap"); sx.str("");
-        mapOK = false;
-    }
-
-    QFile mapfile(QString::fromStdString(fullname));
-    mapfile.open(QIODevice::ReadOnly);
-    QTextStream in(&mapfile);
-    while(!in.atEnd()) {
-        QString line = in.readLine();
-        if(line.left(1)!="#") {
-
-            ////////////////// mini2 [begin] /////////////////
-            if(m_mapping=="mini2") {
-
-                QStringList line_list = line.split("  ", QString::SkipEmptyParts);
-                if(line_list.size()) {
-                    std::vector<int> chip_list;
-                    chip_list.push_back(line_list.at(1).toInt());
-                    chip_list.push_back(line_list.at(2).toInt());
-                    m_map_mini2.insert(line_list.at(0).toInt(), chip_list);
-                } // non-empty line
-            } // mini2
-            ////////////////// mini2 [end] ///////////////////
-        } // not a comment line
-    } //while
-
-    ///////////////////////////////////////////////////////////////
-    // if the map is not "OK" turn off the use of the channel map
-    // altogether
-    ///////////////////////////////////////////////////////////////
-    if(!mapOK) {
-        sx << "WARNING Unable to load ELx channel map properly. Will use VMM \nchannels instead"
-           << " of strip numbers.";
-        msg()(sx, "DataHandler::loadELxChannelMapping");
-        m_use_channelmap = false;
-    }
-
 }
 // ------------------------------------------------------------------------ //
 void DataHandler::setWriteNtuple(bool doit)
@@ -1199,6 +1136,12 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram,
                     //msg()(sx,"DataHandler::decodeAndWriteData");
                     //msg()(" "," ");
                 } // dbg
+
+                // monitoring
+                if(monitoring()) {
+                    string dummy = "1 TZ2 0 0 X 43 1 20 60 150 100 100 120";
+                    m_monTool->sendToMonitoring(dummy);
+                } // send to monitoring
 
                 //shared
               //  if(monitoring()) {

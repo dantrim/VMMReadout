@@ -5,6 +5,7 @@
 #include <boost/algorithm/string.hpp>
 
 Layer::Layer() :
+    m_map_dir(""),
     m_name(""),
     m_id(""),
     n_readout(0),
@@ -81,6 +82,7 @@ bool Layer::loadLayer(const boost::property_tree::ptree::value_type pt)
                 /////////////////////////////////
                 else if(v.first == "connector") {
                     ConnectorInfo tmpConnectorInfo;
+                    tmpConnectorInfo.setMapDir(m_map_dir);
                     if(!tmpConnectorInfo.loadConnectorInfo(v)) ok = false;
                     if(ok) m_connectorInfoArray.push_back(tmpConnectorInfo);
                 }

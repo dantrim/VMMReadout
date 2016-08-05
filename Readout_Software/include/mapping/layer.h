@@ -16,6 +16,7 @@ class Layer {
 
     public :
         Layer();
+        void setMapDir(std::string mapdir) { m_map_dir = mapdir; }
         bool loadLayer(const boost::property_tree::ptree::value_type pt);
 
         int nReadout() { return n_readout; }
@@ -36,6 +37,7 @@ class Layer {
         std::string id() { return m_id; }
 
     private :
+        std::string m_map_dir;
         std::string m_name;
         std::string m_id;
 

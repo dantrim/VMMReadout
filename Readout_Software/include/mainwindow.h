@@ -192,8 +192,6 @@ class MainWindow : public QMainWindow
         // DataHandler related
         void monitorDataSignal(bool);
         void clearSharedMemory(int);
-        void setUseChannelMap(bool);
-        void loadELxChannelMapping(QString);
         void setWriteNtuple(bool);
         void setIgnore16(bool);
         void setCalibrationRun(bool);
@@ -238,8 +236,24 @@ class MainWindow : public QMainWindow
         // set the acquisition mode
         void setACQMode();
 
+        // monitoring state
+        void updateMonitoringState();
+
+        void testMon();
+
         // select the output directory
         void selectOutputDirectory();
+
+        // select the DAQ configuration/mapping file
+        void selectDAQSetupFile();
+
+        // load the DAQ configuration/mapping
+        void loadDAQSetup();
+
+        void checkRequestedFile();
+
+        // select the config xml file
+        void selectConfigXmlFile();
 
         // load a configuration from an XML
         void loadConfigurationFromFile();
@@ -298,9 +312,6 @@ class MainWindow : public QMainWindow
         void setCalibrationACQon(int);
         void setCalibrationACQoff();
         void endCalibrationRun();
-
-        //monitoring
-        void setupMonitoring(int);
 
 };
 

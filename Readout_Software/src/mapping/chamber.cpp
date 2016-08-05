@@ -9,6 +9,7 @@
 #include <boost/algorithm/string.hpp>
 
 Chamber::Chamber() :
+    m_map_dir(""),
     n_multilayer(0),
     n_connector(0),
     m_name(""),
@@ -47,9 +48,15 @@ bool Chamber::loadChamber(const boost::property_tree::ptree::value_type pt)
                 if(v.first == "config_file") {
                     m_specfilename = v.second.data();
                     boost::trim(m_specfilename);
-                    if(!loadChamberSpecs(m_specfilename)) ok = false;
-                    if(ok)
+                    std::string spec_file = m_map_dir + "/" + m_specfilename;
+                    if(!loadChamberSpecs(spec_file)) { 
+                        ok = false;
+                        std::cout << "Chamber::loadChamber    Unable to load spec file: " << spec_file << std::endl;
+                    }
+                    if(ok) {
+                        m_specfilename = spec_file;
                         std::cout << "Chamber::loadChamber    Chamber spec laoded: " << m_specfilename << std::endl;
+                    }
                 }
                 ///////////////////////////////
                 // name
@@ -147,6 +154,7 @@ bool Chamber::loadChamberSpecs(std::string filename)
                 //////////////////////////////////
                 if(v.first == "multilayer") {
                     MultiLayer tmpMultiLayer;
+                    tmpMultiLayer.setMapDir(m_map_dir);
                     if(!tmpMultiLayer.loadMultiLayer(v)) ok = false;
                     if(ok) m_multilayerArray.push_back(tmpMultiLayer);
                 }

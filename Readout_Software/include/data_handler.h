@@ -14,11 +14,12 @@ class QUdpSocket;
 // std/stl
 #include <iostream>
 
-// vmm
+// nsw
 #include "config_handler.h"
 #include "message_handler.h"
 #include "daq_monitor.h"
 #include "map_handler.h"
+#include "OnlineMonTool.h"
 class VMMSocket;
 
 // ROOT
@@ -57,7 +58,8 @@ class DataHandler : public QObject
         bool mmfe8() { return m_mmfe8; }
 
         bool monitoring() { return m_doMonitoring; }
-        void setupMonitoring();
+        void setupMonitoring(bool doit);
+        void testMonitoring();
         void LoadMessageHandler(MessageHandler& msg);
         MessageHandler& msg() { return *m_msg; }
 
@@ -117,24 +119,28 @@ class DataHandler : public QObject
         //daqmon
         boost::shared_ptr< int > n_daqCnt;
 
+        // load the DAQ configuration / mapping
+        bool loadMapping(std::string filename);
+        MapHandler& mapHandler() { return *m_mapHandler; }
+        bool mappingOK() { return m_mappingSetup; }
+
     private :
         bool m_dbg;
         //addmmfe8
         bool m_mmfe8;
         bool m_doMonitoring;
         bool m_monitoringSetup;
+        bool m_mappingSetup;
         bool m_calibRun;
         bool m_write;
         bool m_ignore16;
         bool m_use_channelmap;
 
-        //test shared
-        //DaqConfig* m_daqConf;
-        //CreateEvents* m_ce;
-        //SharedMemoryWriter* m_sh;
-        //std::vector<std::string> m_sharedDataStrips;
         //mapping
         MapHandler* m_mapHandler;
+        
+        //monitor
+        OnlineMonTool* m_monTool;
 
         //thread
         QUdpSocket *m_DAQSocket;
@@ -254,6 +260,8 @@ class DataHandler : public QObject
         TTree*  m_artTree;
         TBranch *br_art;
         TBranch *br_artFlag;
+
+        int n_test;
         
 
     signals :
@@ -263,14 +271,10 @@ class DataHandler : public QObject
 
     public slots :
         //testing sharted memory
-        void testSharedMem();
         void readEvent();
         void EndRun();
         void writeAndCloseDataFile();
         void set_monitorData(bool);
-        void clearSharedMemory();
-        void setUseChannelMap(bool);
-        void loadELxChannelMapping(QString);
         void setWriteNtuple(bool);
         void setIgnore16(bool);
         void setCalibrationRun(bool);
