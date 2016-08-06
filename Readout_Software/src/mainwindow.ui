@@ -84,6 +84,9 @@
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetFixedSize</enum>
+      </property>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
@@ -1156,10 +1159,13 @@
        <x>10</x>
        <y>270</y>
        <width>271</width>
-       <height>201</height>
+       <height>211</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetFixedSize</enum>
+      </property>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_14">
         <item>
@@ -2734,6 +2740,9 @@
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_11">
+       <property name="sizeConstraint">
+        <enum>QLayout::SetFixedSize</enum>
+       </property>
        <item row="0" column="0">
         <widget class="QCheckBox" name="hdmi1">
          <property name="sizeIncrement">
@@ -5963,16 +5972,6 @@
 Counters</string>
       </property>
      </widget>
-     <zorder>eventCountStop</zorder>
-     <zorder>eventCountStopLabel</zorder>
-     <zorder>label_9</zorder>
-     <zorder>triggerCntLabel_fpga</zorder>
-     <zorder>label_10</zorder>
-     <zorder>triggerCntLabel</zorder>
-     <zorder>angle</zorder>
-     <zorder>label_8</zorder>
-     <zorder>clearTriggerCnt</zorder>
-     <zorder>sbfm</zorder>
     </widget>
     <widget class="QFrame" name="frame_3">
      <property name="geometry">
