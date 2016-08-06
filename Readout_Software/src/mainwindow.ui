@@ -38,54 +38,18 @@
     <property name="title">
      <string>Global Registers</string>
     </property>
-    <widget class="QPushButton" name="loadConfigXMLFileButton">
-     <property name="geometry">
-      <rect>
-       <x>30</x>
-       <y>490</y>
-       <width>81</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>9</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>Load Config</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="writeConfigXMLFileButton">
-     <property name="geometry">
-      <rect>
-       <x>150</x>
-       <y>490</y>
-       <width>81</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>9</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>Write Config</string>
-     </property>
-    </widget>
     <widget class="QWidget" name="layoutWidget">
      <property name="geometry">
       <rect>
        <x>10</x>
        <y>20</y>
        <width>271</width>
-       <height>241</height>
+       <height>261</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
       <property name="sizeConstraint">
-       <enum>QLayout::SetFixedSize</enum>
+       <enum>QLayout::SetDefaultConstraint</enum>
       </property>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout">
@@ -1157,14 +1121,14 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>270</y>
+       <y>290</y>
        <width>271</width>
-       <height>211</height>
+       <height>221</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <property name="sizeConstraint">
-       <enum>QLayout::SetFixedSize</enum>
+       <enum>QLayout::SetDefaultConstraint</enum>
       </property>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_14">
@@ -1670,11 +1634,6 @@
       <bool>true</bool>
      </property>
     </widget>
-    <zorder>layoutWidget</zorder>
-    <zorder>layoutWidget</zorder>
-    <zorder>loadConfigXMLFileButton</zorder>
-    <zorder>writeConfigXMLFileButton</zorder>
-    <zorder>testMonButton</zorder>
    </widget>
    <widget class="QGroupBox" name="groupBox_7">
     <property name="geometry">
@@ -2741,7 +2700,7 @@
       </property>
       <layout class="QGridLayout" name="gridLayout_11">
        <property name="sizeConstraint">
-        <enum>QLayout::SetFixedSize</enum>
+        <enum>QLayout::SetDefaultConstraint</enum>
        </property>
        <item row="0" column="0">
         <widget class="QCheckBox" name="hdmi1">
@@ -3763,7 +3722,7 @@
      <enum>QTabWidget::North</enum>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <property name="iconSize">
      <size>
@@ -5680,7 +5639,7 @@
      <rect>
       <x>10</x>
       <y>0</y>
-      <width>1201</width>
+      <width>1231</width>
       <height>121</height>
      </rect>
     </property>
@@ -5701,7 +5660,7 @@
       <rect>
        <x>448</x>
        <y>93</y>
-       <width>592</width>
+       <width>636</width>
        <height>21</height>
       </rect>
      </property>
@@ -5754,9 +5713,9 @@
     <widget class="QLabel" name="label_7">
      <property name="geometry">
       <rect>
-       <x>1050</x>
+       <x>1090</x>
        <y>20</y>
-       <width>141</width>
+       <width>138</width>
        <height>41</height>
       </rect>
      </property>
@@ -6073,7 +6032,7 @@ Counters</string>
       <rect>
        <x>375</x>
        <y>20</y>
-       <width>671</width>
+       <width>711</width>
        <height>97</height>
       </rect>
      </property>
@@ -6086,7 +6045,7 @@ Counters</string>
      <widget class="QPushButton" name="selectDir_output">
       <property name="geometry">
        <rect>
-        <x>623</x>
+        <x>667</x>
         <y>50</y>
         <width>41</width>
         <height>21</height>
@@ -6114,7 +6073,7 @@ Counters</string>
        <rect>
         <x>73</x>
         <y>50</y>
-        <width>547</width>
+        <width>591</width>
         <height>21</height>
        </rect>
       </property>
@@ -6199,7 +6158,7 @@ Counters</string>
        <rect>
         <x>73</x>
         <y>4</y>
-        <width>503</width>
+        <width>547</width>
         <height>21</height>
        </rect>
       </property>
@@ -6216,7 +6175,7 @@ Counters</string>
      <widget class="QPushButton" name="selectDir_daqSetup">
       <property name="geometry">
        <rect>
-        <x>579</x>
+        <x>623</x>
         <y>4</y>
         <width>41</width>
         <height>21</height>
@@ -6280,7 +6239,7 @@ Counters</string>
      <widget class="QPushButton" name="load_daqSetup">
       <property name="geometry">
        <rect>
-        <x>623</x>
+        <x>667</x>
         <y>4</y>
         <width>41</width>
         <height>21</height>
@@ -6300,11 +6259,34 @@ Counters</string>
        </size>
       </property>
      </widget>
+     <widget class="QPushButton" name="write_config">
+      <property name="geometry">
+       <rect>
+        <x>667</x>
+        <y>27</y>
+        <width>41</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset resource="../images/icons.qrc">
+        <normaloff>:/images/writebutton.png</normaloff>:/images/writebutton.png</iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>15</width>
+        <height>15</height>
+       </size>
+      </property>
+     </widget>
     </widget>
     <widget class="QFrame" name="frame_4">
      <property name="geometry">
       <rect>
-       <x>1060</x>
+       <x>1095</x>
        <y>70</y>
        <width>101</width>
        <height>41</height>

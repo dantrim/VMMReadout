@@ -17,7 +17,6 @@
 // vmm
 #include "message_handler.h"
 
-
 // ---------------------------------------------------------------------- //
 //  Structures for holding config items
 // ---------------------------------------------------------------------- //
@@ -25,128 +24,119 @@
 ////////////////////////////////////////////////////////
 // structure for communication
 ////////////////////////////////////////////////////////
-struct CommInfo {
+class CommInfo {
+    public :
+        CommInfo();
+        virtual ~CommInfo(){};
 
-    // IF YOU ADD ANY DATA MEMBERS
-    // YOU MUST ADD THEM TO THE
-    // CONSTRUCTOR!!!
+        // UDP info
+        int fec_port;
+        int daq_port;
+        int vmmasic_port;
+        int vmmapp_port;
+        int s6_port;
 
-    CommInfo();
+        // general info
+        QString config_filename;
+        QString vmm_id_list;
+        QString ip_list;
+        QString comment;
 
-    // UDP info
-    int fec_port;
-    int daq_port;
-    int vmmasic_port;
-    int vmmapp_port;
-    int s6_port;
-
-    // general info
-    QString config_filename;
-    QString config_version;
-    QString vmm_id_list;
-    QString ip_list;
-    QString comment;
-    bool debug;
-
-    void Print();
+        void print();
+        bool ok; // loading went ok
 };
 
 ////////////////////////////////////////////////////////
 // structure for DAQ configuration
 ////////////////////////////////////////////////////////
-struct TriggerDAQ {
+class TriggerDAQ {
 
-    // IF YOU ADD ANY DATA MEMBERS
-    // YOU MUST ADD THEM TO THE
-    // CONSTRUCTOR!!!
+    public :
+        TriggerDAQ();
+        virtual ~TriggerDAQ(){};
 
-    // default values
-    TriggerDAQ();
+        int tp_delay;
+        std::string trigger_period;
+        int acq_sync;
+        int acq_window;
+        std::string run_mode;
+        int run_count;
+        int ignore16;
+        std::string mapping_file;
+        std::string output_path;
+        std::string output_filename;
+        int bcid_reset;
 
-    int tp_delay;
-    QString trigger_period;
-    int acq_sync;
-    int acq_window;
-    QString run_mode;
-    int run_count;
-    int ignore16;
-    QString mapping_file;
-    QString output_path;
-    QString output_filename;
-    int bcid_reset;
-
-    void Print();
+        void print();
+        bool ok; // loading went ok
 }; 
 
 ////////////////////////////////////////////////////////
 // stucture for the global configuration settings
 ////////////////////////////////////////////////////////
-struct GlobalSetting {
+class GlobalSetting {
 
-    // IF YOU ADD ANY DATA MEMBERS
-    // YOU MUST ADD THEM TO THE
-    // CONSTRUCTOR!!!
+    public :
+        GlobalSetting();
+        virtual ~GlobalSetting(){};
 
-    // initial values
-    GlobalSetting();
-
-    int polarity;               //SP
-    int leakage_current;
-    int analog_tristates;
-    int double_leakage;
-    int gain;
-    int peak_time;
-    int neighbor_trigger;
-    int tac_slope;
-    int disable_at_peak;
-    int art;
-    int art_mode;
-    int dual_clock_art;
-    int out_buffer_mo;          //sbfm
-    int out_buffer_pdo;         //sbfp
-    int out_buffer_tdo;         //sbft
-    int channel_monitor;
-    int monitoring_control;     //scmx
-    int monitor_pdo_out;        //sbmx
-    int adcs;
-    int sub_hysteresis;
-    int direct_time;
-    int direct_time_mode;
-    int direct_time_mode0;
-    int direct_time_mode1;
-    int conv_mode_8bit;
-    int enable_6bit;
-    int adc_10bit;
-    int adc_8bit;
-    int adc_6bit;
-    int dual_clock_data;
-    int dual_clock_6bit;
-    int threshold_dac;
-    int test_pulse_dac;
-    
-    void Validate();
-    void Print();
+        int polarity;               //SP
+        int leakage_current;
+        int analog_tristates;
+        int double_leakage;
+        int gain;
+        int peak_time;
+        int neighbor_trigger;
+        int tac_slope;
+        int disable_at_peak;
+        int art;
+        int art_mode;
+        int dual_clock_art;
+        int out_buffer_mo;          //sbfm
+        int out_buffer_pdo;         //sbfp
+        int out_buffer_tdo;         //sbft
+        int channel_monitor;
+        int monitoring_control;     //scmx
+        int monitor_pdo_out;        //sbmx
+        int adcs;
+        int sub_hysteresis;
+        int direct_time;
+        int direct_time_mode;
+        int direct_time_mode0;
+        int direct_time_mode1;
+        int conv_mode_8bit;
+        int enable_6bit;
+        int adc_10bit;
+        int adc_8bit;
+        int adc_6bit;
+        int dual_clock_data;
+        int dual_clock_6bit;
+        int threshold_dac;
+        int test_pulse_dac;
+        
+        void validate();
+        void print();
+        bool ok; // loading went ok
 };
 
 
 ////////////////////////////////////////////////////////
 // HDMI containers
 ////////////////////////////////////////////////////////
-struct ChannelMap {
+class ChannelMap {
 
-    // IF YOU ADD ANY DATA MEMBERS
-    // YOU MUST ADD THEM TO THE
-    // CONSTRUCTOR!!!
+    public :
+        ChannelMap();
+        virtual ~ChannelMap(){};
 
-    ChannelMap();
+        int hdmi_no;
+        bool on;
+        bool first;
+        bool second;
+        bool art;
 
-    unsigned int hdmi_no;
-    bool on;
-    bool first;
-    bool second;
-    bool art;
-
-    void Print();
+        void print();
+        bool ok; // loading went ok
 };
 
 
@@ -154,28 +144,28 @@ struct ChannelMap {
 // structure holding configuration for the individual
 // vmm channels
 ////////////////////////////////////////////////////////
-struct Channel {
+class Channel {
 
-    // IF YOU ADD ANY DATA MEMBERS
-    // YOU MUST ADD THEM TO THE
-    // CONSTRUCTOR!!!
+    public :
+        Channel();
+        virtual ~Channel(){};
 
-    Channel();
+        int number;
+        int polarity;          //SP
+        int capacitance;       //SC
+        int leakage_current;   //SL
+        int test_pulse;        //ST
+        int hidden_mode;       //SM
+        int trim;
+        int monitor;           //SMX
+        int s10bitADC;
+        int s8bitADC;
+        int s6bitADC;
 
-    unsigned int number;
-    int polarity;          //SP
-    int capacitance;       //SC
-    int leakage_current;   //SL
-    int test_pulse;        //ST
-    int hidden_mode;       //SM
-    int trim;
-    int monitor;           //SMX
-    int s10bitADC;
-    int s8bitADC;
-    int s6bitADC;
-
-    void Print();
+        void print();
+        bool ok; // loading went ok
 };
+
 
 // ---------------------------------------------------------------------- //
 //  Main Configuration Handler tool
@@ -198,16 +188,21 @@ class ConfigHandler : public QObject
         void LoadMessageHandler(MessageHandler& msg);
         MessageHandler& msg() { return *m_msg; }
 
-        void LoadConfig(const QString &filename);
+        bool LoadConfig(const QString &filename);
         void WriteConfig(QString filename);
+
         CommInfo LoadCommInfo(const boost::property_tree::ptree& p);
         void LoadCommInfo(const CommInfo& info);
+
         GlobalSetting LoadGlobalSettings(const boost::property_tree::ptree& p);
+
         TriggerDAQ LoadDAQConfig(const boost::property_tree::ptree& p);
+
         std::vector<ChannelMap> LoadHDMIChannels(const boost::property_tree::ptree& p);
-        void setHDMIChannelMap();
+        bool setHDMIChannelMap();
         quint16 getHDMIChannelMap() { return m_channelMap; }
         quint32 getHDMIChannelMapART() { return m_channelMapART; }
+
         std::vector<Channel> LoadVMMChannelConfig(const boost::property_tree::ptree& p);
 
         // methods for GUI interaction
@@ -222,11 +217,11 @@ class ConfigHandler : public QObject
         QString getIPList() { return m_commSettings.ip_list; }
 
         // retrieve the objects
-        CommInfo& commSettings() { return m_commSettings; }
-        TriggerDAQ& daqSettings() { return m_daqSettings; }
-        GlobalSetting& globalSettings() { return m_globalSettings; }
-        ChannelMap& hdmiChannelSettings(int i) { return m_channelmap[i]; }
-        Channel& channelSettings(int i) { return m_channels[i]; }
+        CommInfo& commSettings()                { return m_commSettings; }
+        TriggerDAQ& daqSettings()               { return m_daqSettings; }
+        GlobalSetting& globalSettings()         { return m_globalSettings; }
+        ChannelMap& hdmiChannelSettings(int i)  { return m_channelmap[i]; }
+        Channel& channelSettings(int i)         { return m_channels[i]; }
 
         ////////////////////////////
         // expected settings
@@ -247,18 +242,18 @@ class ConfigHandler : public QObject
         //addmmfe8
         bool m_mmfe8;
 
-        CommInfo m_commSettings;
-        TriggerDAQ m_daqSettings;
-        GlobalSetting m_globalSettings;
+        CommInfo                m_commSettings;
+        TriggerDAQ              m_daqSettings;
+        GlobalSetting           m_globalSettings;
         std::vector<ChannelMap> m_channelmap;
-        quint16 m_channelMap; 
-        quint32 m_channelMapART;
-        std::vector<Channel> m_channels;
+        quint16                 m_channelMap; 
+        quint32                 m_channelMapART;
+        std::vector<Channel>    m_channels;
 
         MessageHandler* m_msg;
 
-
-
 }; // class ConfigHandler
+
+
 
 #endif

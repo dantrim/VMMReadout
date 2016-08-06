@@ -7,76 +7,24 @@
 		<vmmapp_port>6600</vmmapp_port>
 		<s6_port>6602</s6_port>
 	</udp_setup>
-	<general_info>
-		<config_version>0.1</config_version>
-		<vmm_id>L115</vmm_id>
-		<!--<ip>10.0.0.2</ip>-->
-        <ip>127.0.0.1</ip>
-		<comment>This is a config file</comment>
-		<debug>off</debug>
-	</general_info>
 	<trigger_daq>
 		<tp_delay>81</tp.delay>
 		<trigger_period>3FFFE</trigger_period>
 		<acq_sync>100</acq_sync>
 		<acq_window>4096</acq_window>
         <bcid_reset>0</bcid_reset>
-		<run_mode>external</run_mode>
-		<run_count>20</run_count>
         <ignore16>off</ignore16>
-        <mapping_file>mini2_map.txt</mapping_file>
         <output_path>/Users/dantrim/workarea/NSW/VMMReadout/restructure/</output_path>
-		<output_filename>tmp.txt</output_filename>
 	</trigger_daq>
 	<channel_map>
-		<hdmi_1>
-			<switch>on</switch>
-			<first>1</first>
-			<second>1</second>
-            <art>0</art>
-		</hdmi_1>
-		<hdmi_2>
-			<switch>off</switch>
-			<first>0</first>
-			<second>0</second>
-            <art>0</art>
-		</hdmi_2>
-		<hdmi_3>
-			<switch>off</switch>
-			<first>0</first>
-			<second>0</second>
-            <art>0</art>
-		</hdmi_3>
-		<hdmi_4>
-			<switch>off</switch>
-			<first>0</first>
-			<second>0</second>
-            <art>0</art>
-		</hdmi_4>
-		<hdmi_5>
-			<switch>off</switch>
-			<first>0</first>
-			<second>0</second>
-            <art>0</art>
-		</hdmi_5>
-		<hdmi_6>
-			<switch>off</switch>
-			<first>0</first>
-			<second>0</second>
-            <art>0</art>
-		</hdmi_6>
-		<hdmi_7>
-			<switch>off</switch>
-			<first>0</first>
-			<second>0</second>
-            <art>0</art>
-		</hdmi_7>
-		<hdmi_8>
-			<switch>off</switch>
-			<first>0</first>
-			<second>0</second>
-            <art>0</art>
-		</hdmi_8>
+		<hdmi_1> <switch>on</switch> <first>1</first> <second>1</second> <art>0</art> </hdmi_1>
+		<hdmi_2> <switch>off</switch> <first>0</first> <second>0</second> <art>0</art> </hdmi_2>
+		<hdmi_3> <switch>off</switch> <first>0</first> <second>0</second> <art>0</art> </hdmi_3>
+		<hdmi_4> <switch>off</switch> <first>0</first> <second>0</second> <art>0</art> </hdmi_4>
+		<hdmi_5> <switch>off</switch> <first>0</first> <second>0</second> <art>0</art> </hdmi_5>
+		<hdmi_6> <switch>off</switch> <first>0</first> <second>0</second> <art>0</art> </hdmi_6>
+		<hdmi_7> <switch>off</switch> <first>0</first> <second>0</second> <art>0</art> </hdmi_7>
+		<hdmi_8> <switch>off</switch> <first>0</first> <second>0</second> <art>0</art> </hdmi_8>
 	</channel_map>
 	<global_settings>
 		<ch_polarity>strips</ch_polarity>

@@ -264,12 +264,17 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->configXmlFilenameField, SIGNAL(returnPressed()),
                                     this, SLOT(checkRequestedFile()));
 
-    // load the board/global configuration from the XML
-    connect(ui->loadConfigXMLFileButton, SIGNAL(clicked()),
+    connect(ui->load_config, SIGNAL(clicked()),
                                     this, SLOT(loadConfigurationFromFile()));
+
+   // // load the board/global configuration from the XML
+   // connect(ui->loadConfigXMLFileButton, SIGNAL(clicked()),
+   //                                 this, SLOT(loadConfigurationFromFile()));
     // write the total configuration to an XML file
-    connect(ui->writeConfigXMLFileButton, SIGNAL(clicked()),
+    connect(ui->write_config, SIGNAL(clicked()),
                                     this, SLOT(writeConfigurationToFile()));
+    //connect(ui->writeConfigXMLFileButton, SIGNAL(clicked()),
+    //                                this, SLOT(writeConfigurationToFile()));
 
     // set event headers
     connect(ui->setEvbld, SIGNAL(clicked()),
@@ -513,9 +518,46 @@ void MainWindow::selectDAQSetupFile()
     }
 }
 // ------------------------------------------------------------------------- //
+void MainWindow::loadConfigurationFromFile()
+{
+    bool ok = false;
+    if(ui->configXmlFilenameField->text().toStdString() != "")
+        ok = configHandle().LoadConfig(ui->configXmlFilenameField->text());
+
+    if(ok) {
+        msg()("Configuration loaded successfully");
+        ui->configXmlFilenameField->setStyleSheet("background-color: green");
+        updateConfigState();
+    }
+    else {
+        msg()("ERROR Configuration unable to be loaded from requested file");
+        ui->configXmlFilenameField->setStyleSheet("QLineEdit { background: rgb(220, 0, 0);}");
+        delay();
+        delay();
+        ui->configXmlFilenameField->setStyleSheet("QLineEdit { background: white; }");
+        delay();
+    }
+
+//    // Load the file from the user
+//    QString filename = QFileDialog::getOpenFileName(this,
+//        tr("Load Configuration XML File"), "../configs/",
+//        tr("XML Files (*.xml)"));
+//    if(filename.isNull()) return;
+//
+//    stringstream sx;
+//    sx << "Loading configuration from file: " << filename.toStdString();
+//    msg()(sx);
+//
+//    // pass the file to ConfigHandler to parse and load
+//    configHandle().LoadConfig(filename);
+//    updateConfigState();
+}
+// ------------------------------------------------------------------------- //
 void MainWindow::loadDAQSetup()
 {
-    bool ok = dataHandle().loadMapping(ui->daqSetupFilenameField->text().toStdString());
+    bool ok = false;
+    if(ui->daqSetupFilenameField->text().toStdString() != "")
+        ok = dataHandle().loadMapping(ui->daqSetupFilenameField->text().toStdString());
 
     if(ok) {
         msg()("DAQ setup loaded successfully");
@@ -950,16 +992,11 @@ void MainWindow::prepareAndSendTDAQConfig()
     TriggerDAQ daq;
 
     daq.tp_delay        = ui->pulserDelay->value();
-    daq.trigger_period  = ui->trgPeriod->text();
+    daq.trigger_period  = ui->trgPeriod->text().toStdString();
     daq.acq_sync        = ui->acqSync->value();
     daq.acq_window      = ui->acqWindow->value();
-    if(ui->trgPulser->isChecked()) daq.run_mode = "pulser";
-    else if(ui->trgExternal->isChecked()) daq.run_mode = "external";
-    else{daq.run_mode = "pulser";}
-    //daq.run_mode        = "pulser"; // dummy here
-    daq.run_count       = 20; // dummy here
     daq.ignore16        = ui->ignore16->isChecked();
-    daq.output_path     = ui->runDirectoryField->text();
+    daq.output_path     = ui->runDirectoryField->text().toStdString();
     daq.bcid_reset      = ui->bcid_reset->value();
 
     configHandle().LoadTDAQConfiguration(daq);
@@ -1008,13 +1045,11 @@ void MainWindow::setRunMode()
 
     TriggerDAQ daq;
     daq.tp_delay        = ui->pulserDelay->value();
-    daq.trigger_period  = ui->trgPeriod->text();
+    daq.trigger_period  = ui->trgPeriod->text().toStdString();
     daq.acq_sync        = ui->acqSync->value();
     daq.acq_window      = ui->acqWindow->value();
-    daq.run_mode        = rmode;
-    daq.run_count       = 20; // dummy here
     daq.ignore16        = ui->ignore16->isChecked();
-    daq.output_path     = ui->runDirectoryField->text();
+    daq.output_path     = ui->runDirectoryField->text().toStdString();
 
     // update the config handle with the new DAQ object
     configHandle().LoadTDAQConfiguration(daq);
@@ -1854,27 +1889,8 @@ void MainWindow::updateChannelADCs(int index)
     }
 }
 // ------------------------------------------------------------------------- //
-void MainWindow::loadConfigurationFromFile()
-{
-
-    // Load the file from the user
-    QString filename = QFileDialog::getOpenFileName(this,
-        tr("Load Configuration XML File"), "../configs/",
-        tr("XML Files (*.xml)"));
-    if(filename.isNull()) return;
-
-    stringstream sx;
-    sx << "Loading configuration from file: " << filename.toStdString();
-    msg()(sx);
-
-    // pass the file to ConfigHandler to parse and load
-    configHandle().LoadConfig(filename);
-    updateConfigState();
-}
-// ------------------------------------------------------------------------- //
 void MainWindow::updateConfigState()
 {
-
     // ------------------------------------------- //
     //  GlobalSetting
     // ------------------------------------------- //
@@ -1914,7 +1930,7 @@ void MainWindow::updateConfigState()
     ui->sdp_2->setValue(global.test_pulse_dac);
  
 
-/*
+///*
     // ------------------------------------------- //
     //  HDMI Channel Map
     // ------------------------------------------- //
@@ -1954,7 +1970,7 @@ void MainWindow::updateConfigState()
     ui->hdmi8->setChecked(  chMap[ch].on);
     ui->hdmi8_1->setChecked(chMap[ch].first);
     ui->hdmi8_2->setChecked(chMap[ch].second);
-*/
+//*/
 
     // ------------------------------------------------- //
     //  individual channels
@@ -1967,8 +1983,7 @@ void MainWindow::updateConfigState()
                << " Attempting to access state of channel number " << i
                << " but corresponding index in ConfigHandler channel map is "
                << chan.number << "!";
-            msg()(ss, "MainWindow::updateConfigState", true);
-            exit(1);
+            msg()(ss, "MainWindow::updateConfigState");
         }
 
         // for some reason in the original code
@@ -2134,13 +2149,11 @@ void MainWindow::writeConfigurationToFile()
     TriggerDAQ daq;
 
     daq.tp_delay        = ui->pulserDelay->value();
-    daq.trigger_period  = ui->trgPeriod->text();
+    daq.trigger_period  = ui->trgPeriod->text().toStdString();
     daq.acq_sync        = ui->acqSync->value();
     daq.acq_window      = ui->acqWindow->value();
-    daq.run_mode        = "pulser"; // dummy here
-    daq.run_count       = 20; // dummy here
     daq.ignore16        = ui->ignore16->isChecked();
-    daq.output_path     = ui->runDirectoryField->text();
+    daq.output_path     = ui->runDirectoryField->text().toStdString();
 
     configHandle().LoadTDAQConfiguration(daq);
 

@@ -3,5 +3,6 @@
         <file>../images/directory.png</file>
         <file>../images/logo.png</file>
         <file>../images/load.png</file>
+        <file>../images/writebutton.png</file>
     </qresource>
 </RCC>

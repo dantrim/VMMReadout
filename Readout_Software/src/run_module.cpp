@@ -243,10 +243,15 @@ void RunModule::setTriggerAcqConstants()
         ///////////////////////////
         // trigger constants
         ///////////////////////////
+        QString trigperiod = QString::fromStdString(config().daqSettings().trigger_period);
+        qDebug() << "DEBUG CHECK TRIGGER PERIOD: " << trigperiod;
+        qDebug() << "DEBUG CHECK TRIGGER PERIOD: " << trigperiod;
+        qDebug() << "DEBUG CHECK TRIGGER PERIOD: " << trigperiod;
         out << (quint32) 0 //[12,15]
             //trigger period
             << (quint32) 2 //[16,19]
-            << (quint32) config().daqSettings().trigger_period.toInt(&ok,16) //[20,23]
+            << (quint32) trigperiod.toInt(&ok,16) //[20,23]
+            //<< (quint32) config().daqSettings().trigger_period.toInt(&ok,16) //[20,23]
             //pulser delay
             << (quint32) 4 //[24,27]
             << (quint32) config().daqSettings().tp_delay //[28,31]
