@@ -66,6 +66,7 @@ class TriggerDAQ {
         std::string output_path;
         std::string output_filename;
         int bcid_reset;
+        int enable_holdoff;
 
         void print();
         bool ok; // loading went ok
@@ -165,7 +166,25 @@ class Channel {
         void print();
         bool ok; // loading went ok
 };
+////////////////////////////////////////////////////////
+// structure for holding s6 settings
+////////////////////////////////////////////////////////
+class s6Setting {
+    public :
+        s6Setting();
+        virtual ~s6Setting(){};
 
+        int cktk;
+        int ckbc;
+        int ckbc_skew;
+        int do_auto_reset;
+        int do_fec_reset;
+        int tk_pulses;
+        int fec_reset_period;
+
+        void print();
+        bool ok; // loading went ok
+};
 
 // ---------------------------------------------------------------------- //
 //  Main Configuration Handler tool
@@ -205,6 +224,9 @@ class ConfigHandler : public QObject
 
         std::vector<Channel> LoadVMMChannelConfig(const boost::property_tree::ptree& p);
 
+        s6Setting LoadS6Settings(const boost::property_tree::ptree& p);
+        void LoadS6Configuration(s6Setting& s6);
+
         // methods for GUI interaction
         void LoadBoardConfiguration(GlobalSetting& global,
              std::vector<ChannelMap>& chMap, std::vector<Channel>& channels);
@@ -220,6 +242,7 @@ class ConfigHandler : public QObject
         CommInfo& commSettings()                { return m_commSettings; }
         TriggerDAQ& daqSettings()               { return m_daqSettings; }
         GlobalSetting& globalSettings()         { return m_globalSettings; }
+        s6Setting& s6Settings()                 { return m_s6Settings; }
         ChannelMap& hdmiChannelSettings(int i)  { return m_channelmap[i]; }
         Channel& channelSettings(int i)         { return m_channels[i]; }
 
@@ -236,6 +259,10 @@ class ConfigHandler : public QObject
         static const QStringList all_ADC10bits;
         static const QStringList all_ADC8bits;
         static const QStringList all_ADC6bits;
+        // s6
+        static const QStringList all_CKTK;
+        static const QStringList all_CKBC;
+        static const QStringList all_CKBC_SKEW;
 
     private :
         bool m_dbg;
@@ -245,6 +272,7 @@ class ConfigHandler : public QObject
         CommInfo                m_commSettings;
         TriggerDAQ              m_daqSettings;
         GlobalSetting           m_globalSettings;
+        s6Setting               m_s6Settings;
         std::vector<ChannelMap> m_channelmap;
         quint16                 m_channelMap; 
         quint32                 m_channelMapART;

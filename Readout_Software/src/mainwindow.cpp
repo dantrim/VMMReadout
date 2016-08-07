@@ -998,6 +998,7 @@ void MainWindow::prepareAndSendTDAQConfig()
     daq.ignore16        = ui->ignore16->isChecked();
     daq.output_path     = ui->runDirectoryField->text().toStdString();
     daq.bcid_reset      = ui->bcid_reset->value();
+    daq.enable_holdoff  = ui->holdOffCheckBox->isChecked() ? 1 : 0;
 
     configHandle().LoadTDAQConfiguration(daq);
 
@@ -1048,7 +1049,8 @@ void MainWindow::setRunMode()
     daq.trigger_period  = ui->trgPeriod->text().toStdString();
     daq.acq_sync        = ui->acqSync->value();
     daq.acq_window      = ui->acqWindow->value();
-    daq.ignore16        = ui->ignore16->isChecked();
+    daq.ignore16        = ui->ignore16->isChecked() ? 1 : 0;
+    daq.enable_holdoff  = ui->holdOffCheckBox->isChecked() ? 1 : 0;
     daq.output_path     = ui->runDirectoryField->text().toStdString();
 
     // update the config handle with the new DAQ object
@@ -2011,8 +2013,32 @@ void MainWindow::updateConfigState()
         VMMSZ010bCBox[i]->setCurrentIndex(VMMSZ010bValue[i]);
         VMMSZ08bCBox[i]->setCurrentIndex(VMMSZ08bValue[i]);
         VMMSZ06bCBox[i]->setCurrentIndex(VMMSZ06bValue[i]);
-
     }
+
+    // ------------------------------------------------- //
+    //  T/DAQ settings
+    // ------------------------------------------------- //
+    TriggerDAQ tdaq = configHandle().daqSettings();
+    ui->pulserDelay->setValue(tdaq.tp_delay);
+    ui->bcid_reset->setValue(tdaq.bcid_reset);
+    ui->trgPeriod->setText(QString::fromStdString(tdaq.trigger_period));
+    ui->acqSync->setValue(tdaq.acq_sync);
+    ui->acqWindow->setValue(tdaq.acq_window);
+    ui->holdOffCheckBox->setChecked(tdaq.enable_holdoff==1);
+    ui->ignore16->setChecked(tdaq.ignore16==1);
+
+    // ------------------------------------------------- //
+    //  S6 Settings
+    // ------------------------------------------------- //
+    s6Setting s6 = configHandle().s6Settings();
+    ui->cktk_s6->setCurrentIndex(s6.cktk);
+    ui->ckbc_s6->setCurrentIndex(s6.ckbc);
+    ui->ckbc_skew_s6->setCurrentIndex(s6.ckbc_skew);
+    ui->s6_autoReset->setChecked(s6.do_auto_reset==1);
+    ui->s6_FECReset->setChecked(s6.do_fec_reset==1);
+    ui->s6_tkPulses->setValue(s6.tk_pulses);
+    ui->fecPeriodReset->setValue(s6.fec_reset_period);
+
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::writeConfigurationToFile()
@@ -2152,10 +2178,27 @@ void MainWindow::writeConfigurationToFile()
     daq.trigger_period  = ui->trgPeriod->text().toStdString();
     daq.acq_sync        = ui->acqSync->value();
     daq.acq_window      = ui->acqWindow->value();
-    daq.ignore16        = ui->ignore16->isChecked();
+    daq.ignore16        = ui->ignore16->isChecked() ? 1 : 0;
+    daq.enable_holdoff  = ui->holdOffCheckBox->isChecked() ? 1 : 0;
     daq.output_path     = ui->runDirectoryField->text().toStdString();
 
     configHandle().LoadTDAQConfiguration(daq);
+
+    
+    // ------------------------------------------------- //
+    //  S6 settings
+    // ------------------------------------------------- //
+    s6Setting s6current;
+
+    s6current.cktk      = ui->cktk_s6->currentIndex();
+    s6current.ckbc      = ui->ckbc_s6->currentIndex();
+    s6current.ckbc_skew = ui->ckbc_skew_s6->currentIndex();
+    s6current.do_auto_reset = (ui->s6_autoReset->isChecked() ? 1 : 0);
+    s6current.do_fec_reset = (ui->s6_FECReset->isChecked() ? 1 : 0);
+    s6current.tk_pulses = ui->s6_tkPulses->value();
+    s6current.fec_reset_period = ui->fecPeriodReset->value();
+
+    configHandle().LoadS6Configuration(s6current);
 
     configHandle().WriteConfig(filename);
 }

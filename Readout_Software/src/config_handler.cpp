@@ -38,6 +38,14 @@ const QStringList ConfigHandler::all_ADC8bits
 const QStringList ConfigHandler::all_ADC6bits
     = {"low", "middle", "up"};
 
+/// s6 setting values
+const QStringList ConfigHandler::all_CKTK
+    = {"0", "12.5", "25"}; // ns
+const QStringList ConfigHandler::all_CKBC
+    = {"160", "160inv", "80", "40", "20", "10", "5", "2.5"}; // MHz
+const QStringList ConfigHandler::all_CKBC_SKEW
+    = {"0", "6.26", "12.52", "18.78"}; // ns
+
 //////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------ //
 //  ConfigHandler -- Constructor
@@ -92,7 +100,7 @@ bool ConfigHandler::LoadConfig(const QString &filename)
 
     m_daqSettings = LoadDAQConfig(pt);
     bool daq_ok = m_daqSettings.ok;
-    if(!ok) {
+    if(!daq_ok) {
         msg()("Problem loading DAQ settings","ConfigHandler::LoadConfig");
     }
 
@@ -127,6 +135,10 @@ bool ConfigHandler::LoadConfig(const QString &filename)
         }
     }
 
+    m_s6Settings = LoadS6Settings(pt);
+    bool s6_ok = m_s6Settings.ok;
+    if(!s6_ok)
+        msg()("Problem loading s6 settings","ConfigHandler::LoadConfig");
 
     stringstream sx;
     if(dbg()) {
@@ -141,7 +153,7 @@ bool ConfigHandler::LoadConfig(const QString &filename)
         msg()(sx,"ConfigHandler::LoadConfig");
     }
 
-    return (comm_ok && global_ok && daq_ok && hdmi_ok && vmmchan_ok);
+    return (comm_ok && global_ok && daq_ok && hdmi_ok && vmmchan_ok && s6_ok);
 }
 //// ------------------------------------------------------------------------ //
 void ConfigHandler::WriteConfig(QString filename)
@@ -182,7 +194,8 @@ void ConfigHandler::WriteConfig(QString filename)
     out_tdaq.put("acq_sync", daqSettings().acq_sync);
     out_tdaq.put("acq_window", daqSettings().acq_window);
     out_tdaq.put("bcid_reset", daqSettings().bcid_reset);
-    out_tdaq.put("ignore16", daqSettings().ignore16);
+    out_tdaq.put("ignore16", isOnOrOff(daqSettings().ignore16));
+    out_tdaq.put("hold_off", isOnOrOff(daqSettings().enable_holdoff));
     string outpath = (daqSettings().output_path != "" ? daqSettings().output_path :
                                 def_tdaq.output_path);
     out_tdaq.put("output_path", outpath);
@@ -285,15 +298,36 @@ void ConfigHandler::WriteConfig(QString filename)
         globalSettings().threshold_dac);
     out_global.put("test_pulse_DAC",
         globalSettings().test_pulse_dac);
+
+    // ----------------------------------------------- //
+    //  S6 settings
+    // ----------------------------------------------- //
+    s6Setting def_s6 = LoadS6Settings(defaultpt);
+
+    ptree out_s6;
+    out_s6.put("cktk",
+        ConfigHandler::all_CKTK[s6Settings().cktk].toStdString());
+    out_s6.put("ckbc",
+        ConfigHandler::all_CKBC[s6Settings().ckbc].toStdString());
+    out_s6.put("ckbc_skew",
+        ConfigHandler::all_CKBC_SKEW[s6Settings().ckbc_skew].toStdString());
+    out_s6.put("vmm_auto_reset",
+        isOnOrOff(s6Settings().do_auto_reset));
+    out_s6.put("fec_reset",
+        isOnOrOff(s6Settings().do_fec_reset));
+    out_s6.put("tk_pulses",
+        s6Settings().tk_pulses);
+    out_s6.put("fec_reset_period",
+        s6Settings().fec_reset_period);
    
     // ----------------------------------------------- //
     // stitch together the fields
     // ----------------------------------------------- //
     out_root.add_child("udp_setup", out_udpsetup);
     out_root.add_child("trigger_daq", out_tdaq);
+    out_root.add_child("s6_settings", out_s6);
     out_root.add_child("channel_map", out_hdmi);
     out_root.add_child("global_settings", out_global);
-
 
 
     // ----------------------------------------------- //
@@ -308,7 +342,7 @@ void ConfigHandler::WriteConfig(QString filename)
             sx << "ERROR VMM Channel numbers out of sync! Expecting VMM channel "
                << i << " but at this index we have VMM " << channelSettings(i).number;
             msg()(sx, "ConfigHandler::WriteConfig", true);
-            exit(1);
+           // exit(1);
         }
 
         ss.str("");
@@ -714,7 +748,9 @@ TriggerDAQ ConfigHandler::LoadDAQConfig(const boost::property_tree::ptree& pt)
             // bcid reset
             daq.bcid_reset = conf.second.get<int>("bcid_reset");
             // ignore16 flag
-            daq.ignore16 = isOn(conf.second.get<string>("ignore16"));
+            daq.ignore16 = isOn(conf.second.get<string>("ignore16"), "ignore16");
+            // hold off
+            daq.enable_holdoff = isOn(conf.second.get<string>("hold_off"), "hold_off");
             // output path
             string opath = conf.second.get<string>("output_path");
             daq.output_path = opath;
@@ -955,6 +991,88 @@ std::vector<Channel> ConfigHandler::LoadVMMChannelConfig(const boost::property_t
     return channels;
 }
 //// ------------------------------------------------------------------------ //
+s6Setting ConfigHandler::LoadS6Settings(const boost::property_tree::ptree& pt)
+{
+    using boost::property_tree::ptree;
+    s6Setting s6;
+    bool outok = true;
+
+    try
+    {
+        for(const auto& conf : pt.get_child("configuration")) {
+            if(!(conf.first == "s6_settings")) continue;
+
+            /////////////////////////////////////////////////
+            // cktk period
+            string cktk_in = conf.second.get<string>("cktk");
+            if(all_CKTK.indexOf(QString::fromStdString(cktk_in))>=0)
+                s6.cktk = all_CKTK.indexOf(QString::fromStdString(cktk_in));
+            else {
+                stringstream sx;
+                sx << "ERROR cktk value must be one of: [";
+                for(auto& i : all_CKTK) sx << " " << i.toStdString() << " ";
+                sx << "]\nYou have provided: " << cktk_in;
+                msg()(sx,"ConfigHandler::LoadS6Settings");
+                outok = false;
+            }
+            /////////////////////////////////////////////////
+            // ckbc frequency
+            string ckbc_in = conf.second.get<string>("ckbc");
+            if(all_CKBC.indexOf(QString::fromStdString(ckbc_in))>=0)
+                s6.ckbc = all_CKBC.indexOf(QString::fromStdString(ckbc_in));
+            else {
+                stringstream sx;
+                sx << "ERROR ckbc value must be one of: [";
+                for(auto& i : all_CKBC) sx << " " << i.toStdString() << " ";
+                sx << "]\nYou have provided: " << ckbc_in;
+                msg()(sx,"ConfigHandler::LoadS6Settings");
+                outok = false;
+            }
+            /////////////////////////////////////////////////
+            // ckbc skew
+            string ckbc_skew_in = conf.second.get<string>("ckbc_skew");
+            if(all_CKBC_SKEW.indexOf(QString::fromStdString(ckbc_skew_in))>=0)
+                s6.ckbc_skew = all_CKBC_SKEW.indexOf(QString::fromStdString(ckbc_skew_in));
+            else {
+                stringstream sx;
+                sx << "ERROR ckbc_skew value must be one of: [";
+                for(auto& i : all_CKBC_SKEW) sx << " " << i.toStdString() << " ";
+                sx << "]\nYou have provided: " << ckbc_skew_in;
+                msg()(sx,"ConfigHandler::LoadS6Settings");
+                outok = false;
+            }
+            /////////////////////////////////////////////////
+            // vmm auto reset
+            string auto_reset = conf.second.get<string>("vmm_auto_reset");
+            s6.do_auto_reset = isOn(auto_reset, "vmm_auto_reset");
+            /////////////////////////////////////////////////
+            // fec period reset
+            string fec_reset = conf.second.get<string>("fec_reset");
+            s6.do_fec_reset = isOn(fec_reset, "fec_reset");
+            /////////////////////////////////////////////////
+            // tk pulses before reset
+            s6.tk_pulses = conf.second.get<int>("tk_pulses");
+            /////////////////////////////////////////////////
+            // fec reset period
+            s6.fec_reset_period = conf.second.get<int>("fec_reset_period");
+            
+        } // conf
+
+    } // try
+    catch(std::exception &e)
+    {
+        stringstream sx;
+        sx << "!! --------------------------------- !!\n"
+           << "    ERROR S6: " << e.what() << "\n"
+           << "!! --------------------------------- !!";
+        msg()(sx, "ConfigHandler::LoadS6Settings");
+        outok = false;
+    } // catch
+    s6.ok = outok;
+
+    return s6;
+}
+//// ------------------------------------------------------------------------ //
 void ConfigHandler::LoadBoardConfiguration(GlobalSetting& global,
                 std::vector<ChannelMap>& chMap, std::vector<Channel>& channels)
 {
@@ -985,6 +1103,12 @@ void ConfigHandler::LoadTDAQConfiguration(TriggerDAQ& daq)
 {
     m_daqSettings = daq; 
     m_daqSettings.print();
+}
+
+void ConfigHandler::LoadS6Configuration(s6Setting& s6)
+{
+    m_s6Settings = s6;
+    m_s6Settings.print();
 }
 //// ------------------------------------------------------------------------ //
 int ConfigHandler::isOn(std::string onOrOff, std::string where)
@@ -1090,9 +1214,10 @@ TriggerDAQ::TriggerDAQ() :
     trigger_period("61A80"),
     acq_sync(100),
     acq_window(4096),
-    ignore16(false),
+    ignore16(0),
     output_path(""),
     bcid_reset(0),
+    enable_holdoff(0),
     ok(false)
 {
 }
@@ -1114,6 +1239,8 @@ void TriggerDAQ::print()
         << bcid_reset << endl;
     ss << "     > ignore16              : "
         << ignore16 << endl;
+    ss << "     > enable holdoff        : "
+        << enable_holdoff << endl;
     ss << "     > output path           : "
         << output_path << endl;
     ss << "------------------------------------------------------" << endl;
@@ -1314,6 +1441,35 @@ void Channel::print()
     cout << ss.str() << endl;
 
 }
+//////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------ //
+//  S6 settings
+// ------------------------------------------------------------------------ //
+//////////////////////////////////////////////////////////////////////////////
+s6Setting::s6Setting() :
+    cktk(0), // 0ns
+    ckbc(2), // 80 MHz
+    ckbc_skew(0), // 0 ns
+    do_auto_reset(1),
+    do_fec_reset(1),
+    tk_pulses(2),
+    fec_reset_period(4094),
+    ok(false)
+{
+}
+void s6Setting::print()
+{
+    stringstream ss;
+    ss << "s6 settings " << endl;
+    ss << "    > CKTK                  : " << ConfigHandler::all_CKTK[cktk].toStdString() << " ns" << endl;
+    ss << "    > CKBC                  : " << ConfigHandler::all_CKBC[ckbc].toStdString() << " MHz" << endl;
+    ss << "    > CKBC skew             : " << ConfigHandler::all_CKBC_SKEW[ckbc_skew].toStdString() << " ns" << endl;
+    ss << "    > do vmm auto reset     : " << (do_auto_reset==1 ? "on" : "off") << endl;
+    ss << "    > do FEC periodic reset : " << (do_fec_reset==1 ? "on" : "off") << endl;
+    ss << "    > TK pulses for FEC reset : " << tk_pulses << endl;
+    ss << "    > FEC reset period      : " << fec_reset_period << endl;
+    cout << ss.str() << endl;
+} 
 //////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------ //
 //  ChannelMap

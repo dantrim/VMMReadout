@@ -8,16 +8,26 @@
 		<s6_port>6602</s6_port>
 	</udp_setup>
 	<trigger_daq>
-		<tp_delay>81</tp.delay>
+		<tp_delay>77</tp.delay>
 		<trigger_period>3FFFE</trigger_period>
 		<acq_sync>100</acq_sync>
 		<acq_window>4096</acq_window>
         <bcid_reset>0</bcid_reset>
-        <ignore16>off</ignore16>
+        <ignore16>on</ignore16>
+        <hold_off>on</hold_off>
         <output_path>/Users/dantrim/workarea/NSW/VMMReadout/restructure/</output_path>
 	</trigger_daq>
+    <s6_settings>
+        <cktk>0</cktk> <!-- ns -->
+        <ckbc>160</ckbc> <!-- MHz -->
+        <ckbc_skew>0</ckbc_skew> <!-- ns -->
+        <vmm_auto_reset>on</vmm_auto_reset>
+        <fec_reset>off</fec_period>
+        <tk_pulses>2</tk_pulses>
+        <fec_reset_period>4094</fec_reset_period>
+    </s6_settings>
 	<channel_map>
-		<hdmi_1> <switch>on</switch> <first>1</first> <second>1</second> <art>0</art> </hdmi_1>
+		<hdmi_1> <switch>on</switch> <first>1</first> <second>1</second> <art>1</art> </hdmi_1>
 		<hdmi_2> <switch>off</switch> <first>0</first> <second>0</second> <art>0</art> </hdmi_2>
 		<hdmi_3> <switch>off</switch> <first>0</first> <second>0</second> <art>0</art> </hdmi_3>
 		<hdmi_4> <switch>off</switch> <first>0</first> <second>0</second> <art>0</art> </hdmi_4>
@@ -60,14 +70,14 @@
 		<test_pulse_DAC>600</test_pulse_DAC>
 	</global_settings>
 	<channel_00>
-		<polarity>strips</polarity>
+		<polarity>wires</polarity>
 		<capacitance>off</capacitance>
 		<leakage_current>enabled</leakage_current>
 		<test_pulse>on</test_pulse>
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_00>
@@ -79,7 +89,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_01>
@@ -91,7 +101,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_02>
@@ -103,7 +113,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_03>
@@ -115,7 +125,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_04>
@@ -127,7 +137,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_05>
@@ -139,7 +149,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_06>
@@ -151,7 +161,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_07>
@@ -163,7 +173,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_08>
@@ -175,7 +185,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_09>
@@ -187,7 +197,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_10>
@@ -199,7 +209,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_11>
@@ -211,7 +221,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_12>
@@ -223,7 +233,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_13>
@@ -235,7 +245,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_14>
@@ -247,7 +257,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_15>
@@ -259,7 +269,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_16>
@@ -271,7 +281,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_17>
@@ -283,7 +293,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_18>
@@ -295,7 +305,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_19>
@@ -307,7 +317,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_20>
@@ -319,7 +329,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_21>
@@ -331,7 +341,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_22>
@@ -343,7 +353,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_23>
@@ -355,7 +365,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_24>
@@ -367,7 +377,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_25>
@@ -379,7 +389,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_26>
@@ -391,7 +401,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_27>
@@ -403,7 +413,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_28>
@@ -415,7 +425,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_29>
@@ -427,7 +437,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_30>
@@ -439,7 +449,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_31>
@@ -451,7 +461,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_32>
@@ -463,7 +473,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_33>
@@ -475,7 +485,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_34>
@@ -487,7 +497,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_35>
@@ -499,7 +509,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_36>
@@ -511,7 +521,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_37>
@@ -523,7 +533,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_38>
@@ -535,7 +545,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_39>
@@ -547,7 +557,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_40>
@@ -559,7 +569,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_41>
@@ -571,7 +581,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_42>
@@ -583,7 +593,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_43>
@@ -595,7 +605,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_44>
@@ -607,7 +617,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_45>
@@ -619,7 +629,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_46>
@@ -631,7 +641,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_47>
@@ -643,7 +653,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_48>
@@ -655,7 +665,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_49>
@@ -667,7 +677,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_50>
@@ -679,7 +689,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_51>
@@ -691,7 +701,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_52>
@@ -703,7 +713,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_53>
@@ -715,7 +725,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_54>
@@ -727,7 +737,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_55>
@@ -739,7 +749,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_56>
@@ -751,7 +761,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_57>
@@ -763,7 +773,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_58>
@@ -775,7 +785,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_59>
@@ -787,7 +797,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_60>
@@ -799,7 +809,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_61>
@@ -811,7 +821,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_62>
@@ -823,7 +833,7 @@
 		<hidden_mode>off</hidden_mode>
 		<trim>0</trim>
 		<monitor_mode>off</monitor_mode>
-		<s10bADC_time_set>10</s10bADC_time_set>
+		<s10bADC_time_set>0</s10bADC_time_set>
 		<s08bADC_time_set>0</s08bADC_time_set>
 		<s06bADC_time_set>0</s06bADC_time_set>
 	</channel_63>
