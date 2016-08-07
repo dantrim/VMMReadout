@@ -244,3 +244,15 @@ std::string Chamber::connectorNameFromFEBName(std::string feb_name)
     } // i
     return out;
 }
+
+std::string Chamber::connectorNameFromVMMName(std::string vmm_name)
+{
+    std::string out = "";
+    for(int i = 0; i < nConnector(); i++) {
+        if(m_connectorArray.at(i).hasVMM(vmm_name)) {
+            out = m_connectorArray.at(i).name();
+            break;
+        }
+    } // i
+    return out;
+}

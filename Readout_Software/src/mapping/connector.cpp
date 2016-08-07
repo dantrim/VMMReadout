@@ -39,6 +39,14 @@ bool Connector::loadConnector(const boost::property_tree::ptree::value_type pt)
                 m_connected_feb = v.second.data();
                 boost::trim(m_connected_feb);
             }
+            //////////////////////////////////
+            // chip associated with this
+            // connector
+            //////////////////////////////////
+            else if(v.first == "chip") {
+                std::string chip_name = v.second.get<std::string>("name");
+                m_chip_names.push_back(chip_name);
+            }
 
             else {
                 std::cout << "Connector::loadConnector    WARNING Unknown key: " << v.first << std::endl;
@@ -52,4 +60,16 @@ bool Connector::loadConnector(const boost::property_tree::ptree::value_type pt)
         ok = false;
     }
     return ok;
+}
+
+bool Connector::hasVMM(std::string vmm_name)
+{
+    bool connector_has_this_vmm = false;
+    for(int i = 0; i < (int)m_chip_names.size(); i++) {
+        if(m_chip_names.at(i) == vmm_name) {
+            connector_has_this_vmm = true;
+            break;
+        }
+    }
+    return connector_has_this_vmm;
 }

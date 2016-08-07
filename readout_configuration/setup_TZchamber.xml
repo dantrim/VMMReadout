@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<detector>
+    <name>Test</name>
+
+    <position> <x>0.0</x> <y>0.0</y> <z>0.0</z> </position>
+    <rotation> <x>0.0</x> <y>0.0</y> <z>0.0</z> </rotation>
+
+        <!-- chambers present in the current setup -->
+
+        <chamber>
+            <name>TZ6</name>
+            <id>0</id>
+
+            <position> <x>0.0</x> <y>0.0</y> <z>0.0</z> </position>
+            <rotation> <x>0.0</x> <y>0.0</y> <z>0.0</z> </rotation>
+
+            <!-- config file describes configuration of this chamber -->
+            <config_file>TZ-chamber.xml</config_file>
+            
+            <!-- connectors -->
+            <connector>
+                <name>C0</name>
+                <board> MMFE8.1 </board>
+                <chip> <name> VMM2.1.00 </name> </chip>
+                <chip> <name> VMM2.1.01 </name> </chip>
+                <chip> <name> VMM2.1.02 </name> </chip>
+                <chip> <name> VMM2.1.03 </name> </chip>
+                <chip> <name> VMM2.1.04 </name> </chip>
+                <chip> <name> VMM2.1.05 </name> </chip>
+                <chip> <name> VMM2.1.06 </name> </chip>
+                <chip> <name> VMM2.1.07 </name> </chip>
+             <!--   <map_file> vmm2_TZ_map.txt </map_file> -->
+            </connector>
+        </chamber>
+
+        <chamber>
+            <name>TZ7</name>
+            <id>1</id>
+
+            <position> <x>0.0</x> <y>0.0</y> <z>0.0</z> </position>
+            <rotation> <x>0.0</x> <y>0.0</y> <z>0.0</z> </rotation>
+
+            <!-- config file describes configuration of this chamber -->
+            <config_file>TZ-chamber.xml</config_file>
+
+            <!-- connectors -->
+            <connector>
+                <name>C0</name>
+                <board> MMFE8.2 </board>
+                <chip> <name> VMM2.2.00 </name> </chip>
+                <chip> <name> VMM2.2.01 </name> </chip>
+                <chip> <name> VMM2.2.02 </name> </chip>
+                <chip> <name> VMM2.2.03 </name> </chip>
+                <chip> <name> VMM2.2.04 </name> </chip>
+                <chip> <name> VMM2.2.05 </name> </chip>
+                <chip> <name> VMM2.2.06 </name> </chip>
+                <chip> <name> VMM2.2.07 </name> </chip>
+                <!-- <map_file> vmm2_TZ_map.txt </map_file> -->
+            </connector>
+        </chamber>
+
+</detector>

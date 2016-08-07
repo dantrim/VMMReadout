@@ -61,17 +61,26 @@ bool MapHandler::loadDaqConfiguration(std::string filename)
     return ok;
 }
 // ------------------------------------------------------------------------ //
+void MapHandler::clearMaps()
+{
+    m_daq_map.clear();
+    //m_daq_map_mini2.clear();
+}
+// ------------------------------------------------------------------------ //
 void MapHandler::buildMapping()
 {
-    if(m_map_loaded) m_daq_map.clear();
+    if(m_map_loaded) clearMaps(); //m_daq_map.clear();
 
     using namespace std;
+
+    bool ok = true;
 
     int n_element_loaded = 0;
     for(int ifeb = 0; ifeb < config().febConfig().nFeb(); ifeb++) {
         FEB feb = config().febConfig().getFEB(ifeb);
         string feb_id = feb.id();
         string feb_name = feb.name();
+        string feb_type = feb.type();
 
         nsw_map::channel_map feb_channel_map; // [ feb_channel : Element ]
 
@@ -93,8 +102,15 @@ void MapHandler::buildMapping()
 
                     // name of connector on this chamber that contains
                     // our FEB
-                    string connector_name = chamber.connectorNameFromFEBName(feb_name);
-
+                    string connector_name = "";
+                    if(feb_type == "mmfe8")
+                        connector_name = chamber.connectorNameFromFEBName(feb_name);
+                    else if(feb_type =="mini2") {
+                        string vmm_name = feb.VMMNameFromId(vmm_id);
+                        if(vmm_name=="") { ok = false; break; }
+                        connector_name = chamber.connectorNameFromVMMName(vmm_name);
+                    }
+                        
                     for(int iML = 0; iML < chamber.nMultiLayer(); iML++) {
                         string multilayer_name = chamber.multiLayer(iML).name();
                         string multilayer_id   = chamber.multiLayer(iML).id();
@@ -117,6 +133,10 @@ void MapHandler::buildMapping()
                                 // negative means that this element (strip) is not
                                 // read out by this FEB
                                 if(!(strip_number<0)) {
+
+                                    //std::cout << "feb name: " << feb_name << " (vmmid, vmmchan, febchan) = (" << vmm_id << ", " << vmm_channel << " , " << feb_channel <<     ")   chamber: " << chamber_name << "  connector: " << connector_name << "  strip: " << strip_number << std::endl;
+
+
                                     Element current_element;
                                     current_element.init(n_element_loaded); n_element_loaded++; // give elements unique #
                                     
@@ -140,7 +160,7 @@ void MapHandler::buildMapping()
                                     // readout info
                                     /////////////////////////////////////
                                     string readout_type = "";
-                                    if(feb.type() == "mmfe8") readout_type = "MM";
+                                    if((feb.type() == "mmfe8") || (feb.type() == "mini2")) readout_type = "MM";
                                     else { readout_type = "XXX"; }
                                     current_element.setElementType(feb.type())
                                                    .setReadoutType(readout_type);
@@ -175,11 +195,13 @@ void MapHandler::buildMapping()
 
     #warning ADD SANITY CHECK ON MAP
 
-//cout << " [1][222] = " << m_daq_map["1"]["222"].stripNumber() << std::endl;
+    //cout << " [1][222] = " << m_daq_map["1"]["222"].stripNumber() << std::endl;
+    //cout << "febChannel(1, 3, 32) = " << febChannel("1", 3, 32) << endl;
+    //cout << "[1][febChannel(1,3,32)] = " << m_daq_map["1"][std::to_string(febChannel("1",3,32))].stripNumber() << std::endl;
 
     m_map_loaded = true;
 }
-
+// ------------------------------------------------------------------------ //
 int MapHandler::febChannel(std::string boardid, int vmmid, int vmmchan)
 {
     FEB feb = config().febConfig().getFEBwithId(boardid);

@@ -21,6 +21,7 @@ class FEB {
         bool readMapFile(std::string filename);
 
         int getFEBChannel(int vmmid, int vmmchannel);
+        std::string VMMNameFromId(int vmm_id);
 
         std::string name() { return m_name; }
         std::string id()   { return m_id; }
@@ -31,6 +32,7 @@ class FEB {
         std::vector<Chip> m_chipArray;
 
         std::vector<std::tuple<int, int, int> > vmm_map; // (vmm id, vmm channel, FEB channel)
+
     private :
         int n_chip; 
         std::string m_map_dir;

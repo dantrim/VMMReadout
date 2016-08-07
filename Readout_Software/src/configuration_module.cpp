@@ -241,8 +241,8 @@ void Configuration::SendConfig()
             // global SPI
             for(unsigned int i = 0; i < 3; i++) {
                 //out << (quint32)DataHandler::reverse32(globalRegisters[i]);
-                qDebug() << "global[" << i << "] : " << globalRegisters.at(i);
-                qDebug() << "global[" << i << "] reversed : " << Configuration::reverse32(globalRegisters.at(i));
+                //qDebug() << "global[" << i << "] : " << globalRegisters.at(i);
+                //qDebug() << "global[" << i << "] reversed : " << Configuration::reverse32(globalRegisters.at(i));
                 out << (quint32)Configuration::reverse32(globalRegisters.at(i));
             } // i
         } // if mmfe8

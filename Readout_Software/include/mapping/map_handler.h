@@ -35,6 +35,9 @@ class MapHandler : public QObject
         bool loadDaqConfiguration(std::string filename);
         DaqConfiguration& config() { return *m_daqConfig; }
 
+        // clear the maps
+        void clearMaps();
+
         // from the XML build the FEB channel to detector element mapping
         void buildMapping();
 

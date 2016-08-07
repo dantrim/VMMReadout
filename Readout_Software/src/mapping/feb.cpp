@@ -214,3 +214,13 @@ int FEB::getFEBChannel(int vmmid, int vmmchannel)
     }
     return -1;
 }
+
+std::string FEB::VMMNameFromId(int vmmid)
+{
+    std::string out = "";
+    for(int ichip = 0; ichip < nChip(); ichip++) {
+        if(m_chipArray.at(ichip).id() == std::to_string(vmmid))
+            out = m_chipArray.at(ichip).name();
+    } // ichip 
+    return out;
+}

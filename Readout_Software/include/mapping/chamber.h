@@ -32,6 +32,7 @@ class Chamber {
         Connector getConnector(std::string name);
 
         std::string connectorNameFromFEBName(std::string feb_name);
+        std::string connectorNameFromVMMName(std::string vmm_name);
 
         bool hasFEB(std::string name);
 
