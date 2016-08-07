@@ -183,13 +183,16 @@ class DataHandler : public QObject
         std::vector<int> _bcid;
         std::vector<int> _gray;
         std::vector<int> _channelNo;
+        std::vector<int> _febChannelNo;
+        std::vector<int> _mappedChannelNo;
         std::vector<int> _flag;
         std::vector<int> _thresh;
         std::vector<int> _neighbor;
 
         int m_eventNumberFAFA;
         int m_daqCnt;
-        std::vector<int> m_fromIp;
+        std::vector<int> m_boardIp;
+        std::vector<int> m_boardId;
         std::vector<int> m_triggerTimeStamp;
         std::vector<int> m_triggerCounter;
         std::vector<int> m_chipId;
@@ -202,6 +205,8 @@ class DataHandler : public QObject
         std::vector< std::vector<int> > m_threshold;
         std::vector< std::vector<int> > m_bcid;
         std::vector< std::vector<int> > m_channelId;
+        std::vector< std::vector<int> > m_febChannelId;
+        std::vector< std::vector<int> > m_mappedChannelId;
         std::vector< std::vector<int> > m_grayDecoded;
 
         // calibration data
@@ -228,7 +233,8 @@ class DataHandler : public QObject
         TBranch *br_eventNumberFAFA;
         TBranch *br_triggerTimeStamp;
         TBranch *br_triggerCounter;
-        TBranch *br_fromIp;
+        TBranch *br_boardIp;
+        TBranch *br_boardId;
         TBranch *br_chipId;
         TBranch *br_evSize;
         TBranch *br_tdo;
@@ -238,6 +244,8 @@ class DataHandler : public QObject
         TBranch *br_bcid;
         TBranch *br_grayDecoded;
         TBranch *br_channelId;
+        TBranch *br_febChannelId;
+        TBranch *br_mappedChannelId;
         TBranch *br_pulserCalib;
         TBranch *br_gainCalib;
         TBranch *br_peakTimeCalib;

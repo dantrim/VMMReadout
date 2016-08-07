@@ -32,6 +32,8 @@ class FEBConfig {
         bool hasFEB(int i) { return i < (int)m_febArray.size(); }
         FEB getFEB(int i);
 
+        FEB getFEBwithId(std::string id_no);
+
     private :
         int n_feb;
         std::string m_map_dir;

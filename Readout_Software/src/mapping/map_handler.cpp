@@ -180,5 +180,14 @@ cout << " [1][222] = " << m_daq_map["1"]["222"].stripNumber() << std::endl;
     m_map_loaded = true;
 }
 
+int MapHandler::febChannel(std::string boardid, int vmmid, int vmmchan)
+{
+    FEB feb = config().febConfig().getFEBwithId(boardid);
+    return feb.getFEBChannel(vmmid, vmmchan);
+}
 
-
+int MapHandler::elementStripNumber(std::string boardid, std::string vmmid, std::string vmmchan)
+{
+    std::string feb_chan = std::to_string(this->febChannel(boardid, stoi(vmmid), stoi(vmmchan)));
+    return stoi(m_daq_map[boardid][feb_chan].stripNumber());
+}

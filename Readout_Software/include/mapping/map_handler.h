@@ -41,6 +41,12 @@ class MapHandler : public QObject
         // get the board ID from the packet IP
         std::string boardIDfromIP(std::string ip_string);
 
+        // obtain the strip given the FEB ID, VMM ID, and VMM CHANNEL
+        int elementStripNumber(std::string board_id, std::string vmm_id, std::string vmm_chan);
+
+        // get the FEB channel from the (vmmid, vmmchan)
+        int febChannel(std::string boardid, int vmmid, int vmmchan);
+
         // mapping [ FEB ID : [ FEB CHANNEL : ELEMENT ] ]
         nsw_map::id_map map() { return m_daq_map; }
 

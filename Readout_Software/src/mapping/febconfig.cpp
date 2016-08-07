@@ -80,6 +80,16 @@ FEB FEBConfig::getFEB(int i)
     }
     return m_febArray.at(i);
 }
+FEB FEBConfig::getFEBwithId(std::string id)
+{
+    FEB out_;
+    for(int ifeb = 0; ifeb < nFeb(); ifeb++) {
+        if(m_febArray.at(ifeb).id() == id) {
+            return m_febArray.at(ifeb);
+        }
+    } //ifeb
+    return out_;
+}
 
 std::string FEBConfig::boardNameFromIp(std::string ip)
 {
