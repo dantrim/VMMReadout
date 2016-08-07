@@ -68,13 +68,19 @@ bool DaqConfiguration::loadDaqXml(std::string filename)
     if(febConfigFile()!="")
         exists = std::ifstream(full_feb_name).good();
     if(!exists) {
-        std::cout << "DaqConfiguration::loadDaqXml    Unable to load FEB config file: " << full_feb_name << std::endl;
+        std::cout << "**************************************************************************" << std::endl;
+        std::cout << "DaqConfiguration::loadDaqXml    ERROR FEB config file does not exists: " << full_feb_name << std::endl;
+        std::cout << "**************************************************************************" << std::endl;
+        //std::cout << "DaqConfiguration::loadDaqXml    Unable to load FEB config file: " << full_feb_name << std::endl;
         return false;
     }
     if(detectorConfigFile()!="")
         exists = std::ifstream(full_det_name).good();
     if(!exists) {
-        std::cout << "DaqConfiguration::loadDaqXml    Unable to load detector config file: " << full_det_name << std::endl;
+        std::cout << "**************************************************************************" << std::endl;
+        std::cout << "DaqConfiguration::loadDaqXml    ERROR detector config file does not exists: " << full_det_name << std::endl;
+        std::cout << "**************************************************************************" << std::endl;
+        //std::cout << "DaqConfiguration::loadDaqXml    Unable to load detector config file: " << full_det_name << std::endl;
         return false;
     }
     std::cout << "Successfully found DAQ files" << std::endl;

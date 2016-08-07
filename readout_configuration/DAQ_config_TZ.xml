@@ -2,8 +2,8 @@
 
 <daq_config>
 
-    <feb_file>feb.xml</feb_file>
+    <feb_file>feb_TZchamber.xml</feb_file>
 
-    <detector_file>setup.xml</detector_file>
+    <detector_file>setup_TZchamber.xml</detector_file>
 
 </daq_config>

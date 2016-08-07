@@ -40,6 +40,7 @@ bool MapHandler::loadDaqConfiguration(std::string filename)
     }
     else {
         cout << "MapHandler::loadDaqConfiguration    Unable to load DAQ xml: " << filename << endl;
+        return false;
     }
     ok = m_daqConfig->loadFEB();
     if(ok) {
@@ -47,6 +48,7 @@ bool MapHandler::loadDaqConfiguration(std::string filename)
     }
     else {
         cout << "MapHandler::loadDaqConfiguration    Unable to load FEB configuration" << endl;
+        return false;
     }
     ok = m_daqConfig->loadDetectorSetup();
     if(ok) {
@@ -54,6 +56,7 @@ bool MapHandler::loadDaqConfiguration(std::string filename)
     }
     else {
         cout << "MapHandler::loadDaqConfiguration    Unable to laod detector setup" << endl;
+        return false;
     }
     m_initialized = ok;
 
