@@ -175,7 +175,7 @@ void MapHandler::buildMapping()
 
     #warning ADD SANITY CHECK ON MAP
 
-cout << " [1][222] = " << m_daq_map["1"]["222"].stripNumber() << std::endl;
+//cout << " [1][222] = " << m_daq_map["1"]["222"].stripNumber() << std::endl;
 
     m_map_loaded = true;
 }
