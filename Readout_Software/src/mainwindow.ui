@@ -3724,21 +3724,6 @@ FECs</string>
       <string>Set</string>
      </property>
     </widget>
-    <zorder>cktk_s6</zorder>
-    <zorder>cktkLabel</zorder>
-    <zorder>ckbcLabel</zorder>
-    <zorder>ckbc_s6</zorder>
-    <zorder>ckbcLabel_2</zorder>
-    <zorder>ckbc_skew_s6</zorder>
-    <zorder>label_34</zorder>
-    <zorder>s6_tkPulses</zorder>
-    <zorder>setck_s6_resets</zorder>
-    <zorder>s6_autoReset</zorder>
-    <zorder>s6_FECReset</zorder>
-    <zorder>fecPeriodReset</zorder>
-    <zorder>label_32</zorder>
-    <zorder>setck_s6</zorder>
-    <zorder>scrollArea</zorder>
    </widget>
    <widget class="QTabWidget" name="tabWidget">
     <property name="geometry">

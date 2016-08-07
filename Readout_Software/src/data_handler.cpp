@@ -977,6 +977,8 @@ void DataHandler::readEvent()
 void DataHandler::decodeAndWriteData(const QByteArray& datagram,
                                             QHostAddress& fromIp)
 {
+    QHostAddress ipv4_fromIp = QHostAddress(fromIp.toIPv4Address());
+
     bool ok;
     stringstream sx;
 
@@ -990,8 +992,8 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram,
     if(mmfe8())
         trailer = "ffffffff";
 
-    QString boardIpStr = fromIp.toString();
-    quint32 boardIpNo  = fromIp.toIPv4Address();
+    QString boardIpStr = ipv4_fromIp.toString();
+    quint32 boardIpNo  = ipv4_fromIp.toIPv4Address();
 
     string boardIdNo = "";
     if(mappingOK())
@@ -1323,6 +1325,8 @@ void DataHandler::decodeAndWriteData(const QByteArray& datagram,
 void DataHandler::decodeAndWriteData_mmfe8(const QByteArray& datagram,
                                                 QHostAddress& fromIp)
 {
+    QHostAddress ipv4_fromIp = QHostAddress(fromIp.toIPv4Address());
+
     bool ok;
     stringstream sx;
 
@@ -1330,8 +1334,8 @@ void DataHandler::decodeAndWriteData_mmfe8(const QByteArray& datagram,
 
     QString frameCounterStr = datagram.mid(0,4).toHex();
 
-    QString boardIpStr   = fromIp.toString();
-    quint32 boardIpNo    = fromIp.toIPv4Address();
+    QString boardIpStr   = ipv4_fromIp.toString();
+    quint32 boardIpNo    = ipv4_fromIp.toIPv4Address();
 
     string boardIdNo = "";
     if(mappingOK())

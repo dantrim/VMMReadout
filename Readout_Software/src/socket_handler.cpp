@@ -236,8 +236,12 @@ void SocketHandler::SendDatagram(const QByteArray& datagram, const QString& ip,
         msg()(sx,"SocketHandler::SendDatagram");
 
     }
+    QHostAddress send_to_address = QHostAddress(QHostAddress(ip).toIPv4Address());
+    //qDebug() << "send_to_address: " << send_to_address.toString();
+    //qDebug() << "original addres: " << QHostAddress(ip).toString();
     if(!dryrun())
-        socket.writeDatagram(datagram, QHostAddress(ip), destPort);
+        socket.writeDatagram(datagram, send_to_address, destPort);
+        //socket.writeDatagram(datagram, QHostAddress(ip), destPort);
 }
 // ---------------------------------------------------------------------- //
 bool SocketHandler::waitForReadyRead(std::string name, int msec)
