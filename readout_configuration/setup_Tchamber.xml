@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<detector>
+    <name>Test</name>
+
+    <position> <x>0.0</x> <y>0.0</y> <z>0.0</z> </position>
+    <rotation> <x>0.0</x> <y>0.0</y> <z>0.0</z> </rotation>
+
+        <!-- chambers present in the current setup -->
+
+        <chamber>
+            <name>T6</name>
+            <id>0</id>
+
+            <position> <x>0.0</x> <y>0.0</y> <z>0.0</z> </position>
+            <rotation> <x>0.0</x> <y>0.0</y> <z>0.0</z> </rotation>
+
+            <!-- config file describes configuration of this chamber -->
+            <config_file>T-chamber.xml</config_file>
+            
+            <!-- connectors -->
+            <connector>
+                <name>C0</name>
+                <board> FEC1 </board>
+                <chip> <name> VMM2.1.00 </name> </chip>
+                <chip> <name> VMM2.1.01 </name> </chip>
+             <!--   <map_file> vmm2_TZ_map.txt </map_file> -->
+            </connector>
+            <connector>
+                <name>C1</name>
+                <board> FEC1 </board>
+                <chip> <name> VMM2.1.02 </name> </chip>
+                <chip> <name> VMM2.1.03 </name> </chip>
+            </connector>
+        </chamber>
+
+</detector>

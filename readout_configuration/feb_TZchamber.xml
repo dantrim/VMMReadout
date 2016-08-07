@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<feb>
+    <board>
+        <ip>192.168.0.2</ip>
+        <id>1</id>
+        <type>mmfe8</type>
+        <name>MMFE8.1</name>
+            <chip> <id>0</id> <type>vmm2</type> <name> VMM2.1.00 </name> </chip>
+            <chip> <id>1</id> <type>vmm2</type> <name> VMM2.1.01 </name> </chip>
+            <chip> <id>2</id> <type>vmm2</type> <name> VMM2.1.02 </name> </chip>
+            <chip> <id>3</id> <type>vmm2</type> <name> VMM2.1.03 </name> </chip>
+            <chip> <id>4</id> <type>vmm2</type> <name> VMM2.1.04 </name> </chip>
+            <chip> <id>5</id> <type>vmm2</type> <name> VMM2.1.05 </name> </chip>
+            <chip> <id>6</id> <type>vmm2</type> <name> VMM2.1.06 </name> </chip>
+            <chip> <id>7</id> <type>vmm2</type> <name> VMM2.1.07 </name> </chip>
+        <map_file>vmm2_TZ_map.txt</map_file>
+    </board>
+    <board>
+        <ip>192.168.0.3</ip>
+        <id>2</id>
+        <type>mmfe8</type>
+        <name>MMFE8.2</name>
+            <chip> <id>0</id> <type>vmm2</type> <name> VMM2.2.00 </name> </chip>
+            <chip> <id>1</id> <type>vmm2</type> <name> VMM2.2.01 </name> </chip>
+            <chip> <id>2</id> <type>vmm2</type> <name> VMM2.2.02 </name> </chip>
+            <chip> <id>3</id> <type>vmm2</type> <name> VMM2.2.03 </name> </chip>
+            <chip> <id>4</id> <type>vmm2</type> <name> VMM2.2.04 </name> </chip>
+            <chip> <id>5</id> <type>vmm2</type> <name> VMM2.2.05 </name> </chip>
+            <chip> <id>6</id> <type>vmm2</type> <name> VMM2.2.06 </name> </chip>
+            <chip> <id>7</id> <type>vmm2</type> <name> VMM2.2.07 </name> </chip>
+        <map_file>vmm2_TZ_map.txt</map_file>
+    </board>
+
+</feb>
