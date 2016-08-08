@@ -8,8 +8,8 @@
 		<s6_port>6602</s6_port>
 	</udp_setup>
 	<trigger_daq>
-		<tp_delay>77</tp.delay>
-		<trigger_period>3FFFE</trigger_period>
+		<tp_delay>81</tp.delay>
+		<trigger_period>61A80</trigger_period>
 		<acq_sync>100</acq_sync>
 		<acq_window>4096</acq_window>
         <bcid_reset>0</bcid_reset>
