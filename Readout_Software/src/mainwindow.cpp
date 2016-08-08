@@ -46,7 +46,6 @@ MainWindow::MainWindow(QWidget *parent) :
     m_inCalibrationLoop(false)
 {
 
-
     //thread
     daqThread = new QThread();
 

@@ -37,8 +37,8 @@
 		<hdmi_8> <switch>off</switch> <first>0</first> <second>0</second> <art>0</art> </hdmi_8>
 	</channel_map>
 	<global_settings>
-		<ch_polarity>strips</ch_polarity>
-		<ch_leakage_current>disabled</ch_leakage_current>
+		<ch_polarity>wires</ch_polarity>
+		<ch_leakage_current>enabled</ch_leakage_current>
 		<analog_tristates>off</analog_tristates>
 		<double_leakage>on</double_leakage>
 		<gain>3.0</gain>
@@ -53,12 +53,12 @@
 		<out_buffer_pdo>off</out_buffer_pdo>
 		<out_buffer_tdo>off</out_buffer_tdo>
 		<channel_monitoring>0</channel_monitoring>
-		<monitoring_control>on</monitoring_control>
+		<monitoring_control>off</monitoring_control>
 		<monitor_pdo_out>off</monitor_pdo_out>
 		<ADCs>on</ADCs>
 		<sub_hyst_discr>off</sub_hyst_discr>
 		<direct_time>off</direct_time>
-		<direct_time_mode>ToT</direct_time_mode>
+		<direct_time_mode>TtP</direct_time_mode>
 		<conv_mode_8bit>on</conv_mode_8bit>
 		<enable_6bit>off</enable_6bit>
 		<ADC_10bit>200ns</ADC_10bit>
@@ -66,8 +66,8 @@
 		<ADC_6bit>low</ADC_6bit>
 		<dual_clock_data>off</dual_clock_data>
 		<dual_clock_6bit>off</dual_clock_6bit>
-		<threshold_DAC>100</threshold_DAC>
-		<test_pulse_DAC>600</test_pulse_DAC>
+		<threshold_DAC>230</threshold_DAC>
+		<test_pulse_DAC>300</test_pulse_DAC>
 	</global_settings>
 	<channel_00>
 		<polarity>wires</polarity>
