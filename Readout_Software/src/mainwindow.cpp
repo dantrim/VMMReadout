@@ -491,7 +491,7 @@ void MainWindow::selectDAQSetupFile()
     stringstream sx;
     // get the file from the user
     QString filename = QFileDialog::getOpenFileName(this,
-        tr("Load DAQ configuration XML"), "../../readout_configuration/",
+        tr("Load DAQ configuration XML"), "../readout_configuration/",
         tr("XML Files (*.xml)"));
     if(filename.isNull()) return;
 
@@ -601,7 +601,7 @@ void MainWindow::selectConfigXmlFile()
 {
     stringstream sx;
     QString filename = QFileDialog::getOpenFileName(this,
-        tr("Load board configuration XML"), "../../readout_configuration/configuration/",
+        tr("Load board configuration XML"), "../readout_configuration/configuration/",
         tr("XML Files (*.xml)"));
     if(filename.isNull()) return;
 
@@ -2069,7 +2069,7 @@ void MainWindow::writeConfigurationToFile()
 
     // open a dialog to select the output file name
     QString filename = QFileDialog::getSaveFileName(this,
-        tr("Save XML Configuration File"), "../../readout_configuration/configuration/",
+        tr("Save XML Configuration File"), "../readout_configuration/configuration/",
         tr("XML Files (*.xml)"));
 
     if(filename.isNull()) return;
