@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Chamber configuration file -->
+<chamber>
+
+    <multilayer>
+        <id>0</id>
+        <name>MultiLayer.0</name>
+        <position> <x>0.0</x> <y>0.0</y> <z>0.0</z> </position> 
+        <rotation> <x>0.0</x> <y>0.0</y> <z>0.0</z> </rotation>
+
+        <layer>
+            <id>0</id>
+            <name>Layer.0</name>
+            <position> <x>0.0</x> <y>0.0</y> <z>0.0</z> </position> 
+            <rotation> <x>0.0</x> <y>0.0</y> <z>0.0</z> </rotation>
+
+            <readout>
+                <id> 0 </id>
+                <name> X </name>
+                <position> <x>0.0</x> <y>0.0</y> <z>0.0</z> </position> 
+                <rotation> <x>0.0</x> <y>0.0</y> <z>0.0</z> </rotation>
+
+                <strip_range>
+                    <min>1</min>
+                    <max>256</max>
+                </strip_range>
+                <pitch>0.4</pitch> <!-- mm -->
+            </readout>
+
+            <connector>
+                <name> C0 </name>
+                <!-- map of chamber strips to FEB channels -->
+                <map_file> TZ_chamber_map.txt </map_file> 
+            </connector>
+
+        </layer>
+    </multilayer>
+</chamber>

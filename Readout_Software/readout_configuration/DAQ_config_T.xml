@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<daq_config>
+
+    <feb_file>feb_Tchamber.xml</feb_file>
+
+    <detector_file>setup_Tchamber.xml</detector_file>
+
+</daq_config>

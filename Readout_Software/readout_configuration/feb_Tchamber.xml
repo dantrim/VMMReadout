@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<feb>
+    <board>
+        <ip>10.0.0.2</ip>
+        <id>1</id>
+        <type>mini2</type>
+        <name>FEC1</name>
+            <chip> <id>0</id> <type>vmm2</type> <name> VMM2.1.00 </name> </chip>
+            <chip> <id>1</id> <type>vmm2</type> <name> VMM2.1.01 </name> </chip>
+            <chip> <id>2</id> <type>vmm2</type> <name> VMM2.1.02 </name> </chip>
+            <chip> <id>3</id> <type>vmm2</type> <name> VMM2.1.03 </name> </chip>
+        <map_file>vmm2_T_map.txt</map_file>
+    </board>
+
+</feb>
