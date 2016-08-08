@@ -250,6 +250,9 @@ class MainWindow : public QMainWindow
         // load the DAQ configuration/mapping
         void loadDAQSetup();
 
+        // update the IP info based on loaded DAQ config
+        void updateIPs();
+
         void checkRequestedFile();
 
         // select the config xml file

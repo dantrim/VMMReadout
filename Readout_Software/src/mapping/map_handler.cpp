@@ -64,6 +64,20 @@ bool MapHandler::loadDaqConfiguration(std::string filename)
     return ok;
 }
 // ------------------------------------------------------------------------ //
+std::string MapHandler::firstIP()
+{
+    // FEB ID starts at 1
+    std::string ip_ = "";
+    for(int ifeb = 0; ifeb< config().febConfig().nFeb(); ifeb++) {
+        FEB feb = config().febConfig().getFEB(ifeb);
+        if(feb.id()=="1") {
+            ip_ = feb.ip();
+            break;
+        }
+    }
+    return ip_;
+}
+// ------------------------------------------------------------------------ //
 void MapHandler::clearMaps()
 {
     m_daq_map.clear();

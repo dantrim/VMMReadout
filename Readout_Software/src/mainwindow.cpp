@@ -561,6 +561,7 @@ void MainWindow::loadDAQSetup()
     if(ok) {
         msg()("DAQ setup loaded successfully");
         ui->daqSetupFilenameField->setStyleSheet("background-color: green");
+        updateIPs();
     }
     else {
         msg()("DAQ setup unable to be loaded");
@@ -571,6 +572,29 @@ void MainWindow::loadDAQSetup()
         delay();
     }
 
+}
+// ------------------------------------------------------------------------- //
+void MainWindow::updateIPs()
+{
+    std::string ipstring = dataHandle().getFirstIP();
+    int nfecs = dataHandle().getNumberOfFecs();
+
+    if(ipstring != "") {
+        QString ip = QString::fromStdString(ipstring);
+        QStringList ip_split = ip.split(".");
+        ui->ip1->setText(ip_split[0]);
+        ui->ip2->setText(ip_split[1]);
+        ui->ip3->setText(ip_split[2]);
+        ui->ip4->setText(ip_split[3]);
+    }
+    else {
+        ui->ip1->setText("10");
+        ui->ip2->setText("0");
+        ui->ip3->setText("0");
+        ui->ip4->setText("2");
+    }
+    ui->numberOfFecs->setValue(nfecs);
+    
 }
 // ------------------------------------------------------------------------- //
 void MainWindow::selectConfigXmlFile()

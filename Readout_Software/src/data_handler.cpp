@@ -169,6 +169,22 @@ bool DataHandler::loadMapping(string daq_xml_file)
 
     return ok;
 }
+std::string DataHandler::getFirstIP()
+{
+    std::string out = "";
+    if(m_mappingSetup) {
+        out = m_mapHandler->firstIP();
+    }
+    return out;
+}
+int DataHandler::getNumberOfFecs()
+{
+    int nFecs = 0;
+    if(m_mappingSetup) {
+        nFecs = m_mapHandler->config().febConfig().nFeb();
+    }
+    return nFecs;
+}
 // ------------------------------------------------------------------------ //
 void DataHandler::connectDAQSocket()
 {

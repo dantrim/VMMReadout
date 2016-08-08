@@ -123,6 +123,8 @@ class DataHandler : public QObject
         bool loadMapping(std::string filename);
         MapHandler& mapHandler() { return *m_mapHandler; }
         bool mappingOK() { return m_mappingSetup; }
+        std::string getFirstIP();
+        int getNumberOfFecs();
 
     private :
         bool m_dbg;

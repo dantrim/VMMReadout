@@ -35,6 +35,9 @@ class MapHandler : public QObject
         bool loadDaqConfiguration(std::string filename);
         DaqConfiguration& config() { return *m_daqConfig; }
 
+        // return the IP of FEB ID 0
+        std::string firstIP();
+
         // clear the maps
         void clearMaps();
 
